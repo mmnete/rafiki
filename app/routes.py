@@ -14,6 +14,9 @@ def message():
     if not phone_number or not user_message:
         return "Missing phone number or message", 400
 
+    if phone_number.startswith("whatsapp:"):
+        phone_number = phone_number[len("whatsapp:"):]
+
     reply = conv_manager.handle_message(phone_number, user_message)
 
     response = MessagingResponse()
