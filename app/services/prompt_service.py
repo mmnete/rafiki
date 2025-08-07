@@ -15,8 +15,11 @@ class PromptService:
             return self._build_onboarding_location_prompt()
         elif user_status == "onboarding_confirm_location":
             return self._build_confirm_location_prompt(user)
-        else:
+        elif user_status == "active":
             return self._build_main_prompt(history, user)
+        else:
+            return "Samahani, kuna tatizo. Tafadhali jaribu tena baadaye."
+
 
     def _build_onboarding_name_prompt(self) -> str:
         return (
