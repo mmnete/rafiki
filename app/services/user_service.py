@@ -21,15 +21,21 @@ class FakeUserService:
     def __init__(self):
         self._users = {}
 
-    def is_valid_tanzanian_number(self, phone_number: str) -> bool:
-        # Accepts: +2557XXXXXXXX, +2556XXXXXXXX, 07XXXXXXXX, 06XXXXXXXX
-        # The regex is slightly adjusted to be more explicit and robust
-        pattern = r"^(?:\+255|0)(6|7)\d{8}$"
-        return re.match(pattern, phone_number) is not None
+    import re
+
+    def is_valid_supported_number(self, phone_number: str) -> bool:
+        # Tanzania numbers (accept +2557XXXXXXXX, +2556XXXXXXXX, 07XXXXXXXX, 06XXXXXXXX)
+        tz_pattern = r"^(?:\+255|0)(6|7)\d{8}$"
+        
+        # US numbers (accept +1 followed by 10 digits)
+        us_pattern = r"^\+1\d{10}$"
+        
+        return re.match(tz_pattern, phone_number) is not None or re.match(us_pattern, phone_number) is not None
+
 
     def get_or_create_user(self, phone_number: str):
         # First, validate the phone number before anything else.
-        if not self.is_valid_tanzanian_number(phone_number):
+        if not self.is_valid_supported_number(phone_number):
             error_message = (
                 """Oops! Kuna hitilafu kidogo 😅
 Kwa sasa tunahudumia tu namba za simu za Kitanzania zinazoanza na +255 📞🇹🇿
