@@ -7,7 +7,7 @@ class PromptService:
 
         if user_status == "onboarding_greet":
             return self._build_onboarding_name_prompt()
-        elif user_status == "onboarding_name":
+        elif user_status == "onboarding_name" or user_status == "onboarding_greeted":
             return self._build_onboarding_name_prompt_repeat()
         elif user_status == "onboarding_confirm_name":
             return self._build_confirm_name_prompt(user)
