@@ -23,9 +23,13 @@ class ConversationManager:
 
         # --- Onboarding Greet Logic (Initial message for brand new users) ---
         if user.status == "onboarding_greet":
+            # Build prompt first
+            prompt = self.prompt_service.build_prompt(self.conversation_service.get_conversation(phone_number), user)
+            
+            # Update status only after prompt generation succeeds
             self.user_service.update_user_status(phone_number, "onboarding_greeted")
-            # The prompt service will provide the long introductory message for 'onboarding_greeted' status
-            return self.prompt_service.build_prompt(self.conversation_service.get_conversation(phone_number), user)
+            
+            return prompt
 
         # --- Onboarding Name Capture Logic (After greeting, or after invalid name) ---
         # This handles both the first attempt after greeting (onboarding_greeted)
