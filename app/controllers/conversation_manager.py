@@ -70,7 +70,7 @@ class ConversationManager:
             )
 
             response = user_message.strip().lower()
-            yes_responses = {"ndio", "ndiyo", "yes", "yeah", "yep"}
+            yes_responses = {"ndio", "ndiyo", "yes", "yeah", "yep", "nd"}
             no_responses = {"hapana", "no", "nope"}
 
             if response in yes_responses:
@@ -98,7 +98,7 @@ class ConversationManager:
             self.conversation_service.update_conversation(phone_number, {"role": "user", "content": user_message})
             
             response = user_message.strip().lower()
-            yes_responses = {"ndio", "ndiyo", "yes", "yeah", "yep"}
+            yes_responses = {"ndio", "ndiyo", "yes", "yeah", "yep", "nd"}
             no_responses = {"hapana", "no", "nope"}
             
             if response in yes_responses:
