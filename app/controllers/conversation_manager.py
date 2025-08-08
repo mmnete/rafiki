@@ -13,64 +13,73 @@ class ConversationManager:
         
     def handle_message(self, phone_number, user_message):
         user_message = user_message.strip()
+        
+        # 1. Get or create user and check for phone number validity.
         user, error_message = self.user_service.get_or_create_user(phone_number)
-
         if error_message:
             return error_message
 
-        status = user.status
-        conversation = self.conversation_service.get_conversation(phone_number)
+        # A robust way to manage state is to handle each status in a distinct block.
+        # This prevents logic from "falling through" to the wrong state.
 
-        # --- Onboarding Greet Logic ---
-        if status == "onboarding_greet":
-            prompt = self.prompt_service.build_prompt(conversation, user)
-            self.user_service.update_user_status(phone_number, "onboarding_greeted")
-            return prompt
+        # --- Onboarding Greet Logic (Initial message for brand new users) ---
+        if user.status == "onboarding_greet":
+            # Update user status to signal that the initial long greeting has been sent.
+            user = self.user_service.update_user_status(phone_number, "onboarding_greeted")
+            return self.prompt_service.build_prompt(self.conversation_service.get_conversation(phone_number), user)
 
-        # --- Name Capture ---
-        if status in ["onboarding_greeted", "onboarding_name"]:
+        # --- Onboarding Name Capture Logic ---
+        # This block handles both the initial attempt after the greeting and failed attempts.
+        elif user.status in ["onboarding_greeted", "onboarding_name"]:
             match = re.match(r"(\w+)\s+(\w+)(?:\s+(\w+))?", user_message, re.IGNORECASE)
+            
             if match:
                 first_name = match.group(1).capitalize()
-                last_name = (match.group(3) if match.group(3) else match.group(2)).capitalize()
+                last_name_raw = match.group(3) if match.group(3) else match.group(2)
+                last_name = last_name_raw.capitalize()
+                
                 self.user_service.update_user_details(phone_number, first_name=first_name, last_name=last_name)
                 self.conversation_service.update_conversation(phone_number, {"role": "user", "content": user_message})
-                prompt = self.prompt_service.build_prompt(conversation, user)
-                self.user_service.update_user_status(phone_number, "onboarding_confirm_name")
-                return prompt
+                
+                # Update status and get the new user object for the next prompt.
+                user = self.user_service.update_user_status(phone_number, "onboarding_confirm_name")
+                return self.prompt_service.build_prompt(self.conversation_service.get_conversation(phone_number), user)
             else:
-                self.user_service.update_user_status(phone_number, "onboarding_name")
-                return self.prompt_service.build_prompt(conversation, user)
+                # If the name format is incorrect, update status for the retry prompt.
+                user = self.user_service.update_user_status(phone_number, "onboarding_name")
+                return self.prompt_service.build_prompt(self.conversation_service.get_conversation(phone_number), user)
 
-        # --- Confirm Name ---
-        if status == "onboarding_confirm_name":
+        # --- Onboarding Name Confirmation Logic ---
+        elif user.status == "onboarding_confirm_name":
+            self.conversation_service.update_conversation(phone_number, {"role": "user", "content": user_message})
+            
             if user_message.lower() in ["ndio", "yes"]:
-                self.user_service.update_user_status(phone_number, "onboarding_location")
+                user = self.user_service.update_user_status(phone_number, "onboarding_location")
             elif user_message.lower() in ["hapana", "no"]:
-                self.user_service.update_user_status(phone_number, "onboarding_name")
+                user = self.user_service.update_user_status(phone_number, "onboarding_name")
             else:
                 return "Tafadhali jibu 'Ndio' au 'Hapana'."
-            self.conversation_service.update_conversation(phone_number, {"role": "user", "content": user_message})
-            return self.prompt_service.build_prompt(conversation, user)
 
-        # --- Capture Location ---
-        if status == "onboarding_location":
+            return self.prompt_service.build_prompt(self.conversation_service.get_conversation(phone_number), user)
+
+        # --- Onboarding Location Capture Logic ---
+        elif user.status == "onboarding_location":
             self.user_service.update_user_details(phone_number, location=user_message.title())
             self.conversation_service.update_conversation(phone_number, {"role": "user", "content": user_message})
-            prompt = self.prompt_service.build_prompt(conversation, user)
-            self.user_service.update_user_status(phone_number, "onboarding_confirm_location")
-            return prompt
+            
+            user = self.user_service.update_user_status(phone_number, "onboarding_confirm_location")
+            return self.prompt_service.build_prompt(self.conversation_service.get_conversation(phone_number), user)
 
-        # --- Confirm Location ---
-        if status == "onboarding_confirm_location":
+        # --- Onboarding Location Confirmation Logic ---
+        elif user.status == "onboarding_confirm_location":
+            self.conversation_service.update_conversation(phone_number, {"role": "user", "content": user_message})
+            
             if user_message.lower() in ["ndio", "yes"]:
-                self.user_service.update_user_status(phone_number, "active")
-                self.conversation_service.update_conversation(phone_number, {"role": "user", "content": user_message})
+                user = self.user_service.update_user_status(phone_number, "active")
                 return f"Asante {user.first_name}! Sasa unaweza kuanza kutafuta safari za ndege. Uko tayari kuanza? 😄"
             elif user_message.lower() in ["hapana", "no"]:
-                self.user_service.update_user_status(phone_number, "onboarding_location")
-                self.conversation_service.update_conversation(phone_number, {"role": "user", "content": user_message})
-                return self.prompt_service.build_prompt(conversation, user)
+                user = self.user_service.update_user_status(phone_number, "onboarding_location")
+                return self.prompt_service.build_prompt(self.conversation_service.get_conversation(phone_number), user)
             else:
                 return "Tafadhali jibu 'Ndio' au 'Hapana'."
         

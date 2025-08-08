@@ -5,9 +5,11 @@ class PromptService:
     def build_prompt(self, history: list, user: User) -> str:
         user_status = user.status
 
-        if user_status == "onboarding_greet":
+        if user_status == "onboarding_greeted":
+            # This is the initial long message, shown only once.
             return self._build_onboarding_name_prompt()
-        elif user_status == "onboarding_name" or user_status == "onboarding_greeted":
+        elif user_status == "onboarding_name":
+            # This is the short message for a failed name attempt.
             return self._build_onboarding_name_prompt_repeat()
         elif user_status == "onboarding_confirm_name":
             return self._build_confirm_name_prompt(user)
@@ -20,8 +22,8 @@ class PromptService:
         else:
             return "Samahani, kuna tatizo. Tafadhali jaribu tena baadaye."
 
-
     def _build_onboarding_name_prompt(self) -> str:
+        # This is the initial long message
         return (
             "Habari! Mimi ni Rafiki, msaidizi wako wa safari za ndege. ✈️🌍\n\n"
             "Rafiki yuko hapa kukusaidia kufanya kila kitu rahisi na haraka — "
@@ -37,19 +39,6 @@ class PromptService:
             "✅ **Peter Joshua Mwangi**\n"
             "❌ Morgan\n"
             "❌ Morgan Chris Jabari Juma\n\n"
-            "Hello! I’m Rafiki, your personal flight assistant. ✈️🌍\n\n"
-            "I’m here to make everything easy and fast — from finding flights, booking them, to making sure your trip fits you perfectly. 🛫✨\n"
-            "Chat with me and you can book a flight in 3 minutes or less! ⏱️🔥\n\n"
-            "My job is to take the heavy lifting off your hands so you can enjoy your journey worry-free. 😊💼\n\n"
-            "🛩️ Here’s what I support:\n"
-            "✅ Domestic flights within Tanzania 🇹🇿\n"
-            "✅ International flights to and from Tanzania 🌐✈️\n\n"
-            "To get started, please share your full name. It should be two or three words only.\n\n"
-            "Examples:\n"
-            "✅ **Morgan Mnete**\n"
-            "✅ **Peter Joshua Mwangi**\n"
-            "❌ Morgan\n"
-            "❌ Morgan Chris Jabari Juma\n"
         )
         
     def _build_onboarding_name_prompt_repeat(self) -> str:

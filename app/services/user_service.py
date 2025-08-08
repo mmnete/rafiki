@@ -62,6 +62,7 @@ But don’t worry! Our service is growing fast 🌱✨ and we’ll notify you as
         if user:
             user.status = new_status
             print(f"FakeUserService: User {phone_number} status updated to '{new_status}'.")
+        return user
 
     def update_user_details(self, phone_number: str, first_name: str = None, last_name: str = None, location: str = None):
         # This also needs to handle the tuple return
@@ -74,3 +75,4 @@ But don’t worry! Our service is growing fast 🌱✨ and we’ll notify you as
             if location:
                 user.location = location
             print(f"FakeUserService: User {phone_number} details updated.")
+        return user
