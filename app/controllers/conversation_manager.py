@@ -3,6 +3,11 @@ from app.services.prompt_service import PromptService
 from app.services.user_service import FakeUserService # Assuming this is the updated one
 import re
 from app.services.gemini_service import GeminiService
+from app.services.flight_scraper import AmadeusFlightScraper
+
+def search_flights_tool_wrapper(**kwargs):
+    scraper = AmadeusFlightScraper()
+    return scraper.search_flights(**kwargs)
 
 class ConversationManager:
     def __init__(self):
@@ -97,7 +102,8 @@ class ConversationManager:
             
             # 4. Call the Gemini service to get a response
             # gemini_model is not defined. You must use the instantiated self.gemini_service
-            gemini_response_text = self.gemini_service.ask_gemini(prompt)
+            tools_for_gemini = {"search_flights": search_flights_tool_wrapper}
+            gemini_response_text = self.gemini_service.ask_gemini(prompt, tools_for_gemini)
 
             # 5. Add Rafiki's reply to the conversation history
             # gemini_response is an object. You need to store the text content.
