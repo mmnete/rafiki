@@ -4,6 +4,7 @@ from app.services.user_service import FakeUserService # Assuming this is the upd
 import re
 from app.services.gemini_service import GeminiService
 from app.services.flight_scraper import AmadeusFlightScraper
+from app.storage.in_memory import InMemoryStorage
 
 def search_flights_tool_wrapper(**kwargs):
     scraper = AmadeusFlightScraper()
@@ -11,10 +12,11 @@ def search_flights_tool_wrapper(**kwargs):
 
 class ConversationManager:
     def __init__(self):
-        self.user_service = FakeUserService()
+        self.shared_storage = InMemoryStorage()
+        self.user_service = FakeUserService(storage=self.shared_storage)
         self.prompt_service = PromptService()
         self.gemini_service = GeminiService()
-        self.conversation_service = ConversationService()
+        self.conversation_service = ConversationService(storage=self.shared_storage)
         
     def handle_message(self, phone_number, user_message):
         user_message = user_message.strip()

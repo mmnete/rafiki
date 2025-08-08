@@ -1,11 +1,11 @@
+from app.storage.in_memory import InMemoryStorage # Import the new storage class
+
 class ConversationService:
-    def __init__(self):
-        self._store = {}
+    def __init__(self, storage: InMemoryStorage):
+        self._storage = storage
+    
+    def get_conversation(self, phone_number):
+        return self._storage.get_conversation(phone_number)
 
-    def get_conversation(self, user_id: str):
-        return self._store.get(user_id, [])
-
-    def update_conversation(self, user_id: str, message: dict):
-        if user_id not in self._store:
-            self._store[user_id] = []
-        self._store[user_id].append(message)
+    def update_conversation(self, phone_number, message):
+        return self._storage.update_conversation(phone_number, message)

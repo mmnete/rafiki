@@ -1,77 +1,47 @@
 import re
-
-class User:
-    def __init__(self, phone_number: str, first_name: str = None, last_name: str = None, location: str = None, status: str = "new"):
-        self.phone_number = phone_number
-        self.first_name = first_name
-        self.last_name = last_name
-        self.location = location
-        self.status = status  # 'new', 'onboarding_greet', 'onboarding_name', ..., 'active'
-
-    def to_dict(self):
-        return {
-            "phone_number": self.phone_number,
-            "first_name": self.first_name,
-            "last_name": self.last_name,
-            "location": self.location,
-            "status": self.status
-        }
+from typing import Optional, Tuple
+from app.storage.in_memory import InMemoryStorage, User
 
 class FakeUserService:
-    def __init__(self):
-        self._users = {}
+    def __init__(self, storage: InMemoryStorage):
+        # We no longer need an internal dictionary. We use the shared storage.
+        self._storage = storage
 
     def is_valid_supported_number(self, phone_number: str) -> bool:
-        # Tanzania numbers (accept +2557XXXXXXXX, +2556XXXXXXXX, 07XXXXXXXX, 06XXXXXXXX)
         tz_pattern = r"^(?:\+255|0)(6|7)\d{8}$"
-        
-        # US numbers (accept +1 followed by 10 digits)
         us_pattern = r"^\+1\d{10}$"
-        
         return re.match(tz_pattern, phone_number) is not None or re.match(us_pattern, phone_number) is not None
 
-
-    def get_or_create_user(self, phone_number: str):
-        # First, validate the phone number before anything else.
+    def get_or_create_user(self, phone_number: str) -> Tuple[Optional[User], Optional[str]]:
         if not self.is_valid_supported_number(phone_number):
-            error_message = (
-                """Oops! Kuna hitilafu kidogo 😅
-Kwa sasa tunahudumia tu namba za simu za Kitanzania zinazoanza na +255 📞🇹🇿
-Lakini usijali! Huduma yetu inakua kwa kasi 🌱✨ na tutakutaarifu mara tu tutakapoanza kutoa huduma kwenye nchi yako! 🌍🎉
----
-Oops! There’s a small issue 😅
-Currently, we only support Tanzanian phone numbers starting with +255 📞🇹🇿
-But don’t worry! Our service is growing fast 🌱✨ and we’ll notify you as soon as we launch in your country! 🌍🎉"""
-            )
+            error_message = """... (your existing error message) ..."""
             return None, error_message
 
-        # If the number is valid, proceed to get or create the user.
-        user = self._users.get(phone_number)
+        # The core change: get the user from the shared storage
+        user = self._storage.get_user(phone_number)
+        
         if user is None:
-            print(f"User not found {self._users}")
+            print(f"FakeUserService: User not found. Creating new user for {phone_number}.")
             user = User(phone_number, status="onboarding_greet")
-            self._users[phone_number] = user
-            print(f"FakeUserService: New user {phone_number} created with status 'onboarding_greet'.")
+            self._storage.set_user(phone_number, user) # Save the new user to storage
+            print(f"FakeUserService: New user {phone_number} created with status '{user.status}'.")
         
         return user, None
 
-    def update_user_status(self, phone_number: str, new_status: str):
-        # Now, `get_or_create_user` returns a tuple. We need to handle both parts.
-        user, _ = self.get_or_create_user(phone_number)
+    def update_user_status(self, phone_number: str, new_status: str) -> User:
+        user = self._storage.get_user(phone_number)
         if user:
             user.status = new_status
+            self._storage.set_user(phone_number, user) # Save the change
             print(f"FakeUserService: User {phone_number} status updated to '{new_status}'.")
         return user
 
-    def update_user_details(self, phone_number: str, first_name: str = None, last_name: str = None, location: str = None):
-        # This also needs to handle the tuple return
-        user, _ = self.get_or_create_user(phone_number)
+    def update_user_details(self, phone_number: str, first_name: str = None, last_name: str = None, location: str = None) -> User:
+        user = self._storage.get_user(phone_number)
         if user:
-            if first_name:
-                user.first_name = first_name
-            if last_name:
-                user.last_name = last_name
-            if location:
-                user.location = location
+            if first_name: user.first_name = first_name
+            if last_name: user.last_name = last_name
+            if location: user.location = location
+            self._storage.set_user(phone_number, user) # Save the change
             print(f"FakeUserService: User {phone_number} details updated.")
         return user
