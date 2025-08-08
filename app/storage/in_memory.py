@@ -49,6 +49,8 @@ class InMemoryStorage:
 
     def get_user(self, user_id: str) -> User:
         """Retrieves a user object from the store."""
+        print("DEBUG: Current state of the entire in-memory store:")
+        print(self._store)
         return cast(User, self._store["users"].get(user_id))
 
     def set_user(self, user_id: str, user_data: Any) -> None:
