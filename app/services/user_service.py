@@ -21,8 +21,6 @@ class FakeUserService:
     def __init__(self):
         self._users = {}
 
-    import re
-
     def is_valid_supported_number(self, phone_number: str) -> bool:
         # Tanzania numbers (accept +2557XXXXXXXX, +2556XXXXXXXX, 07XXXXXXXX, 06XXXXXXXX)
         tz_pattern = r"^(?:\+255|0)(6|7)\d{8}$"
@@ -50,6 +48,7 @@ But don’t worry! Our service is growing fast 🌱✨ and we’ll notify you as
         # If the number is valid, proceed to get or create the user.
         user = self._users.get(phone_number)
         if user is None:
+            print(f"User not found {self._users}")
             user = User(phone_number, status="onboarding_greet")
             self._users[phone_number] = user
             print(f"FakeUserService: New user {phone_number} created with status 'onboarding_greet'.")
