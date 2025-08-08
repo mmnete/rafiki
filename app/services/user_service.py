@@ -36,12 +36,13 @@ class FakeUserService:
             print(f"FakeUserService: User {phone_number} status updated to '{new_status}'.")
         return user
 
-    def update_user_details(self, phone_number: str, first_name: str = None, last_name: str = None, location: str = None) -> User:
+    def update_user_details(self, phone_number: str, first_name: str = None, middle_name : str = None, last_name: str = None, location: str = None) -> User:
         user = self._storage.get_user(phone_number)
         if user:
-            if first_name: user.first_name = first_name
-            if last_name: user.last_name = last_name
-            if location: user.location = location
-            self._storage.set_user(phone_number, user) # Save the change
+            user.first_name = first_name if first_name is not None else user.first_name
+            user.middle_name = middle_name if middle_name is not None else user.middle_name
+            user.last_name = last_name if last_name is not None else user.last_name
+            user.location = location if location is not None else user.location
+            self._storage.set_user(phone_number, user)
             print(f"FakeUserService: User {phone_number} details updated.")
         return user

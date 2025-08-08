@@ -3,10 +3,7 @@ from typing import Dict, Any, Optional, List
 import datetime
 from os import getenv
 
-class AmadeusFlightScraper:
-    # Use a single, unified source of truth for supported airports
-    # This makes the validation logic much cleaner and more reliable.
-    TANZANIAN_AIRPORTS = {
+TANZANIAN_AIRPORTS = {
         "DAR": "Dar es Salaam",
         "ZNZ": "Zanzibar",
         "JRO": "Kilimanjaro",
@@ -18,16 +15,21 @@ class AmadeusFlightScraper:
         "DOD": "Dodoma"
     }
 
-    # Supported destination codes (Tanzania + East Africa)
-    SUPPORTED_DESTINATIONS = {
-        **TANZANIAN_AIRPORTS,
-        "NBO": "Nairobi",
-        "EBB": "Entebbe",
-        "KGL": "Kigali",
-        "BJM": "Bujumbura",
-        "MGQ": "Mogadishu",
-        "JUB": "Juba"
-    }
+# Supported destination codes (Tanzania + East Africa)
+SUPPORTED_DESTINATIONS = {
+    **TANZANIAN_AIRPORTS,
+    "NBO": "Nairobi",
+    "EBB": "Entebbe",
+    "KGL": "Kigali",
+    "BJM": "Bujumbura",
+    "MGQ": "Mogadishu",
+    "JUB": "Juba"
+}
+    
+class AmadeusFlightScraper:
+    # Use a single, unified source of truth for supported airports
+    # This makes the validation logic much cleaner and more reliable.
+
 
     def __init__(self):
         self.client_id = getenv("AMADEUS_CLIENT_ID")
@@ -74,10 +76,10 @@ class AmadeusFlightScraper:
         destination = destination.upper()
 
         # Validate routes based on the scope: inside or from Tanzania.
-        if origin not in self.TANZANIAN_AIRPORTS:
+        if origin not in TANZANIAN_AIRPORTS:
             return {"error": f"Origin '{origin}' not supported. Must be a Tanzanian airport. Please try again."}
         
-        if destination not in self.SUPPORTED_DESTINATIONS:
+        if destination not in SUPPORTED_DESTINATIONS:
             return {"error": f"Destination '{destination}' not supported. Please choose a destination in Tanzania or East Africa."}
 
         # Validate dates

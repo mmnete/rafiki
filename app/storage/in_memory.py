@@ -2,9 +2,10 @@ from typing import Dict, Any, List, cast
 from .file_service import FileService
 
 class User:
-    def __init__(self, phone_number: str, first_name: str = None, last_name: str = None, location: str = None, status: str = "new"):
+    def __init__(self, phone_number: str, first_name: str = None, middle_name: str = None, last_name: str = None, location: str = None, status: str = "new"):
         self.phone_number = phone_number
         self.first_name = first_name
+        self.middle_name = middle_name
         self.last_name = last_name
         self.location = location
         self.status = status
@@ -13,10 +14,22 @@ class User:
         return {
             "phone_number": self.phone_number,
             "first_name": self.first_name,
+            "middle_name": self.middle_name,
             "last_name": self.last_name,
             "location": self.location,
             "status": self.status
         }
+        
+    @classmethod
+    def from_dict(cls, data: dict):
+        return cls(
+            phone_number=data.get("phone_number"),
+            first_name=data.get("first_name"),
+            middle_name=data.get("middle_name"),
+            last_name=data.get("last_name"),
+            location=data.get("location"),
+            status=data.get("status", "new")  # default to "new" if not present
+        )
         
     def __repr__(self):
         return f"User(phone_number={self.phone_number}, status={self.status})"
