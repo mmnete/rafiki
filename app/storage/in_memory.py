@@ -30,7 +30,7 @@ class InMemoryStorage:
     
     def __init__(self):
         print("DEBUG: InMemoryStorage initialized. Ready to store data. 🧠")
-        self._file_service = FileService()
+        self._file_service = FileService(file_path="data.json")
         self._store = self._load_data()
         
     def _load_data(self) -> Dict[str, Any]:
