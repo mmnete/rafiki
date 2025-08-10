@@ -321,10 +321,16 @@ class StorageService:
             with self.conn.cursor() as cur:
                 # Use TRUNCATE for faster deletion and to reset IDs
                 cur.execute("TRUNCATE TABLE users RESTART IDENTITY CASCADE;")
+            
+            # Commit the transaction to save the changes
+            self.conn.commit()
+            
             print("All users and their conversations deleted successfully.")
             return True
         except Exception as e:
             print(f"Error deleting all users: {e}")
+            # Rollback the transaction in case of an error
+            self.conn.rollback()
             return False
 
 
