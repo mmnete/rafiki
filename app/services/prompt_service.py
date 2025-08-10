@@ -125,7 +125,7 @@ class PromptService:
         
         user: {new_message}
         
-        There is a strict 1600 character limit in your final response!
+        There is a strict 1400 character limit in your final response!  WE WANT TO GIVE PEOPLE CLEAR AND HELPFUL MESSAGES BUT WE ALSO DONT WANT TO BOMBARD THEM WITH BLOCKS OF TEXT!
 
         """
         
