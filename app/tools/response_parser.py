@@ -4,7 +4,7 @@ import json
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass
 from enum import Enum
-from toolcall_config import get_tool_manager
+from .toolcall_config import get_tool_manager
 
 class ResponseType(Enum):
     TOOL_CALL = "tool_call"
