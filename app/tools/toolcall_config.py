@@ -136,7 +136,8 @@ def enhanced_search_flights_implementation(**kwargs):
         'flight_count': len(formatted_response.flights),
         'flights': [
             {
-                'airline': f.airline,
+                'airline_code': f.airline_code,
+                'airline_name': f.airline_name,
                 'price': f.price,
                 'currency': f.currency,
                 'departure_time': f.departure_time,

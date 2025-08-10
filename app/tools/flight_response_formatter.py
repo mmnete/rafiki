@@ -4,16 +4,35 @@ from dataclasses import dataclass
 from datetime import datetime
 import urllib.parse
 
+
 @dataclass
 class FlightInfo:
-    airline: str
+    # A single flight offer can have multiple legs, so we'll store all details
+    # This stores the IATA code (e.g., 'SA') and the full name (e.g., 'SOUTH AFRICAN AIRWAYS')
+    airline_code: str
+    airline_name: str
+    
+    # Aircraft information
+    aircraft: Optional[str]
     flight_number: Optional[str]
+    
+    # Times for the *entire* journey
     departure_time: str
     arrival_time: str
+    
+    # Pricing information
     price: float
     currency: str
+    
+    # Duration and stops for the *entire* journey
     duration: Optional[str]
+    
+    # Detailed baggage information
+    checked_bags: Optional[str]
+    cabin_bags: Optional[str]
+    
     stops: int = 0
+    # Booking information
     booking_class: str = "ECONOMY"
 
 @dataclass
@@ -91,34 +110,51 @@ class FlightResponseFormatter:
     
     def _parse_flight_data(self, flight_data: Dict[str, Any]) -> List[FlightInfo]:
         flights = []
-        flight_list = flight_data.get('flights', flight_data.get('data', []))
-        if not isinstance(flight_list, list):
-            flight_list = [flight_list] if flight_list else []
+        flight_list = flight_data.get('flights', [])
 
         for flight in flight_list:
             try:
-                # CORRECTED LINES: Access price_total and currency directly from 'flight'
+                # Correctly access the new and updated fields
                 price_total = float(flight.get('price_total', 0))
-                currency = flight.get('currency', 'TZS')
-
-                # For airline code, you can grab first segment carrierCode:
-                # Your provided flight data has 'airline' directly, use that for simplicity
-                airline_code = flight.get('airline', 'Unknown')
+                currency = flight.get('currency', 'USD')  # Default to USD
                 
-                # Extracting departure and arrival times directly from the 'flight' object
+                # Using the new keys for airline information
+                airline_code = flight.get('airline_code', 'Unknown')
+                airline_name = flight.get('airline_name', 'Unknown Airline')
+                aircraft_name = flight.get('aircraft_name', 'Unknown Aircraft')
+                
+                # Extracting departure and arrival times
                 departure_time_str = flight.get('departure_time', '')
                 arrival_time_str = flight.get('arrival_time', '')
                 duration_str = flight.get('duration', None)
 
+                # Get baggage information
+                checked_bags_info = flight.get('included_checked_bags', {})
+                cabin_bags_info = flight.get('included_cabin_bags', {})
+                
+                # Create a simplified string for baggage
+                checked_bags = ""
+                if 'quantity' in checked_bags_info:
+                    checked_bags += f"{checked_bags_info['quantity']} checked bag(s)"
+                if 'weight' in checked_bags_info:
+                    if checked_bags:
+                        checked_bags += " and "
+                    checked_bags += f"{checked_bags_info['weight']}{checked_bags_info.get('weightUnit', 'KG')}"
+
+                # Append the new FlightInfo object with more details
                 flights.append(FlightInfo(
-                    airline=airline_code,
-                    flight_number=None,  # You may want to extract from segments if needed
+                    airline_code=airline_code,
+                    airline_name=airline_name,
+                    aircraft=aircraft_name,
+                    flight_number=None,
                     departure_time=departure_time_str,
                     arrival_time=arrival_time_str,
                     price=price_total,
                     currency=currency,
                     duration=duration_str,
-                    stops=flight.get('number_of_segments', 1) - 1, # Number of segments is provided
+                    stops=flight.get('number_of_segments', 1) - 1,
+                    checked_bags=checked_bags,
+                    cabin_bags=f"{cabin_bags_info.get('quantity', 0)} cabin bag(s)" if 'quantity' in cabin_bags_info else "No cabin bags specified"
                 ))
             except Exception as e:
                 print(f"Error parsing flight data: {e}")
@@ -156,7 +192,7 @@ class FlightResponseFormatter:
                 output += f"🎯 **Pata Safari {len(flights)} za Ndege:**\n\n"
                 
                 for i, flight in enumerate(flights[:5], 1):  # Show top 5 flights
-                    output += f"**{i}. {flight.airline}**\n"
+                    output += f"**{i}. {flight.airline_name}**\n"
                     
                     if flight.flight_number:
                         output += f"   🔢 Namba ya Safari: {flight.flight_number}\n"

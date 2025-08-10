@@ -153,6 +153,8 @@ class AmadeusFlightScraper:
             response = requests.get(url, headers=self.headers, params=params)
             response.raise_for_status()
             
+            # print(response.json())
+            
             # The API response is too verbose, we'll extract and simplify it.
             return self._parse_api_response(response.json())
         except requests.exceptions.RequestException as e:
@@ -161,25 +163,70 @@ class AmadeusFlightScraper:
 
     def _parse_api_response(self, api_response: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Parses the raw Amadeus API response into a simplified, more manageable format.
+        Parses the raw Amadeus API response into a simplified, more manageable format,
+        including detailed information for each flight segment. This version creates a
+        flatter structure to be compatible with the existing _parse_flight_data method.
         """
         flights = []
+        
+        # Dictionaries for looking up full names from codes
+        airline_dict = api_response.get("dictionaries", {}).get("carriers", {})
+        aircraft_dict = api_response.get("dictionaries", {}).get("aircraft", {})
+
         for offer in api_response.get("data", []):
-            itinerary = offer["itineraries"][0]
-            first_segment = itinerary["segments"][0]
-            last_segment = itinerary["segments"][-1]
+            # We'll focus on the first itinerary for simplicity, as is common for a basic flight scraper
+            itinerary = offer.get("itineraries", [{}])[0]
+            segments = itinerary.get("segments", [])
+            
+            # Get details from the first and last segments for the overall trip
+            first_segment = segments[0]
+            last_segment = segments[-1]
+
+            # Get airline details from the first segment
+            airline_code = first_segment.get("carrierCode")
+            airline_name = airline_dict.get(airline_code, "Unknown Airline")
+
+            # Get aircraft details from the first segment
+            aircraft_code = first_segment.get("aircraft", {}).get("code")
+            aircraft_name = aircraft_dict.get(aircraft_code, "Unknown Aircraft")
+
+            # Get baggage details for the first segment
+            fare_details_by_segment = next((item for item in offer.get("travelerPricings", [])[0].get("fareDetailsBySegment", []) if item["segmentId"] == first_segment["id"]), {})
+            checked_bags = fare_details_by_segment.get("includedCheckedBags", {})
+            cabin_bags = fare_details_by_segment.get("includedCabinBags", {})
 
             flight_details = {
-                "price_total": float(offer["price"]["total"]),
+                "price_total": float(offer["price"]["grandTotal"]),
                 "currency": offer["price"]["currency"],
                 "origin": first_segment["departure"]["iataCode"],
                 "destination": last_segment["arrival"]["iataCode"],
                 "departure_time": first_segment["departure"]["at"],
                 "arrival_time": last_segment["arrival"]["at"],
-                "duration": itinerary["duration"],
-                "number_of_segments": len(itinerary["segments"]),
-                "airline": first_segment["carrierCode"]
+                "duration": itinerary.get("duration"),
+                "number_of_segments": len(segments),
+                "airline_code": airline_code,
+                "airline_name": airline_name,
+                "aircraft_name": aircraft_name,
+                "included_checked_bags": checked_bags,
+                "included_cabin_bags": cabin_bags,
+                "last_ticketing_date": offer.get("lastTicketingDate")
             }
+            
+            # Add a list of all segments for detailed view
+            flight_details["segments"] = [
+                {
+                    "airline_code": s.get("carrierCode"),
+                    "airline_name": airline_dict.get(s.get("carrierCode"), "Unknown Airline"),
+                    "flight_number": s.get("number"),
+                    "departure_iata": s["departure"]["iataCode"],
+                    "arrival_iata": s["arrival"]["iataCode"],
+                    "departure_time": s["departure"]["at"],
+                    "arrival_time": s["arrival"]["at"],
+                    "duration": s.get("duration"),
+                    "stops": s.get("numberOfStops", 0)
+                } for s in segments
+            ]
+            
             flights.append(flight_details)
 
-        return {"flights": flights, "meta": api_response.get("meta", {}), "dictionaries": api_response.get("dictionaries", {})}
+        return {"flights": flights}

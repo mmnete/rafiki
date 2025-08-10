@@ -6,6 +6,7 @@ from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass
 from enum import Enum
 from .toolcall_config import get_tool_manager
+import concurrent.futures
 
 class ResponseType(Enum):
     TOOL_CALL = "tool_call"
@@ -317,33 +318,78 @@ class ModelOrchestrator:
         return prompt + formatting_instructions
     
     def _execute_tool_calls(self, tool_calls: List[ToolCall]) -> List[Dict[str, Any]]:
-        """Execute tool calls using the tool manager"""
-        results = []
+        """
+        Execute tool calls concurrently using ThreadPoolExecutor.
+        Ensures non-additive latency and graceful failure handling for each tool.
+        """
+        results_collector: List[Dict[str, Any]] = [] # Collects final results
         
-        for tool_call in tool_calls:
-            try:
+        # This dictionary maps Future objects (representing a running task)
+        # back to their original ToolCall object. This is crucial for matching
+        # results/errors to the correct tool call once the futures complete.
+        future_to_tool_call: Dict[concurrent.futures.Future, ToolCall] = {}
+
+        # Use ThreadPoolExecutor to run tool calls in parallel threads.
+        # max_workers can be adjusted based on the number of concurrent I/O-bound
+        # operations you expect and your system's capabilities.
+        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+            for tool_call in tool_calls:
                 tool_function = self.tool_manager.get_tool_function(tool_call.name)
+                
                 if tool_function:
-                    result = tool_function(**tool_call.args)
-                    results.append({
-                        "tool_name": tool_call.name,
-                        "success": True,
-                        "result": result
-                    })
+                    try:
+                        # Submit the tool function directly to the executor.
+                        # The tool_function itself will be called in a new thread
+                        # with tool_call.args unpacked as keyword arguments.
+                        print(f"DEBUG: Submitting tool '{tool_call.name}' to executor.")
+                        future = executor.submit(tool_function, **tool_call.args)
+                        future_to_tool_call[future] = tool_call
+                    except Exception as e:
+                        # Catch errors that occur during the *submission* of the task
+                        # (e.g., if tool_call.args are malformed for the function signature)
+                        results_collector.append({
+                            "tool_name": tool_call.name,
+                            "success": False,
+                            "error": f"Error submitting tool '{tool_call.name}': {str(e)}"
+                        })
+                        print(f"ERROR: Failed to submit tool '{tool_call.name}': {e}")
                 else:
-                    results.append({
+                    # Handle cases where the tool name is not found by the ToolManager
+                    results_collector.append({
                         "tool_name": tool_call.name,
                         "success": False,
                         "error": f"Unknown tool: {tool_call.name}"
                     })
-            except Exception as e:
-                results.append({
-                    "tool_name": tool_call.name,
-                    "success": False,
-                    "error": str(e)
-                })
-        
-        return results
+                    print(f"ERROR: Unknown tool '{tool_call.name}'.")
+
+            # Iterate over the futures as they complete, not in submission order.
+            # This is key for non-additive latency: results are processed as soon as they're ready.
+            for future in concurrent.futures.as_completed(future_to_tool_call):
+                tool_call = future_to_tool_call[future] # Get the original tool_call for context
+                try:
+                    # Retrieve the result from the completed Future.
+                    # If the tool function itself raised an exception, .result() will
+                    # re-raise that exception here, which is caught by our outer try-except.
+                    tool_result = future.result()
+                    results_collector.append({
+                        "tool_name": tool_call.name,
+                        "success": True,
+                        "result": tool_result
+                    })
+                    print(f"DEBUG: Tool '{tool_call.name}' completed successfully in thread.")
+                except Exception as e:
+                    # Catch any exception that occurred during the *execution* of the tool.
+                    # This ensures that one failing tool does not stop the entire process.
+                    results_collector.append({
+                        "tool_name": tool_call.name,
+                        "success": False,
+                        "error": str(e) # Store the error message
+                    })
+                    print(f"ERROR: Tool '{tool_call.name}' failed during execution with error: {e}")
+                    import traceback
+                    traceback.print_exc() # Print full traceback for failed tool for debugging
+
+        return results_collector
     
     def _format_tool_results_for_model(self, tool_results: List[Dict[str, Any]]) -> str:
         """Format tool results to send back to the model with emphasis on using formatted_response"""
