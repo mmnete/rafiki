@@ -124,6 +124,8 @@ class PromptService:
         {tool_examples}
         
         user: {new_message}
+        
+        There is a strict 1600 character limit in your final response!
 
         """
         
