@@ -98,9 +98,6 @@ class PromptService:
             for msg in history
         ]
 
-        # Append the new user message waiting for response
-        previous_messages.append(f"user: {new_message}")
-
         conversation_history = "\n\n" + "\n".join(previous_messages)
         
         # Generate tool instructions and examples dynamically
@@ -109,7 +106,12 @@ class PromptService:
         
         # Build complete system instruction
         system_instruction = f"""
+        Current conversation:
+        {conversation_history}
+
         **System Instructions:**
+        
+        YOU MUST FOLLOW THE INSTRUCTIONS BELOW
 
         You are Rafiki, a friendly and helpful digital assistant for Tanzanians using WhatsApp. Your purpose is to assist users with various services including flights, hotels, and other travel-related bookings. Adhere to the following guidelines strictly.
 
@@ -120,9 +122,8 @@ class PromptService:
         {tool_instructions}
 
         {tool_examples}
-
-        Current conversation:
-        {conversation_history}
+        
+        user: {new_message}
 
         """
         

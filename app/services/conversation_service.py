@@ -8,5 +8,6 @@ class ConversationService:
         user = self._storage.get_or_create_user(phone_number)
         return self._storage.load_user_conversation_history(user.id, limit)
 
-    def update_conversation(self, phone_number, message):
-        return self._storage.update_conversation(phone_number, message)
+    def update_conversation(self, phone_number, request_text, response_text):
+        user = self._storage.get_or_create_user(phone_number)
+        return self._storage.save_conversation_entry(user.id, request_text, response_text)

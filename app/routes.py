@@ -25,7 +25,7 @@ def message():
     return str(response)
 
 @main.route("/delete_all_users", methods=["POST"])
-def message():
+def delete_all_users():
     conv_manager.delete_all_users()
     return str("done")
 

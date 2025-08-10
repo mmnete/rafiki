@@ -3,19 +3,55 @@ from typing import Dict, Any, Optional, List
 import datetime
 from os import getenv
 
+# All supported Tanzanian airports
+# All supported Tanzanian airports
 TANZANIAN_AIRPORTS = {
-        "DAR": "Dar es Salaam",
-        "ZNZ": "Zanzibar",
-        "JRO": "Kilimanjaro",
-        "MWZ": "Mwanza",
-        "ARK": "Arusha",
-        "TGT": "Tanga",
-        "MBA": "Mbeya",
-        "MTW": "Mtwara",
-        "DOD": "Dodoma"
-    }
+    "DAR": "Dar es Salaam",
+    "ZNZ": "Zanzibar",
+    "JRO": "Kilimanjaro",
+    "MWZ": "Mwanza",
+    "ARK": "Arusha",
+    "TGT": "Tanga",
+    "MBA": "Mbeya",
+    "MTW": "Mtwara",
+    "DOD": "Dodoma",
+    "TBO": "Tabora",
+    "BKZ": "Bukoba",
+    "IRI": "Iringa",
+    "TKQ": "Kigoma",
+    "LKY": "Lake Manyara",
+    "MFA": "Mafia Island",
+    "PMA": "Pemba",
+    "SGX": "Songea",
+    "MUZ": "Musoma"
+}
 
-# Supported destination codes (Tanzania + East Africa)
+# All supported Middle Eastern airports
+MIDDLE_EAST_AIRPORTS = {
+    "DXB": "Dubai",
+    "DOH": "Doha",
+    "IST": "Istanbul",
+    "MCT": "Muscat",
+    "ADD": "Addis Ababa",  # Often serves as a Middle East connection hub
+    "CAI": "Cairo"
+}
+
+# All supported Asian airports
+ASIAN_AIRPORTS = {
+    "BOM": "Mumbai",
+    "CAN": "Guangzhou",
+    "BKK": "Bangkok",
+    "SIN": "Singapore",
+    "KUL": "Kuala Lumpur"
+}
+
+# All supported South African airports
+SOUTH_AFRICAN_AIRPORTS = {
+    "JNB": "Johannesburg",
+    "CPT": "Cape Town"
+}
+
+# Supported destination codes (Tanzania + East Africa + Middle East + Asia + South Africa)
 SUPPORTED_DESTINATIONS = {
     **TANZANIAN_AIRPORTS,
     "NBO": "Nairobi",
@@ -23,7 +59,10 @@ SUPPORTED_DESTINATIONS = {
     "KGL": "Kigali",
     "BJM": "Bujumbura",
     "MGQ": "Mogadishu",
-    "JUB": "Juba"
+    "JUB": "Juba",
+    **MIDDLE_EAST_AIRPORTS,
+    **ASIAN_AIRPORTS,
+    **SOUTH_AFRICAN_AIRPORTS
 }
     
 class AmadeusFlightScraper:

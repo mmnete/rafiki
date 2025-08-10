@@ -1,3 +1,4 @@
+# Updated response_parser.py with formatting support
 import re
 import ast
 import json
@@ -28,10 +29,10 @@ class ParsedResponse:
 
 class ResponseParser:
     """
-    Scalable parser for AI model responses that can handle:
+    Enhanced parser for AI model responses that handles:
     - Thinking blocks
     - Tool calls
-    - Final responses
+    - Final responses with formatting
     - Error handling
     """
     
@@ -184,6 +185,11 @@ class ResponseParser:
         # If no response block, return cleaned text
         # Remove any remaining tool call patterns
         cleaned = self.patterns['tool_call'].sub("", text).strip()
+        
+        prefix = "Rafiki:"
+        if cleaned.lower().startswith(prefix.lower()):
+            cleaned = cleaned[len(prefix):].lstrip()
+        
         return cleaned
     
     def add_pattern(self, name: str, pattern: str, flags: int = 0):
@@ -243,8 +249,8 @@ class ToolExecutor:
 
 class ModelOrchestrator:
     """
-    Orchestrates the entire flow: model calls -> parsing -> tool execution -> response
-    Completely self-contained - only needs model_service
+    Enhanced orchestrator with formatting support
+    Orchestrates the entire flow: model calls -> parsing -> tool execution -> formatted response
     """
     
     def __init__(self, model_service):
@@ -255,12 +261,15 @@ class ModelOrchestrator:
     
     def process_request(self, prompt: str) -> Tuple[str, List[str]]:
         """
-        Process a request through the complete pipeline
+        Process a request through the complete pipeline with formatting support
         
         Returns:
             Tuple[final_response, conversation_history]
         """
-        current_prompt = prompt
+        # Add formatting instructions to the prompt
+        enhanced_prompt = self._enhance_prompt_with_formatting_instructions(prompt)
+        
+        current_prompt = enhanced_prompt
         conversation_history = []
         
         for iteration in range(self.max_iterations):
@@ -277,13 +286,12 @@ class ModelOrchestrator:
                     # Execute tool calls using tool manager
                     tool_results = self._execute_tool_calls(parsed.tool_calls)
                     
-                    # Add tool results to prompt for next iteration
-                    for result in tool_results:
-                        result_str = json.dumps(result["result"]) if result["success"] else result["error"]
-                        current_prompt += f"\nrafiki: tool_output\n{result_str}\n\nrafiki: "
+                    # Format tool results for next iteration
+                    formatted_tool_output = self._format_tool_results_for_model(tool_results)
+                    current_prompt += f"\n\n{formatted_tool_output}\n\nrafiki: "
                     
                 elif parsed.response_type == ResponseType.FINAL_RESPONSE:
-                    # Return final response
+                    # Return final response (should already be formatted)
                     return parsed.content, conversation_history
                     
             except Exception as e:
@@ -293,6 +301,20 @@ class ModelOrchestrator:
         
         # If we reach here, we've exhausted iterations
         return "Samahani, Rafiki ameshindwa kukamilisha ombi lako baada ya majaribio mengi.", conversation_history
+    
+    def _enhance_prompt_with_formatting_instructions(self, prompt: str) -> str:
+        """Add formatting instructions to the prompt"""
+        formatting_instructions = """
+        
+        **CRITICAL FORMATTING REQUIREMENTS:**
+        - When you receive tool results, ALWAYS use the 'formatted_response' field in your final answer
+        - The formatted_response contains properly structured flight information with emojis and Swahili text
+        - ALWAYS include the corroboration links from search_links so users can verify and book flights
+        - If no formatted_response is provided, format the flight data according to the standard format shown in examples
+        - Present information in a user-friendly manner with clear pricing, airline names, times, and booking links
+        """
+        
+        return prompt + formatting_instructions
     
     def _execute_tool_calls(self, tool_calls: List[ToolCall]) -> List[Dict[str, Any]]:
         """Execute tool calls using the tool manager"""
@@ -322,6 +344,31 @@ class ModelOrchestrator:
                 })
         
         return results
+    
+    def _format_tool_results_for_model(self, tool_results: List[Dict[str, Any]]) -> str:
+        """Format tool results to send back to the model with emphasis on using formatted_response"""
+        formatted_output = "Tool Results:\n"
+        
+        for result in tool_results:
+            if result["success"]:
+                tool_data = result["result"]
+                formatted_output += f"\n{result['tool_name']} output:\n"
+                
+                # Prioritize formatted_response if available
+                if isinstance(tool_data, dict) and 'formatted_response' in tool_data:
+                    formatted_output += f"FORMATTED_RESPONSE (USE THIS): {tool_data['formatted_response']}\n"
+                    if 'search_links' in tool_data:
+                        formatted_output += f"SEARCH_LINKS (INCLUDE THESE): {tool_data['search_links']}\n"
+                    if 'flight_count' in tool_data:
+                        formatted_output += f"Flight count: {tool_data['flight_count']}\n"
+                else:
+                    formatted_output += f"{json.dumps(tool_data)}\n"
+            else:
+                formatted_output += f"\n{result['tool_name']} error: {result['error']}\n"
+        
+        formatted_output += "\nIMPORTANT: Use the FORMATTED_RESPONSE exactly as provided and include all SEARCH_LINKS in your response to the user.\n"
+        
+        return formatted_output
     
     def add_parser_pattern(self, name: str, pattern: str, flags: int = 0):
         """Add a new parsing pattern"""

@@ -4,7 +4,7 @@ from psycopg2 import sql
 from psycopg2.extras import DictCursor
 
 class User:
-    def __init__(self, id: str, phone_number: str, first_name: str = None, middle_name: str = None, last_name: str = None, location: str = None, status: str = "new"):
+    def __init__(self, id: str, phone_number: str, first_name: str = None, middle_name: str = None, last_name: str = None, location: str = None, status: str = "onboarding_greet"):
         self.id = id
         self.phone_number = phone_number
         self.first_name = first_name
@@ -33,7 +33,7 @@ class User:
             middle_name=data.get("middle_name"),
             last_name=data.get("last_name"),
             location=data.get("location"),
-            status=data.get("status", "new")  # default to "new" if not present
+            status=data.get("status", "onboarding_greet")  # default to "new" if not present
         )
         
     def __repr__(self):
@@ -139,7 +139,7 @@ class StorageService:
         """
         if not self.conn:
             print("No database connection to get or create user.")
-            return None, {}
+            return None, None
 
         try:
             with self.conn.cursor(cursor_factory=DictCursor) as cur:
@@ -163,7 +163,7 @@ class StorageService:
                         return User.from_dict(dict(new_user_data))
         except Exception as e:
             print(f"Error getting or creating user {phone_number}: {e}")
-            return None, {}
+            return None, None
 
     def load_user_conversation_history(self, user_id, limit=None):
         """
