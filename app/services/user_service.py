@@ -1,9 +1,9 @@
 import re
 from typing import Optional, Tuple
-from app.storage.in_memory import InMemoryStorage, User
+from app.storage.db_service import StorageService, User
 
 class FakeUserService:
-    def __init__(self, storage: InMemoryStorage):
+    def __init__(self, storage: StorageService):
         # We no longer need an internal dictionary. We use the shared storage.
         self._storage = storage
 
@@ -14,35 +14,27 @@ class FakeUserService:
 
     def get_or_create_user(self, phone_number: str) -> Tuple[Optional[User], Optional[str]]:
         if not self.is_valid_supported_number(phone_number):
-            error_message = """... (your existing error message) ..."""
+            error_message = f"""Sorry :( We do not support your phone number ({phone_number}) for now. Please stay in the loop for our services expansions rolling out soon!"""
             return None, error_message
 
         # The core change: get the user from the shared storage
-        user = self._storage.get_user(phone_number)
+        user = self._storage.get_or_create_user(phone_number)
         
-        if user is None:
-            print(f"FakeUserService: User not found. Creating new user for {phone_number}.")
-            user = User(phone_number, status="onboarding_greet")
-            self._storage.set_user(phone_number, user) # Save the new user to storage
-            print(f"FakeUserService: New user {phone_number} created with status '{user.status}'.")
+        if user == None:
+            return None, "No user returned. Likely a database error!"
         
         return user, None
 
     def update_user_status(self, phone_number: str, new_status: str) -> User:
-        user = self._storage.get_user(phone_number)
-        if user:
-            user.status = new_status
-            self._storage.set_user(phone_number, user) # Save the change
-            print(f"FakeUserService: User {phone_number} status updated to '{new_status}'.")
-        return user
+        user = self._storage.get_or_create_user(phone_number)
+        self._storage.update_user_profile(user.id, status=new_status)
+        return self._storage.get_or_create_user(phone_number)
 
     def update_user_details(self, phone_number: str, first_name: str = None, middle_name : str = None, last_name: str = None, location: str = None) -> User:
-        user = self._storage.get_user(phone_number)
-        if user:
-            user.first_name = first_name if first_name is not None else user.first_name
-            user.middle_name = middle_name if middle_name is not None else user.middle_name
-            user.last_name = last_name if last_name is not None else user.last_name
-            user.location = location if location is not None else user.location
-            self._storage.set_user(phone_number, user)
-            print(f"FakeUserService: User {phone_number} details updated.")
-        return user
+        user = self._storage.get_or_create_user(phone_number)
+        self._storage.update_user_profile(user.id, first_name=first_name, middle_name=middle_name, last_name=last_name, location=location)
+        return self._storage.get_or_create_user(phone_number)
+    
+    def delete_all_users(self):
+        return self._storage.delete_all_users()
+

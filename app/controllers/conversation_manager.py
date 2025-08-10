@@ -2,40 +2,41 @@ from app.services.conversation_service import ConversationService
 from app.services.prompt_service import PromptService
 from app.services.user_service import FakeUserService # Assuming this is the updated one
 import re
-from app.services.gemini_service import GeminiService
-from app.services.flight_scraper import AmadeusFlightScraper
-from app.storage.in_memory import InMemoryStorage
+from app.services.gemini_service import EnhancedGeminiService
+from app.storage.db_service import StorageService
+from app.tools.location_standardizer import LocationOnboardingHandler
 
-def search_flights_tool_wrapper(**kwargs):
-    scraper = AmadeusFlightScraper()
-    return scraper.search_flights(**kwargs)
 
 class ConversationManager:
+    YES_RESPONSES = {"ndio", "ndiyo", "yes", "yeah", "yep", "nd",
+                     "yess", "yea", "yaa", "yup", "yee", "ydi", "ndi", "ndy"}
+
+    NO_RESPONSES = {"hapana", "no", "nope",
+                    "nop", "na", "nap", "np", "hapan", "hapn"}
+            
     def __init__(self):
-        self.shared_storage = InMemoryStorage()
+        self.location_handler = LocationOnboardingHandler()
+        self.shared_storage = StorageService()
         self.user_service = FakeUserService(storage=self.shared_storage)
         self.prompt_service = PromptService()
-        self.gemini_service = GeminiService()
+        self.gemini_service = EnhancedGeminiService()
         self.conversation_service = ConversationService(storage=self.shared_storage)
+    
+    def delete_all_users(self):
+        self.user_service.delete_all_users()
         
     def handle_message(self, phone_number, user_message):
         user_message = user_message.strip()
+        model_response = ""
         
         # 1. Get or create user and check for phone number validity.
         user, error_message = self.user_service.get_or_create_user(phone_number)
-        if error_message:
-            return error_message
-
-        # A robust way to manage state is to handle each status in a distinct block.
-        # This prevents logic from "falling through" to the wrong state.
-
-        # --- Onboarding Greet Logic (Initial message for brand new users) ---
-        if user.status == "onboarding_greet":
+        if error_message or user == None:
+            model_response = error_message
+        elif user.status == "onboarding_greet":
             # Update user status to signal that the initial long greeting has been sent.
             user = self.user_service.update_user_status(phone_number, "onboarding_greeted")
-            return self.prompt_service.build_prompt(self.conversation_service.get_conversation(phone_number), user)
-
-        # --- Onboarding Name Capture Logic ---
+            model_response = self.prompt_service.build_prompt(self.conversation_service.get_conversation(phone_number), user)
         elif user.status in ["onboarding_greeted", "onboarding_name"]:
             name_parts = user_message.strip().split()
 
@@ -50,90 +51,71 @@ class ConversationManager:
                     middle_name=middle_name,
                     last_name=last_name
                 )
-                self.conversation_service.update_conversation(
-                    phone_number, {"role": "user", "content": user_message}
-                )
                 user = self.user_service.update_user_status(phone_number, "onboarding_confirm_name")
-                return self.prompt_service.build_prompt(
+                model_response = self.prompt_service.build_prompt(
                     self.conversation_service.get_conversation(phone_number), user
                 )
             else:
                 user = self.user_service.update_user_status(phone_number, "onboarding_name")
-                return self.prompt_service.build_prompt(
+                model_response = self.prompt_service.build_prompt(
                     self.conversation_service.get_conversation(phone_number), user
                 )
-
-        # --- Onboarding Name Confirmation Logic ---
         elif user.status == "onboarding_confirm_name":
-            self.conversation_service.update_conversation(
-                phone_number, {"role": "user", "content": user_message}
-            )
-
             response = user_message.strip().lower()
-            yes_responses = {"ndio", "ndiyo", "yes", "yeah", "yep", "nd"}
-            no_responses = {"hapana", "no", "nope"}
 
-            if response in yes_responses:
+            if response in self.YES_RESPONSES:
                 user = self.user_service.update_user_status(phone_number, "onboarding_location")
-            elif response in no_responses:
+                model_response = self.prompt_service.build_prompt(
+                    self.conversation_service.get_conversation(phone_number), user
+                )
+            elif response in self.NO_RESPONSES:
                 user = self.user_service.update_user_status(phone_number, "onboarding_name")
+                model_response = self.prompt_service.build_prompt(
+                    self.conversation_service.get_conversation(phone_number), user
+                )
             else:
-                return "Tafadhali jibu kwa 'Ndio' au 'Hapana'."
-
-            return self.prompt_service.build_prompt(
-                self.conversation_service.get_conversation(phone_number), user
-            )
-
-
-        # --- Onboarding Location Capture Logic ---
-        elif user.status == "onboarding_location" or user.status == "repeat_onboarding_location":
-            self.user_service.update_user_details(phone_number, location=user_message.strip().lower())
-            self.conversation_service.update_conversation(phone_number, {"role": "user", "content": user_message.strip().lower()})
+                model_response = "Tafadhali jibu kwa 'Ndio' au 'Hapana'."
+        elif user.status == "onboarding_location":
+            response, new_status = self.location_handler.handle_location_input(user_message)
+            user = self.user_service.update_user_status(phone_number, new_status)
+            model_response = response
             
-            user = self.user_service.update_user_status(phone_number, "onboarding_confirm_location")
-            return self.prompt_service.build_prompt(self.conversation_service.get_conversation(phone_number), user)
-
-        # --- Onboarding Location Confirmation Logic ---
+        elif user.status == "repeat_onboarding_location":
+            response, new_status = self.location_handler.handle_location_input(user_message)
+            user = self.user_service.update_user_status(phone_number, new_status)
+            model_response = response
+            
         elif user.status == "onboarding_confirm_location":
-            self.conversation_service.update_conversation(phone_number, {"role": "user", "content": user_message})
-            
             response = user_message.strip().lower()
-            yes_responses = {"ndio", "ndiyo", "yes", "yeah", "yep", "nd"}
-            no_responses = {"hapana", "no", "nope"}
             
-            if response in yes_responses:
+            if response in self.YES_RESPONSES:
                 user = self.user_service.update_user_status(phone_number, "active")
-                return f"Asante {user.first_name}! Sasa unaweza kuanza kutafuta safari za ndege. Uko tayari kuanza? 😄 Uliza chochote kile?"
-            elif response in no_responses:
+                
+                # Get the standardized location for personalized message
+                user_location = user.location if user.location else "Tanzania"
+                model_response = f"Asante {user.first_name}! Umesajiliwa kutoka *{user_location}*. 🎉\n\nSasa unaweza kuanza kutafuta safari za ndege. Uko tayari kuanza? ✈️\n\nUliza chochote kile unachohitaji!"
+                
+            elif response in self.NO_RESPONSES:
+                # Reset to ask for location again
                 user = self.user_service.update_user_status(phone_number, "repeat_onboarding_location")
-                return self.prompt_service.build_prompt(self.conversation_service.get_conversation(phone_number), user)
+                model_response = "Sawa, tafadhali niambie tena ni mji gani wa Tanzania unapoishi?\n\nKwa mfano: *Dar es Salaam*, *Arusha*, *Mwanza*, *Zanzibar*, n.k."
+                
             else:
-                return "Tafadhali jibu 'Ndio' au 'Hapana'."
-        
-        # --- Active User Logic ---
-        if user.status == "active":
+                model_response = "Tafadhali jibu 'Ndio' ikiwa jina la mji ni sahihi, au 'Hapana' ikiwa sio sahihi. 😊"
+        elif user.status == "active":
             # 1. Get the conversation history for the user
             history = self.conversation_service.get_conversation(phone_number)
-            
-            # 2. Add the user's new message to the history
-            history.append({"role": "user", "content": user_message})
-            self.conversation_service.update_conversation(phone_number, {"role": "user", "content": user_message})
 
             # 3. Build the prompt using the full conversation history and user info
-            prompt = self.prompt_service.build_prompt(history, user)
+            prompt = self.prompt_service.build_prompt(history, user, user_message)
             
-            # 4. Call the Gemini service to get a response
-            # gemini_model is not defined. You must use the instantiated self.gemini_service
-            tools_for_gemini = {"search_flights": search_flights_tool_wrapper}
-            final_reply, gemini_all_messages = self.gemini_service.ask_gemini(prompt, tools_for_gemini)
-
-            # Save all model interactions (tool steps, etc.)
-            for message in gemini_all_messages:
-                self.conversation_service.update_conversation(phone_number, {"role": "rafiki", "content": message})
+            final_reply,_ = self.gemini_service.ask_gemini(prompt)
             
             # 6. Return the final text response to the user
             # The placeholder return was bypassing the Gemini call
-            return final_reply
+            model_response = final_reply
+        else:
+            model_response = "Samahani, kuna tatizo. Tafadhali jaribu tena baadaye."
         
-        # Fallback for any other status, though this should not be reached
-        return "Samahani, kuna tatizo. Tafadhali jaribu tena baadaye."
+        self.conversation_service.update_conversation(phone_number, user_message, model_response)
+        return model_response
