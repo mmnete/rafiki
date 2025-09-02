@@ -29,3 +29,50 @@ sudo service redis-server start
 
 
 Then Redis runs just like on Linux.
+
+
+
+PS C:\Users\Public\Desktop\personal_projects_1\rafiki> wsl --install -d Ubuntu
+Downloading: Ubuntu
+Installing: Ubuntu
+A distribution with the supplied name already exists. Use --name to chose a different name.
+Error code: Wsl/InstallDistro/Service/RegisterDistro/ERROR_ALREADY_EXISTS
+PS C:\Users\Public\Desktop\personal_projects_1\rafiki> wsl -d Ubuntu
+Welcome to Ubuntu 24.04.3 LTS (GNU/Linux 5.15.167.4-microsoft-standard-WSL2 x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Sun Aug 31 13:49:36 PDT 2025
+
+  System load:  0.4                 Processes:             55
+  Usage of /:   0.2% of 1006.85GB   Users logged in:       0
+  Memory usage: 5%                  IPv4 address for eth0: 172.22.117.54
+  Swap usage:   0%
+
+ * Strictly confined Kubernetes makes edge and IoT secure. Learn how MicroK8s
+   just raised the bar for easy, resilient and secure K8s cluster deployment.
+
+   https://ubuntu.com/engage/secure-kubernetes-at-the-edge
+
+This message is shown once a day. To disable it please create the
+/home/mnete/.hushlogin file.
+mnete@mmnete-pc:/mnt/c/Users/Public/Desktop/personal_projects_1/rafiki$ sudo service redis-server start
+[sudo] password for mnete:
+mnete@mmnete-pc:/mnt/c/Users/Public/Desktop/personal_projects_1/rafiki$ sudo service redis-server status
+● redis-server.service - Advanced key-value store
+     Loaded: loaded (/usr/lib/systemd/system/redis-server.service; enabled; preset: enabled)
+     Active: active (running) since Sun 2025-08-31 13:49:36 PDT; 42s ago
+       Docs: http://redis.io/documentation,
+             man:redis-server(1)
+   Main PID: 141 (redis-server)
+     Status: "Ready to accept connections"
+      Tasks: 5 (limit: 9350)
+     Memory: 11.2M ()
+     CGroup: /system.slice/redis-server.service
+             └─141 "/usr/bin/redis-server 127.0.0.1:6379"
+
+Aug 31 13:49:35 mmnete-pc systemd[1]: Starting redis-server.service - Advanced key-value store...
+Aug 31 13:49:36 mmnete-pc systemd[1]: Started redis-server.service - Advanced key-value store.
+mnete@mmnete-pc:/mnt/c/Users/Public/Desktop/personal_projects_1/rafiki$

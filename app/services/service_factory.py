@@ -59,7 +59,7 @@ class ServiceFactory:
             raise ValueError("PAYMENT_API_KEY environment variable is not set")
         
         # Model services (clean architecture)
-        model_service = ModelService(use_openai=False)  # Configure as needed
+        model_service = ModelService(use_openai=True)  # Configure as needed
         response_parser = ResponseParser()
         tool_executor = ToolExecutorService(max_workers=5)
         conversation_orchestrator = ConversationOrchestrator(

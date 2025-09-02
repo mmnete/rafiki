@@ -28,10 +28,12 @@ FLASK_APP_URL = "http://localhost:5000"
 GEMINI_API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={GEMINI_API_KEY}"
 REPORT_FILE = "evaluation_report.html"
 
-# Rate limiting configuration
-GEMINI_RATE_LIMIT = 15  # requests per minute
+# Ultra-conservative rate limiting for Gemini free tier
+GEMINI_RATE_LIMIT = 2  # Only 2 requests per minute (extremely conservative)
 GEMINI_LAST_REQUEST = 0
-GEMINI_REQUEST_INTERVAL = 60 / GEMINI_RATE_LIMIT  # seconds between requests
+GEMINI_REQUEST_INTERVAL = 60 / GEMINI_RATE_LIMIT  # 30 seconds between requests
+MAX_RETRIES = 8  # Even more retries
+BASE_DELAY = 5.0  # Longer base delay
 
 def run_command(command, cwd=None, suppress_output=False):
     """Runs a shell command and optionally prints its output."""
@@ -52,7 +54,6 @@ def run_command(command, cwd=None, suppress_output=False):
         for line in process.stdout: # type: ignore
             print(line, end='')
     else:
-        # Just consume the output without printing
         process.communicate()
 
     if process.returncode != 0:
@@ -66,7 +67,6 @@ def start_services():
 
 def stop_services():
     """Stops Docker services quietly."""
-    # run_command(["docker-compose", "down", "-v"], suppress_output=True)
     pass
 
 def cleanup_database(phone_number=None):
@@ -84,27 +84,29 @@ def cleanup_database(phone_number=None):
         print(f"❌ Cleanup failed: {e}")
         return False
 
-def call_gemini_with_retry(prompt, max_retries=3, base_delay=1.0):
+def call_gemini_with_retry(prompt, max_retries=MAX_RETRIES, base_delay=BASE_DELAY):
     """
-    Calls the Gemini API with retry logic and rate limiting.
-    
-    Args:
-        prompt: The prompt to send
-        max_retries: Maximum number of retry attempts
-        base_delay: Base delay for exponential backoff (seconds)
+    Ultra-conservative Gemini API calls with extensive retry logic.
     """
     global GEMINI_LAST_REQUEST
     
     for attempt in range(max_retries + 1):
         try:
-            # Rate limiting: ensure we don't exceed the rate limit
+            # Ultra-conservative rate limiting: 30+ seconds between requests
             current_time = time.time()
             time_since_last_request = current_time - GEMINI_LAST_REQUEST
             
-            if time_since_last_request < GEMINI_REQUEST_INTERVAL:
-                sleep_time = GEMINI_REQUEST_INTERVAL - time_since_last_request
-                print(f"⏱️  Rate limiting: waiting {sleep_time:.1f}s...")
+            # Always wait the full interval, plus extra buffer
+            min_wait_time = GEMINI_REQUEST_INTERVAL + 5  # Extra 5 second buffer
+            if time_since_last_request < min_wait_time:
+                sleep_time = min_wait_time - time_since_last_request
+                print(f"⏱️  Ultra-conservative rate limiting: waiting {sleep_time:.1f}s...")
                 time.sleep(sleep_time)
+            
+            # Add random jitter to avoid synchronized requests
+            jitter = random.uniform(2, 5)
+            print(f"⏱️  Adding {jitter:.1f}s jitter...")
+            time.sleep(jitter)
             
             GEMINI_LAST_REQUEST = time.time()
             
@@ -113,55 +115,123 @@ def call_gemini_with_retry(prompt, max_retries=3, base_delay=1.0):
                 "contents": [{"parts": [{"text": prompt}]}],
                 "generationConfig": {
                     "response_mime_type": "application/json",
+                    "temperature": 0.7,
+                    "topP": 0.8,
+                    "topK": 40
                 }
             }
             
-            response = requests.post(GEMINI_API_URL, json=payload, timeout=30)
+            print(f"🤖 Calling Gemini API (attempt {attempt + 1}/{max_retries + 1})...")
+            response = requests.post(GEMINI_API_URL, json=payload, timeout=60)
             
-            # Check for rate limit error specifically
+            # Log response details for debugging
+            print(f"📊 Response status: {response.status_code}")
+            if response.status_code != 200:
+                print(f"📊 Response headers: {dict(response.headers)}")
+                print(f"📊 Response content: {response.text[:500]}")
+            
+            # Handle rate limiting with extreme patience
             if response.status_code == 429:
                 if attempt < max_retries:
-                    # Exponential backoff with jitter
-                    delay = base_delay * (2 ** attempt) + random.uniform(0, 1)
-                    print(f"🔄 Rate limited (attempt {attempt + 1}/{max_retries + 1}), retrying in {delay:.1f}s...")
+                    # Very long delays for rate limits
+                    delay = base_delay * (4 ** attempt) + random.uniform(10, 30)
+                    print(f"🔄 Rate limited! Waiting {delay:.1f}s before retry {attempt + 1}/{max_retries + 1}")
                     time.sleep(delay)
                     continue
                 else:
-                    print(f"❌ Rate limited after {max_retries + 1} attempts, giving up")
-                    raise requests.exceptions.HTTPError("Rate limit exceeded after all retries")
+                    print(f"❌ Still rate limited after {max_retries + 1} attempts")
+                    # Return a fallback instead of crashing
+                    return create_fallback_response("Rate limit exceeded")
+            
+            # Handle quota exceeded (different from rate limit)
+            if response.status_code == 403:
+                print(f"❌ Quota exceeded or API key issue")
+                return create_fallback_response("API quota exceeded")
             
             # Check for other HTTP errors
             response.raise_for_status()
             
             # Parse response
-            response_text = response.json()['candidates'][0]['content']['parts'][0]['text']
-            return json.loads(response_text)
+            response_data = response.json()
+            
+            if 'candidates' not in response_data or not response_data['candidates']:
+                print(f"⚠️ No candidates in response: {response_data}")
+                if attempt < max_retries:
+                    time.sleep(base_delay)
+                    continue
+                return create_fallback_response("No response candidates")
+                
+            candidate = response_data['candidates'][0]
+            if 'content' not in candidate or 'parts' not in candidate['content']:
+                print(f"⚠️ Invalid response structure: {candidate}")
+                if attempt < max_retries:
+                    time.sleep(base_delay)
+                    continue
+                return create_fallback_response("Invalid response structure")
+            
+            response_text = candidate['content']['parts'][0]['text']
+            
+            # Clean up the response text (sometimes has markdown formatting)
+            response_text = response_text.strip()
+            if response_text.startswith('```json'):
+                response_text = response_text[7:]
+            if response_text.endswith('```'):
+                response_text = response_text[:-3]
+            response_text = response_text.strip()
+            
+            try:
+                parsed_response = json.loads(response_text)
+                print(f"✅ Gemini API call successful")
+                return parsed_response
+            except json.JSONDecodeError as json_error:
+                print(f"⚠️ JSON parsing error: {json_error}")
+                print(f"⚠️ Raw response: {response_text}")
+                if attempt < max_retries:
+                    time.sleep(base_delay)
+                    continue
+                return create_fallback_response("JSON parsing failed")
             
         except requests.exceptions.HTTPError as e:
-            if attempt < max_retries and "429" in str(e):
-                # This is a retry-able error
-                delay = base_delay * (2 ** attempt) + random.uniform(0, 1)
-                print(f"🔄 HTTP error (attempt {attempt + 1}/{max_retries + 1}), retrying in {delay:.1f}s...")
-                time.sleep(delay)
-                continue
-            else:
-                # Non-retryable error or max retries exceeded
-                raise
-        except (requests.exceptions.RequestException, json.JSONDecodeError, KeyError) as e:
             if attempt < max_retries:
-                delay = base_delay * (2 ** attempt) + random.uniform(0, 1)
-                print(f"🔄 Request error (attempt {attempt + 1}/{max_retries + 1}): {e}")
-                print(f"    Retrying in {delay:.1f}s...")
+                delay = base_delay * (2 ** attempt) + random.uniform(5, 15)
+                print(f"🔄 HTTP error (attempt {attempt + 1}/{max_retries + 1}): {e}")
+                print(f"    Waiting {delay:.1f}s...")
                 time.sleep(delay)
                 continue
             else:
-                print(f"❌ Failed after {max_retries + 1} attempts: {e}")
-                # Return a fallback response
-                return {
-                    "next_user_message": "I'm having trouble continuing this conversation.",
-                    "rating": 5,
-                    "reasoning": "Unable to evaluate due to API error"
-                }
+                print(f"❌ HTTP error after all retries: {e}")
+                return create_fallback_response(f"HTTP error: {e}")
+                
+        except requests.exceptions.RequestException as e:
+            if attempt < max_retries:
+                delay = base_delay * (2 ** attempt) + random.uniform(3, 10)
+                print(f"🔄 Request error (attempt {attempt + 1}/{max_retries + 1}): {e}")
+                print(f"    Waiting {delay:.1f}s...")
+                time.sleep(delay)
+                continue
+            else:
+                print(f"❌ Request failed after all retries: {e}")
+                return create_fallback_response(f"Request error: {e}")
+        
+        except Exception as e:
+            print(f"❌ Unexpected error: {e}")
+            if attempt < max_retries:
+                delay = base_delay + random.uniform(2, 8)
+                print(f"    Waiting {delay:.1f}s...")
+                time.sleep(delay)
+                continue
+            else:
+                return create_fallback_response(f"Unexpected error: {e}")
+    
+    return create_fallback_response("Maximum retries exceeded")
+
+def create_fallback_response(reason):
+    """Create a fallback response when API calls fail."""
+    return {
+        "next_user_message": "I need to end this conversation due to technical issues.",
+        "rating": 2,
+        "reasoning": f"Could not evaluate due to API issues: {reason}"
+    }
 
 def call_gemini(prompt):
     """Wrapper for backwards compatibility."""
@@ -175,58 +245,50 @@ def run_conversation_turn(config, conversation_history, last_agent_response):
     history_str = "\n".join([f"You: {t['user_message']}\nAgent: {t['agent_response']}" for t in conversation_history])
     
     prompt = f"""
-    You are an AI user testing a chatbot. Your name is {persona['name']} and your persona is: "{persona['description']}".
-    Your overall goal is: "{intent['goal']}".
+You are an AI user testing a chatbot. Your name is {persona['name']} and your persona is: "{persona['description']}".
+Your overall goal is: "{intent['goal']}".
 
-    ## Conversation History
-    {history_str}
+## Conversation History
+{history_str}
 
-    ## Chatbot's Last Message
-    "{last_agent_response}"
+## Chatbot's Last Message
+"{last_agent_response}"
 
-    ## Your Task
-    Based on the chatbot's last message, your persona, and your goal, provide your next message.
-    Also, rate the chatbot's last response on a scale of 1-10 for helpfulness and quality, and provide a brief reason.
+## Your Task
+Based on the chatbot's last message, your persona, and your goal, provide your next message.
+Also, rate the chatbot's last response on a scale of 1-10 for helpfulness and quality, and provide a brief reason.
 
-    Output ONLY the following JSON object:
-    {{
-        "next_user_message": "Your next message to the chatbot.",
-        "rating": <an integer from 1 to 10>,
-        "reasoning": "A brief explanation for your rating."
-    }}
-    """
+Output ONLY the following JSON object:
+{{
+    "next_user_message": "Your next message to the chatbot.",
+    "rating": <an integer from 1 to 10>,
+    "reasoning": "A brief explanation for your rating."
+}}
+"""
     return call_gemini(prompt)
 
 def send_message_to_app(phone_number, message, timeout=15):
-    """
-    Sends a message to the Flask app and waits for the actual AI response.
-    """
+    """Sends a message to the Flask app and waits for the actual AI response."""
     payload = {
         'From': phone_number,
         'Body': message
     }
     
     try:
-        # Clear any previous responses for this phone number
         clear_previous_responses(phone_number)
-        
-        # Send the webhook message
         response = requests.post(f"{FLASK_APP_URL}/message", data=payload, timeout=10)
         
         if response.status_code != 200:
             print(f"❌ HTTP {response.status_code} error from /message endpoint")
             response.raise_for_status()
         
-        # Get the immediate response (usually "thinking...")
         try:
             immediate_response = response.text.split('<Message>')[1].split('</Message>')[0].strip()
             print(f"📱 Immediate: {immediate_response}")
         except IndexError:
             immediate_response = "[Could not parse immediate response]"
         
-        # Wait for the actual AI response
         ai_response = wait_for_ai_response(phone_number, timeout)
-        
         return ai_response if ai_response else immediate_response
             
     except requests.exceptions.RequestException as e:
@@ -234,11 +296,8 @@ def send_message_to_app(phone_number, message, timeout=15):
 
 def wait_for_ai_response(phone_number, timeout=15):
     """Wait for the AI response to be processed and stored."""
-    import time
-    
     start_time = time.time()
     while time.time() - start_time < timeout:
-        # Check if response is available
         try:
             response = requests.get(f"{FLASK_APP_URL}/testing/get-response/{phone_number}")
             if response.status_code == 200:
@@ -249,7 +308,7 @@ def wait_for_ai_response(phone_number, timeout=15):
         except:
             pass
         
-        time.sleep(0.5)  # Poll every 500ms
+        time.sleep(0.5)
     
     print(f"⏰ Timeout waiting for AI response from {phone_number}")
     return None
@@ -393,12 +452,12 @@ def run_single_test(test_config):
         current_turn = {
             "user_message": user_message,
             "agent_response": agent_response,
-            "rating": eval_result.get('rating', 1), # type: ignore
-            "reasoning": eval_result.get('reasoning', 'No reasoning provided') # type: ignore
+            "rating": eval_result.get('rating', 1),
+            "reasoning": eval_result.get('reasoning', 'No reasoning provided')
         }
         conversation_log.append(current_turn)
 
-        user_message = eval_result.get('next_user_message') # type: ignore
+        user_message = eval_result.get('next_user_message')
         if not user_message:
             break
 
@@ -421,7 +480,6 @@ def main():
     all_test_results = []
     
     try:
-        # 1. Setup
         start_services()
         
         if not cleanup_database():
@@ -430,28 +488,34 @@ def main():
         with open(CONFIG_PATH, 'r') as f:
             config = yaml.safe_load(f)
 
-        # Handle both single test and multiple tests
         test_configs = config if isinstance(config, list) else [config]
         
-        print(f"🧪 Running {len(test_configs)} test scenario(s)...")
-        print(f"⚡ Rate limit: {GEMINI_RATE_LIMIT} requests/minute to Gemini API\n")
+        # Calculate realistic time estimate
+        estimated_turns = sum(tc.get('max_turns', 10) for tc in test_configs)
+        estimated_time_minutes = (estimated_turns * (GEMINI_REQUEST_INTERVAL + 10)) / 60  # Include buffer time
         
-        # 2. Run each test
+        print(f"🧪 Running {len(test_configs)} test scenario(s)...")
+        print(f"⚡ ULTRA-conservative rate limit: {GEMINI_RATE_LIMIT} requests/minute")
+        print(f"⏰ Estimated time: {estimated_time_minutes:.0f} minutes (this will be VERY slow)")
+        print(f"🔄 Max retries per call: {MAX_RETRIES}")
+        print("⚠️  This will take a long time but should avoid rate limits!\n")
+        
         for i, test_config in enumerate(test_configs, 1):
             print(f"[{i}/{len(test_configs)}] Running: {test_config['test_name']}")
             
-            # Clean up between tests
             cleanup_database(test_config['phone_number'])
             
             test_result = run_single_test(test_config)
             all_test_results.append(test_result)
             
             score_emoji = "🟢" if test_result['avg_score'] >= 7 else "🟡" if test_result['avg_score'] >= 5 else "🔴"
-            print(f"    {score_emoji} Completed - Average Score: {test_result['avg_score']:.1f}/10\n")
+            print(f"    {score_emoji} Completed - Average Score: {test_result['avg_score']:.1f}/10")
+            
+            if i < len(test_configs):
+                print(f"    Taking a 10s break before next test...\n")
+                time.sleep(10)
 
-        # 3. Generate comprehensive report
         generate_report(all_test_results)
-        
         print(f"\n🎉 All tests completed! Check {REPORT_FILE} for detailed results.")
 
     except Exception as e:
@@ -459,7 +523,6 @@ def main():
         import traceback
         traceback.print_exc()
     finally:
-        # 4. Teardown
         print("\n🧹 Cleaning up...")
         stop_services()
 
