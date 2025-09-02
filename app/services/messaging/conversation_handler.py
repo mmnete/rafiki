@@ -1,0 +1,205 @@
+from typing import List, Dict, Optional, Callable
+import json
+import time
+from app.services.prompting.prompt_builder import PromptBuilder
+from app.services.messaging.conversation_orchestrator import ConversationOrchestrator
+from app.storage.services.conversation_storage_service import ConversationStorageService
+from app.storage.services.user_storage_service import UserStorageService
+from app.tools.tool_call_manager import ToolCallManager
+from app.services.messaging.response_delivery_service import ResponseDeliveryService
+
+class ConversationHandler:
+    """
+    Handles the core conversation logic without DB coupling.
+
+    Responsibilities:
+    - Coordinate message processing flow
+    - Handle image processing
+    - Call AI model with tools
+    - Return processed response
+
+    NOT responsible for:
+    - Direct DB operations (delegates to services)
+    - Building prompts (delegates to PromptBuilder)
+    - Managing conversation state (delegates to services)
+    """
+
+    def __init__(
+        self,
+        user_storage_service: UserStorageService,
+        conversation_storage_service: ConversationStorageService,
+        conversation_orchestrator: ConversationOrchestrator,
+        tool_manager: ToolCallManager,
+        prompt_builder: PromptBuilder,
+        response_delivery_service: ResponseDeliveryService
+    ):
+        # Services (injected dependencies)
+        self.user_storage_service = user_storage_service
+        self.conversation_storage_service = conversation_storage_service
+        self.conversation_orchestrator = conversation_orchestrator
+        self.tool_manager = tool_manager
+        self.prompt_builder = prompt_builder
+        self.response_delivery_service = response_delivery_service
+
+    # Updated conversation handler method
+    def handle_message_with_cancellation(
+        self,
+        phone_number: str,
+        message: str,
+        media_urls: List[Dict[str, str]],
+        cancellation_check: Callable[[], bool],
+    ) -> Optional[str]:
+        """
+        Handle message processing with periodic cancellation checks
+        Now sends responses via delivery service instead of returning them
+        """
+        start_time = time.time()
+
+        try:
+            # Step 1: Get user (check cancellation)
+            if cancellation_check():
+                return None
+
+            user = self.user_storage_service.get_or_create_user(phone_number)
+            if not user:
+                raise Exception(f"Could not find user of phone number {phone_number}")
+
+            # Step 2: Process images (check cancellation)
+            if cancellation_check():
+                return None
+
+            has_media = len(media_urls) > 0
+            processed_message = self._process_images_if_present(
+                message, media_urls, cancellation_check
+            )
+            if processed_message is None:  # Cancelled during image processing
+                return None
+
+            # Step 3: Get user context (check cancellation)
+            if cancellation_check():
+                return None
+
+            user_context = self._build_user_context(user)
+
+            # Step 4: Get conversation history (check cancellation)
+            if cancellation_check():
+                return None
+
+            conversation_history = (
+                self.conversation_storage_service.get_conversation_history(
+                    user.id, limit=50
+                )
+            )
+
+            # Step 5: Build prompt (check cancellation)
+            if cancellation_check():
+                return None
+
+            prompt = self.prompt_builder.build_conversation_prompt(
+                user=user,
+                user_context=user_context,
+                message=processed_message,
+                conversation_history=conversation_history,
+            )
+
+            # Step 6: Get available tools (check cancellation)
+            if cancellation_check():
+                return None
+
+            available_tools = self.tool_manager.get_available_tools_for_user(user)
+            available_tool_functions = {}
+            for name in available_tools:
+                tool_function = self.tool_manager.get_tool_function(name)
+                if tool_function is not None:
+                    available_tool_functions[name] = tool_function
+
+            # Step 7: Call AI model 
+            if cancellation_check():
+                return None
+
+            # Your existing conversation processing
+            ai_response, tool_results = self.conversation_orchestrator.process_conversation_turn(
+                prompt, str(user.id), processed_message, available_tool_functions
+            )
+
+            if cancellation_check():
+                return None
+
+            # NEW: Send the AI response to the user
+            self._send_response_to_user(phone_number, ai_response)
+
+            # Calculate processing time
+            processing_time_ms = int((time.time() - start_time) * 1000)
+
+            # Save the conversation with the AI response (fixed variable name)
+            self.conversation_storage_service.save_conversation(
+                user.id,
+                processed_message,
+                ai_response,  # Fixed: was "final_response" which didn't exist
+                tools_used=available_tools,
+                processing_time_ms=processing_time_ms,
+                has_media=has_media
+            )
+
+            return ai_response  # Fixed: return the actual AI response
+
+        except Exception as e:
+            print(f"Error in conversation handling: {e}")
+            error_message = "Sorry, there was an error processing your message."
+            self._send_response_to_user(phone_number, error_message)
+            return error_message
+
+    def _send_response_to_user(self, phone_number: str, response: str):
+        """Send response to user via delivery service"""
+        if hasattr(self, 'response_delivery_service') and self.response_delivery_service:
+            self.response_delivery_service.queue_response(phone_number, response)
+        else:
+            print(f"📱 [NO DELIVERY SERVICE] Response for {phone_number}: {response}")
+
+    def _process_images_if_present(
+        self,
+        message: str,
+        media_urls: List[Dict[str, str]],
+        cancellation_check: Callable[[], bool],
+    ) -> Optional[str]:
+        """Process images and prepend descriptions to message"""
+        if not media_urls:
+            return message
+
+        try:
+            image_descriptions = []
+            for img_info in media_urls:
+                # Check cancellation during image processing
+                if cancellation_check():
+                    return None
+
+                parsed_response = self.conversation_orchestrator.describe_image(
+                    img_info
+                )
+                if hasattr(parsed_response, "response_type") and hasattr(
+                    parsed_response, "content"
+                ):
+                    image_descriptions.append(parsed_response.content)
+                else:
+                    print(f"Warning: Failed to describe image {img_info.get('url')}")
+                    image_descriptions.append("an image")
+
+            # Prepend image descriptions to message
+            descriptions_str = ", ".join(image_descriptions)
+            return f"User has provided images: {descriptions_str}. {message}"
+
+        except Exception as e:
+            print(f"Error processing images: {e}")
+            return message  # Fallback to original message
+
+    def _build_user_context(self, user) -> dict:
+        """Build user context for prompt building"""
+        return {
+            "phone_number": user.phone_number,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "location": user.location,
+            "preferred_language": user.preferred_language,
+            "status": getattr(user, "status", "unknown"),
+            "created_at": getattr(user, "created_at", "Unknown"),
+        }

@@ -353,7 +353,7 @@ class FlightResponseFormatter:
 # Integration with existing tool config
 def enhanced_search_flights_implementation(**kwargs):
     """Enhanced flight search with formatted response"""
-    from app.services.flight_scraper import AmadeusFlightScraper
+    from app.services.api.flights.flight_service import AmadeusFlightScraper
     
     scraper = AmadeusFlightScraper()
     raw_results = scraper.search_flights(**kwargs)

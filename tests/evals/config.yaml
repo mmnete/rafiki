@@ -1,0 +1,122 @@
+# Flight Agent Evaluation Test Suite
+# Each test scenario will be run in sequence with database cleanup between tests
+
+- test_name: "Happy Path - Onboarding and Simple Flight Search"
+  phone_number: "+15551234567"
+  max_turns: 12
+  persona:
+    name: "Jamie Rodriguez"
+    description: "A friendly, cooperative user who follows instructions well and provides clear information when asked."
+  intent:
+    goal: "Complete onboarding process, then search for a one-way flight from San Antonio, Texas to Boston for next week."
+    initial_message: "Hello"
+
+- test_name: "Difficult User - Vague Requests and Complaints"
+  phone_number: "+15551234568"
+  max_turns: 15
+  persona:
+    name: "Karen Mitchell"
+    description: "An impatient user who gives vague information, complains about wait times, and gets frustrated easily. Often changes requirements mid-conversation."
+  intent:
+    goal: "Book a flight but be difficult - give vague dates like 'sometime soon', complain about prices, change destination mid-search."
+    initial_message: "I need a flight ASAP"
+
+- test_name: "International Travel - Complex Itinerary"
+  phone_number: "+15551234569"
+  max_turns: 20
+  persona:
+    name: "Dr. Sarah Chen"
+    description: "A frequent business traveler who needs complex international itineraries with specific timing requirements."
+  intent:
+    goal: "Book a multi-city international trip: San Francisco → London → Paris → New York, with specific layover requirements and premium cabin preferences."
+    initial_message: "Hi, I need to book a complex business trip across multiple cities"
+
+- test_name: "Budget Traveler - Price Sensitive"
+  phone_number: "+15551234570"
+  max_turns: 18
+  persona:
+    name: "Alex Thompson"
+    description: "A price-conscious student who asks many questions about fees, wants the cheapest options, and is very detail-oriented about costs."
+  intent:
+    goal: "Find the absolute cheapest flight from any NYC airport to anywhere in California, flexible with dates. Ask about baggage fees, change fees, etc."
+    initial_message: "Hey! I'm looking for the cheapest possible flight to California"
+
+- test_name: "Family Travel - Special Requirements"
+  phone_number: "+15551234571"
+  max_turns: 16
+  persona:
+    name: "Maria Santos"
+    description: "A mother traveling with young children who has special requirements like car seats, dietary restrictions, and seat preferences."
+  intent:
+    goal: "Book flights for family of 4 (2 adults, 2 children ages 3 and 7) from Miami to Disney World area, with special meal requests and seat preferences."
+    initial_message: "Hi, I need to book flights for my family vacation"
+
+- test_name: "Last-Minute Emergency Travel"
+  phone_number: "+15551234572"
+  max_turns: 10
+  persona:
+    name: "Robert Kim"
+    description: "Someone dealing with a family emergency who needs immediate travel, is stressed, and willing to pay premium prices for urgency."
+  intent:
+    goal: "Book the soonest possible flight from Los Angeles to Chicago due to family emergency. Time is more important than cost."
+    initial_message: "I have a family emergency and need to get to Chicago immediately"
+
+- test_name: "Booking Modification and Cancellation"
+  phone_number: "+15551234573"
+  max_turns: 14
+  persona:
+    name: "Jennifer Walsh"
+    description: "A user who already has a booking and needs to make changes or cancel. Tests the system's ability to handle existing reservations."
+  intent:
+    goal: "First book a simple flight, then immediately try to change the date, and finally attempt to cancel for a refund."
+    initial_message: "I need to book a flight from Boston to Atlanta"
+
+- test_name: "Confused New User - Needs Lots of Help"
+  phone_number: "+15551234574"
+  max_turns: 20
+  persona:
+    name: "Harold Brown"
+    description: "An elderly user who is not tech-savvy, asks for help with basic concepts, and needs patient step-by-step guidance."
+  intent:
+    goal: "Try to book a flight but frequently get confused about airport codes, dates, and booking process. Need lots of clarification."
+    initial_message: "Hello, I'm not sure how this works but I need to travel"
+
+- test_name: "Business Travel - Loyalty Program Focus"
+  phone_number: "+15551234575"
+  max_turns: 12
+  persona:
+    name: "Michael Chang"
+    description: "A frequent business traveler who is very focused on loyalty programs, upgrades, and premium services."
+  intent:
+    goal: "Book a business class flight from Seattle to New York with focus on earning/using frequent flyer miles and getting upgrades."
+    initial_message: "I need to book a business trip and want to maximize my loyalty benefits"
+
+- test_name: "Group Travel Coordination"
+  phone_number: "+15551234576"
+  max_turns: 18
+  persona:
+    name: "Lisa Martinez"
+    description: "Someone organizing travel for a large group (wedding party, corporate event, etc.) with coordination challenges."
+  intent:
+    goal: "Book flights for 8 people traveling together from different cities to Las Vegas for a wedding, trying to coordinate arrival times."
+    initial_message: "Hi, I need to coordinate flights for my wedding party"
+
+- test_name: "Edge Case - Unusual Requests"
+  phone_number: "+15551234577"
+  max_turns: 15
+  persona:
+    name: "Tyler Davis"
+    description: "A user who makes unusual requests that might break the system - very specific requirements, edge case scenarios."
+  intent:
+    goal: "Make unusual requests like flying with exotic pets, transporting musical instruments, requesting specific seat numbers, or very short layovers."
+    initial_message: "I have some pretty specific travel requirements"
+
+- test_name: "Fraud Prevention - Suspicious Behavior"
+  phone_number: "+15551234578"
+  max_turns: 10
+  persona:
+    name: "Anonymous User"
+    description: "A user exhibiting potentially suspicious behavior - multiple rapid bookings, unusual payment patterns, testing system limits."
+  intent:
+    goal: "Try to make multiple rapid bookings, ask about payment methods, test if there are booking limits or fraud detection."
+    initial_message: "I need to book several flights right now"

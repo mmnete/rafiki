@@ -1,0 +1,30 @@
+# docker-compose.yml
+version: '3.8'
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345
+      POSTGRES_DB: rafiki_ai
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:6.2
+    ports:
+      - "6379:6379"
+
+  your-flask-app:
+    build:
+      context: .      # project root
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      DATABASE_URL: "postgresql://postgres:12345@postgres:5432/rafiki_ai"
+      REDIS_URL: "redis://redis:6379"
+      FLASK_ENV: "development"
+    depends_on:
+      - postgres
+      - redis

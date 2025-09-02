@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Evaluation Report</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; }
+        h1, h2 { color: #333; }
+        .summary { background: #f0f0f0; padding: 1em; border-radius: 8px; }
+        .convo { border: 1px solid #ccc; border-radius: 8px; margin-top: 1em; }
+        .turn { padding: 1em; border-bottom: 1px solid #eee; }
+        .turn:last-child { border-bottom: none; }
+        .user { color: blue; }
+        .agent { color: green; }
+        .rating { background: #fafad2; margin-top: 0.5em; padding: 0.5em; border-radius: 4px; }
+        .rating strong { color: #555; }
+    </style>
+</head>
+<body>
+    <h1>📋 Evaluation Report</h1>
+    <div class="summary">
+        <h2>Test Summary</h2>
+        <p><strong>Test Name:</strong> {{ summary.test_name }}</p>
+        <p><strong>Final Status:</strong> {{ summary.status }}</p>
+        <p><strong>Total Turns:</strong> {{ summary.total_turns }}</p>
+        <p><strong>Average Quality Score:</strong> {{ "%.2f"|format(summary.avg_score) }} / 10</p>
+    </div>
+    <div class="convo">
+        <h2>Conversation Log</h2>
+        {% for turn in conversation %}
+        <div class="turn">
+            <p class="user"><strong>{{ persona_name }}:</strong> {{ turn.user_message }}</p>
+            <p class="agent"><strong>Agent:</strong> {{ turn.agent_response }}</p>
+            <div class="rating">
+                <p><strong>Quality Score:</strong> {{ turn.rating }} / 10</p>
+                <p><strong>Reasoning:</strong> {{ turn.reasoning }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

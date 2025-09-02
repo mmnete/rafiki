@@ -1,0 +1,31 @@
+Starting Redis locally:
+- sudo service redis-server start
+- sudo service redis-server status
+- local redis - 12345
+- to clear: sudo service redis-server stop
+
+Local Server:
+- python run.py
+
+
+
+Option 2: Install Ubuntu WSL
+
+Right now, you’re not in Ubuntu — you’re in a minimal Docker shell.
+If you install Ubuntu WSL, you’ll get apt, sudo, and everything works like Linux:
+
+In PowerShell:
+
+wsl --install -d Ubuntu
+
+
+(or use the Microsoft Store to install Ubuntu).
+
+Inside Ubuntu WSL:
+
+sudo apt update
+sudo apt install redis-server
+sudo service redis-server start
+
+
+Then Redis runs just like on Linux.
