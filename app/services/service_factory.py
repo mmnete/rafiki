@@ -46,7 +46,7 @@ class ServiceFactory:
         
         
         flight_storage_service = FlightStorageService(base_storage_service) 
-        booking_storage_service = BookingStorageService(base_storage_service, flight_storage_service)
+        booking_storage_service = BookingStorageService(base_storage_service, shared_storage_service)
         user_storage_service = UserStorageService(base_storage_service)
         conversation_storage_service = ConversationStorageService(base_storage_service)
         

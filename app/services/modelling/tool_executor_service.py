@@ -1,7 +1,7 @@
 import concurrent.futures
 import traceback
 import json
-from typing import List, Dict, Any, Callable
+from typing import List, Dict, Any, Callable, Optional
 from app.services.modelling.response_parser import ToolCall
 
 
@@ -20,14 +20,16 @@ class ToolExecutorService:
     def __init__(self, max_workers: int = 5):
         self.max_workers = max_workers
     
+    
     def execute_tool_calls(self, tool_calls: List[ToolCall], available_tools: Dict[str, Callable], 
-                          user_id: str) -> List[Dict[str, Any]]:
+                        available_tool_context: Dict[str, Callable], user_id: str) -> List[Dict[str, Any]]:
         """
         Execute multiple tool calls concurrently
         
         Args:
             tool_calls: List of parsed tool calls
             available_tools: Dict mapping tool names to executable functions
+            available_tool_context: Dict mapping tool names to context extraction functions (optional)
             user_id: User identifier to pass to tools
             
         Returns:
@@ -40,11 +42,15 @@ class ToolExecutorService:
             future_to_tool = {}
             for call in tool_calls:
                 if call.name in available_tools:
+                    # Get context function if available, otherwise None
+                    context_function = available_tool_context.get(call.name)
+                    
                     future = executor.submit(
                         self._execute_single_tool,
                         available_tools[call.name],
                         call,
-                        user_id
+                        user_id,
+                        context_function  # This can safely be None
                     )
                     future_to_tool[future] = call
                 else:
@@ -53,7 +59,8 @@ class ToolExecutorService:
                         "tool_name": call.name,
                         "success": False,
                         "error": f"Tool '{call.name}' not available",
-                        "error_type": "ToolNotFound"
+                        "error_type": "ToolNotFound",
+                        "context_summary": None
                     })
             
             # Collect results as they complete
@@ -63,36 +70,69 @@ class ToolExecutorService:
                     result = future.result()
                     results.append(result)
                 except Exception as e:
-                    print(f"Unexpected error in tool execution future: {e}")
+                    print(f"Unexpected error in tool execution future for '{tool_call.name}': {e}")
                     traceback.print_exc()
                     results.append({
                         "tool_name": tool_call.name,
                         "success": False,
-                        "error": str(e),
-                        "error_type": "ExecutionError"
+                        "error": f"Future execution failed: {str(e)}",
+                        "error_type": "FutureExecutionError",
+                        "context_summary": None
                     })
         
         return results
-    
-    def _execute_single_tool(self, tool_function: Callable, tool_call: ToolCall, user_id: str) -> Dict[str, Any]:
+
+    def _execute_single_tool(self, tool_function: Callable, tool_call: ToolCall, user_id: str, 
+                            tool_context: Optional[Callable] = None) -> Dict[str, Any]:
         """Execute a single tool call with error handling"""
         try:
+            # Execute the main tool function
             result_data = tool_function(user_id=user_id, **tool_call.args)
+            context_summary = None
+            
+            # Extract context summary if context function is provided
+            if tool_context is not None:
+                try:
+                    context_summary = tool_context(result_data, user_id)
+                    print(f"Successfully extracted context for tool '{tool_call.name}'")
+                except Exception as context_error:
+                    print(f"Warning: Error extracting context for tool '{tool_call.name}': {context_error}")
+                    # Don't fail the entire tool execution if context extraction fails
+                    context_summary = f"Context extraction failed: {str(context_error)}"
+            else:
+                print(f"No context extractor available for tool '{tool_call.name}'")
+            
             return {
                 "tool_name": tool_call.name,
                 "success": True,
-                "result": result_data
+                "result": result_data,
+                "context_summary": context_summary,
+                "execution_time": None  # Could add timing if needed
             }
-        except Exception as e:
-            print(f"ERROR executing tool '{tool_call.name}': {e}")
+            
+        except TypeError as type_error:
+            # Handle cases where tool function signature doesn't match expected parameters
+            print(f"ERROR: Type/parameter mismatch executing tool '{tool_call.name}': {type_error}")
             traceback.print_exc()
             return {
                 "tool_name": tool_call.name,
                 "success": False,
-                "error": str(e),
-                "error_type": "ToolExecutionError"
+                "error": f"Parameter mismatch: {str(type_error)}",
+                "error_type": "ParameterError",
+                "context_summary": None
             }
-    
+            
+        except Exception as execution_error:
+            print(f"ERROR executing tool '{tool_call.name}': {execution_error}")
+            traceback.print_exc()
+            return {
+                "tool_name": tool_call.name,
+                "success": False,
+                "error": str(execution_error),
+                "error_type": "ToolExecutionError",
+                "context_summary": None
+            }
+
     def format_tool_results_for_model(self, tool_results: List[Dict[str, Any]]) -> str:
         """Format tool execution results for model consumption"""
         if not tool_results:

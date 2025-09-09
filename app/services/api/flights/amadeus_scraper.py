@@ -6,6 +6,8 @@ import hashlib
 from collections import deque
 from threading import Lock
 from abc import ABC, abstractmethod
+import json
+import re
 
 
 class RateLimiterProtocol(Protocol):
@@ -126,12 +128,26 @@ class DateValidator:
         
         return None
 
-
 class FlightOfferProcessor:
-    """Handles processing and optimization of flight offer data"""
+    """Fixed flight offer processor with correct duration and routing logic"""
     
     def __init__(self):
         pass
+    
+    def parse_duration_to_minutes(self, duration_str: Optional[str] = None) -> Optional[int]:
+        """Parse ISO 8601 duration to minutes (PT1H55M -> 115)"""
+        if not duration_str:
+            return None
+            
+        # Parse PT1H55M format
+        pattern = r'PT(?:(\d+)H)?(?:(\d+)M)?'
+        match = re.match(pattern, duration_str)
+        if not match:
+            return None
+            
+        hours = int(match.group(1) or 0)
+        minutes = int(match.group(2) or 0)
+        return hours * 60 + minutes
     
     def generate_flight_offer_id(self, offer: Dict, index: int) -> str:
         """Generate unique flight offer ID"""
@@ -194,7 +210,7 @@ class FlightOfferProcessor:
     
     def _process_single_offer(self, offer: Dict, offer_idx: int, 
                              airline_dict: Dict, aircraft_dict: Dict) -> Dict[str, Any]:
-        """Process a single flight offer"""
+        """Process a single flight offer - FIXED VERSION"""
         # Generate IDs
         amadeus_offer_id = offer.get("id")
         our_flight_offer_id = self.generate_flight_offer_id(offer, offer_idx)
@@ -202,18 +218,30 @@ class FlightOfferProcessor:
         # Process itineraries
         itineraries = []
         all_segments = []
+        total_duration_minutes = 0
+        total_stops = 0
         
         for itinerary_idx, itinerary in enumerate(offer.get("itineraries", [])):
             segments = []
+            itinerary_duration = self.parse_duration_to_minutes(itinerary.get("duration"))
             
             for segment in itinerary.get("segments", []):
-                processed_segment = self._process_segment(segment, airline_dict)
+                processed_segment = self._process_segment(segment, airline_dict, aircraft_dict)
                 segments.append(processed_segment)
                 all_segments.append(processed_segment)
+                
+                # Count stops (direct flight has 0 stops)
+                stops = segment.get("numberOfStops", 0)
+                total_stops += stops
+            
+            # Add total duration for this itinerary
+            if itinerary_duration:
+                total_duration_minutes += itinerary_duration
             
             itineraries.append({
                 "type": "outbound" if itinerary_idx == 0 else "return",
                 "duration": itinerary.get("duration"),
+                "duration_minutes": itinerary_duration,
                 "segments": segments
             })
         
@@ -223,9 +251,15 @@ class FlightOfferProcessor:
         # Process baggage
         baggage_info = self._process_baggage_info(offer.get("travelerPricings", []))
         
-        # Create optimized flight data
+        # Get route information from first and last segments
         first_segment = all_segments[0] if all_segments else {}
         last_segment = all_segments[-1] if all_segments else {}
+        
+        # Calculate total flight duration (excluding layovers for multi-segment)
+        flight_duration_minutes = sum(
+            self.parse_duration_to_minutes(seg.get("duration", "")) or 0 
+            for seg in all_segments
+        )
         
         return {
             # Critical IDs
@@ -246,12 +280,15 @@ class FlightOfferProcessor:
             # Trip details
             "trip_type": self.determine_trip_type(offer.get("itineraries", [])),
             "duration": itineraries[0].get("duration") if itineraries else None,
+            "duration_minutes": total_duration_minutes,  # FIXED: Now calculated correctly
+            "flight_duration_minutes": flight_duration_minutes,  # Pure flight time
             "total_segments": len(all_segments),
-            "stops_total": sum(s.get("stops", 0) for s in all_segments),
+            "stops": total_stops,  # FIXED: Use 'stops' not 'stops_total'
             
-            # Airline info
+            # Airline info (from first segment)
             "airline_code": first_segment.get("airline_code"),
             "airline_name": first_segment.get("airline_name"),
+            "airlines": list(set(seg.get("airline_code") for seg in all_segments if seg.get("airline_code"))),  # All unique airlines
             
             # Segments
             "segments": all_segments,
@@ -275,33 +312,57 @@ class FlightOfferProcessor:
             }
         }
     
-    def _process_segment(self, segment: Dict, airline_dict: Dict) -> Dict[str, Any]:
-        """Process a single flight segment"""
+    def _process_segment(self, segment: Dict, airline_dict: Dict, aircraft_dict: Dict) -> Dict[str, Any]:
+        """Process a single flight segment - FIXED VERSION"""
         airline_code = segment.get("carrierCode")
+        aircraft_code = segment.get("aircraft", {}).get("code")
+        duration_minutes = self.parse_duration_to_minutes(segment.get("duration"))
         
         return {
+            # Basic flight info
             "airline_code": airline_code,
             "airline_name": airline_dict.get(airline_code, "Unknown"),
             "flight_number": segment.get("number"),
+            
+            # Route info
             "departure_iata": segment["departure"]["iataCode"],
             "arrival_iata": segment["arrival"]["iataCode"],
+            "departure_terminal": segment["departure"].get("terminal"),
+            "arrival_terminal": segment["arrival"].get("terminal"),
             "departure_time": segment["departure"]["at"],
             "arrival_time": segment["arrival"]["at"],
+            
+            # Flight details
             "duration": segment.get("duration"),
-            "stops": segment.get("numberOfStops", 0)
+            "duration_minutes": duration_minutes,  # FIXED: Now parsed correctly
+            "stops": segment.get("numberOfStops", 0),
+            
+            # Aircraft info
+            "aircraft_code": aircraft_code,
+            "aircraft_name": aircraft_dict.get(aircraft_code, "Unknown") if aircraft_code else "Unknown",
+            
+            # Operating info
+            "operating_carrier": segment.get("operating", {}).get("carrierCode", airline_code),
+            "operating_carrier_name": segment.get("operating", {}).get("carrierName", ""),
+            
+            # Segment ID for reference
+            "segment_id": segment.get("id")
         }
     
     def _process_baggage_info(self, traveler_pricings: List[Dict]) -> Dict[str, int]:
         """Process baggage information"""
-        baggage_info = {}
+        baggage_info = {"checked_bags": 0, "cabin_bags": 1}  # Default values
         
         if traveler_pricings:
             fare_details = traveler_pricings[0].get("fareDetailsBySegment", [])
-            if fare_details and fare_details[0].get("includedCheckedBags"):
-                baggage_info = {
-                    "checked_bags": fare_details[0]["includedCheckedBags"].get("quantity", 0),
-                    "cabin_bags": fare_details[0].get("includedCabinBags", {}).get("quantity", 1)
-                }
+            if fare_details:
+                first_segment_fare = fare_details[0]
+                
+                if "includedCheckedBags" in first_segment_fare:
+                    baggage_info["checked_bags"] = first_segment_fare["includedCheckedBags"].get("quantity", 0)
+                
+                if "includedCabinBags" in first_segment_fare:
+                    baggage_info["cabin_bags"] = first_segment_fare["includedCabinBags"].get("quantity", 1)
         
         return baggage_info
     
@@ -315,6 +376,14 @@ class FlightOfferProcessor:
                 "routes_available": 0
             }
         
+        # Get all unique airlines across all flights
+        all_airlines = set()
+        for flight in flights:
+            if flight.get("airlines"):
+                all_airlines.update(flight["airlines"])
+            elif flight.get("airline_code"):
+                all_airlines.add(flight["airline_code"])
+        
         return {
             "total_offers": len(flights),
             "price_range": {
@@ -322,7 +391,7 @@ class FlightOfferProcessor:
                 "max": flights[-1]["price_total"],
                 "currency": flights[0]["currency"]
             },
-            "airlines": list(set(f["airline_code"] for f in flights if f.get("airline_code"))),
+            "airlines": list(all_airlines),
             "routes_available": len(set(
                 f"{f['origin']}-{f['destination']}" 
                 for f in flights 
@@ -331,28 +400,48 @@ class FlightOfferProcessor:
         }
     
     def extract_model_response(self, full_response: Dict[str, Any]) -> Dict[str, Any]:
-        """Extract minimal data for model response"""
-        flights = full_response.get("flights", [])
+        """Extract only essential data for model response"""
+        if 'flights' not in full_response:
+            return full_response
         
-        model_flights = []
-        for flight in flights[:10]:  # Limit to top 10
-            model_flight = {
-                "id": flight.get("flight_offer_id"),
-                "price": flight.get("price_total"),
-                "currency": flight.get("currency"),
-                "route": f"{flight.get('origin', '')}-{flight.get('destination', '')}",
-                "departure": flight.get("departure_time", "")[:16],
-                "arrival": flight.get("arrival_time", "")[:16],
-                "duration": flight.get("duration"),
-                "airline": flight.get("airline_name"),
-                "stops": flight.get("stops_total"),
-                "segments_count": flight.get("total_segments")
+        # Only include top 3-5 flights
+        flights = full_response['flights'][:3]
+        
+        minimal_flights = []
+        for flight in flights:
+            # Format duration nicely
+            duration_str = ""
+            if flight.get('duration'):
+                duration_str = flight['duration'].replace('PT', '').replace('H', 'h ').replace('M', 'm')
+            
+            # Format stops
+            stops = flight.get('stops', 0)
+            stops_text = "Direct" if stops == 0 else f"{stops} stop{'s' if stops > 1 else ''}"
+            
+            minimal_flight = {
+                'id': flight.get('flight_offer_id'),
+                'price': f"${flight.get('price_total', 0):.0f}",
+                'airline': flight.get('airline_name', 'Unknown'),
+                'route': f"{flight.get('origin')} → {flight.get('destination')}",
+                'departure': flight.get('departure_time', '').split('T')[1][:5] if 'T' in flight.get('departure_time', '') else '',
+                'arrival': flight.get('arrival_time', '').split('T')[1][:5] if 'T' in flight.get('arrival_time', '') else '',
+                'duration': duration_str,
+                'stops': stops_text
             }
-            model_flights.append(model_flight)
+            minimal_flights.append(minimal_flight)
+        
+        # Simplified search summary
+        summary = full_response.get('search_summary', {})
+        minimal_summary = {
+            'total_found': summary.get('total_offers', 0),
+            'price_range': f"${summary.get('price_range', {}).get('min', 0):.0f}-${summary.get('price_range', {}).get('max', 0):.0f}",
+            'airlines': summary.get('airlines', [])[:3]
+        }
         
         return {
-            "flights": model_flights,
-            "summary": full_response.get("search_summary", {})
+            'search_id': full_response.get('search_id'),
+            'flights': minimal_flights,
+            'summary': minimal_summary
         }
 
 
@@ -467,10 +556,21 @@ class AmadeusFlightScraper:
             
             # Process response
             api_response = response.json()
+            print(f"DEBUG: Raw API response for {departure_date}:")
+            print(f"  - Status: {response.status_code}")
+            print(f"  - Data count: {len(api_response.get('data', []))}")
+            print(f"  - Has errors: {'errors' in api_response}")
+            if 'errors' in api_response:
+                print(f"  - Errors: {api_response['errors']}")
+            print("FINISHED FLIGHT SEARCH DEBUG")
+            
             full_response = self.flight_processor.process_api_response(api_response)
             model_response = self.flight_processor.extract_model_response(full_response)
             
             print(f"Processed {len(full_response.get('flights', []))} flight offers")
+            
+            print("The model reponse for the flight")
+            print(json.dumps(model_response, indent=4))
             
             return model_response, full_response
             

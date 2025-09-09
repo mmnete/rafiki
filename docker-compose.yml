@@ -23,7 +23,7 @@ services:
       - "5000:5000"
     environment:
       DATABASE_URL: "postgresql://postgres:12345@postgres:5432/rafiki_ai"
-      REDIS_URL: "redis://redis:6379"
+      REDIS_URL: "redis://redis:6379/0"
       FLASK_ENV: "development"
     depends_on:
       - postgres

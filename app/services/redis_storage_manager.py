@@ -58,16 +58,17 @@ class RedisStorageManager:
             redis_url = os.getenv('REDIS_URL')
             if redis_url:
                 # Production (Heroku) - use provided REDIS_URL
-                return redis.from_url(redis_url, decode_responses=True, ssl_cert_reqs=None)
+                # Remove ssl_cert_reqs parameter - let Redis handle SSL automatically
+                return redis.from_url(redis_url, decode_responses=True)
             else:
-                # Local Redis for testing
+                # Local Redis for testing (no SSL needed)
                 return redis.Redis(
                     host=os.getenv('REDIS_HOST', 'localhost'),
                     port=int(os.getenv('REDIS_PORT', 6379)),
                     db=0,
                     decode_responses=True
                 )
-        except redis_exceptions.ConnectionError as e: # Use the imported alias
+        except redis_exceptions.ConnectionError as e:
             print(f"Failed to connect to Redis: {e}")
             print("Falling back to local storage")
             return None

@@ -8,18 +8,21 @@ class BookingSchema(BaseSchema):
     
     def get_table_definitions(self) -> List[str]:
         return [
+            # 1. First create the main bookings table
             """
             CREATE TABLE IF NOT EXISTS bookings (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 booking_reference VARCHAR(20) UNIQUE NOT NULL,
                 
-                -- Owner and Organization
+                -- WHO MADE THE BOOKING (provides contact info)
                 primary_user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                
+                -- Group/Organization
                 group_size INT DEFAULT 1,
                 booking_type VARCHAR(20) DEFAULT 'individual',
                 
                 -- Flight Search Connection
-                search_id UUID REFERENCES flight_searches(id),
+                search_id VARCHAR(255),
                 selected_flight_offers JSONB NOT NULL DEFAULT '[]',
                 
                 -- Trip Details
@@ -42,15 +45,22 @@ class BookingSchema(BaseSchema):
                 payment_status VARCHAR(30) DEFAULT 'pending',
                 fulfillment_status VARCHAR(30) DEFAULT 'pending',
                 
-                -- External System Integration
-                amadeus_booking_id VARCHAR(255),
-                amadeus_pnr VARCHAR(10),
-                amadeus_response JSONB DEFAULT '{}',
+                -- External System Integration (generic)
+                provider_name VARCHAR(50),                -- e.g. 'amadeus', 'sabre', 'airline_direct'
+                provider_booking_id VARCHAR(255),         -- external booking identifier
+                provider_pnr VARCHAR(20),                 -- PNR code if applicable
+                provider_response JSONB DEFAULT '{}',     -- raw API response
                 
-                -- Special Services
+                -- Booking-level services and requests
                 travel_insurance BOOLEAN DEFAULT FALSE,
                 special_requests TEXT,
                 accessibility_requirements TEXT,
+                
+                -- Emergency contact (booking-level, not passenger-level)
+                emergency_contact_name VARCHAR(255),
+                emergency_contact_phone VARCHAR(50),
+                emergency_contact_relationship VARCHAR(50),
+                emergency_contact_email VARCHAR(255),
                 
                 -- Important Dates
                 confirmation_deadline TIMESTAMP,
@@ -64,32 +74,36 @@ class BookingSchema(BaseSchema):
                 cancelled_at TIMESTAMP,
                 
                 -- Constraints
-                CONSTRAINT valid_booking_status CHECK (booking_status IN ('draft', 'passenger_details_pending', 'payment_pending', 'confirmed', 'checked_in', 'completed', 'cancelled', 'expired')),
-                CONSTRAINT valid_payment_status CHECK (payment_status IN ('pending', 'processing', 'completed', 'failed', 'refunded', 'partially_refunded')),
+                CONSTRAINT valid_booking_status CHECK (
+                    booking_status IN ('draft', 'passenger_details_pending', 'payment_pending', 'confirmed', 'checked_in', 'completed', 'cancelled', 'expired')
+                ),
+                CONSTRAINT valid_payment_status CHECK (
+                    payment_status IN ('pending', 'processing', 'completed', 'failed', 'refunded', 'partially_refunded')
+                ),
                 CONSTRAINT valid_trip_type CHECK (trip_type IN ('one_way', 'round_trip', 'multi_city')),
                 CONSTRAINT valid_booking_type CHECK (booking_type IN ('individual', 'family', 'group', 'corporate'))
             );
             """,
             
+            # 2. Then create booking_passengers table (now that bookings exists)
             """
             CREATE TABLE IF NOT EXISTS booking_passengers (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 booking_id UUID NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
-                passenger_profile_id UUID REFERENCES passenger_profiles(id),
+                passenger_profile_id UUID NOT NULL REFERENCES passenger_profiles(id) ON DELETE CASCADE,
                 
                 -- Booking-Specific Details
                 passenger_sequence INT NOT NULL,
-                passenger_type VARCHAR(20) NOT NULL DEFAULT 'adult',
                 is_primary_passenger BOOLEAN DEFAULT FALSE,
                 
-                -- Booking-Specific Overrides (if different from profile)
-                booking_first_name VARCHAR(255),
-                booking_last_name VARCHAR(255),
-                booking_document_number VARCHAR(50),
-                booking_seat_preference VARCHAR(20),
-                booking_meal_preference VARCHAR(50),
+                -- BOOKING-SPECIFIC SERVICES (vary per trip)
+                extra_baggage_count INT DEFAULT 0,
+                priority_boarding BOOLEAN DEFAULT FALSE,
+                seat_upgrade_requested BOOLEAN DEFAULT FALSE,
+                wheelchair_requested BOOLEAN DEFAULT FALSE,
+                unaccompanied_minor BOOLEAN DEFAULT FALSE,
                 
-                -- Seat Assignments
+                -- Seat Assignments (populated after booking)
                 assigned_seats JSONB DEFAULT '{}',
                 seat_assignment_status VARCHAR(20) DEFAULT 'pending',
                 
@@ -103,12 +117,12 @@ class BookingSchema(BaseSchema):
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 
                 -- Constraints
-                CONSTRAINT valid_passenger_type CHECK (passenger_type IN ('adult', 'child', 'infant', 'senior')),
                 CONSTRAINT valid_seat_status CHECK (seat_assignment_status IN ('pending', 'assigned', 'confirmed', 'changed')),
                 UNIQUE(booking_id, passenger_sequence)
             );
             """,
             
+            # 3. Then create booking_flight_segments
             """
             CREATE TABLE IF NOT EXISTS booking_flight_segments (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -138,9 +152,6 @@ class BookingSchema(BaseSchema):
                 distance_km INT,
                 flight_status VARCHAR(20) DEFAULT 'scheduled',
                 
-                -- Passenger Assignments for this segment
-                passenger_assignments JSONB DEFAULT '{}',
-                
                 -- Real-time Updates
                 actual_departure_time TIMESTAMP,
                 actual_arrival_time TIMESTAMP,
@@ -158,6 +169,7 @@ class BookingSchema(BaseSchema):
             );
             """,
             
+            # 4. Finally create booking_timeline
             """
             CREATE TABLE IF NOT EXISTS booking_timeline (
                 id SERIAL PRIMARY KEY,
@@ -169,7 +181,7 @@ class BookingSchema(BaseSchema):
                 event_data JSONB DEFAULT '{}',
                 
                 -- Event Context
-                triggered_by_user_id INT REFERENCES users(id),
+                triggered_by_user_id INT REFERENCES users(id) ON DELETE CASCADE,
                 system_event BOOLEAN DEFAULT FALSE,
                 
                 -- Metadata
@@ -191,7 +203,8 @@ class BookingSchema(BaseSchema):
             "CREATE INDEX IF NOT EXISTS idx_bookings_reference ON bookings(booking_reference);",
             "CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(booking_status);",
             "CREATE INDEX IF NOT EXISTS idx_bookings_departure ON bookings(departure_date);",
-            "CREATE INDEX IF NOT EXISTS idx_bookings_amadeus_pnr ON bookings(amadeus_pnr);",
+            "CREATE INDEX IF NOT EXISTS idx_bookings_provider_pnr ON bookings(provider_pnr);",
+            "CREATE INDEX IF NOT EXISTS idx_bookings_provider_id ON bookings(provider_booking_id);",
             
             "CREATE INDEX IF NOT EXISTS idx_booking_passengers_booking ON booking_passengers(booking_id);",
             "CREATE INDEX IF NOT EXISTS idx_booking_passengers_profile ON booking_passengers(passenger_profile_id);",

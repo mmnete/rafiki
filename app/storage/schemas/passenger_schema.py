@@ -7,9 +7,9 @@ class PassengerSchema(BaseSchema):
     
     Design considerations:
     - Passengers exist independently of bookings
+    - Only contains data that doesn't vary per booking
     - Can be linked to user accounts for personalization
-    - Stores travel documents, preferences, and history
-    - Enables cross-booking passenger recognition
+    - Enables cross-booking passenger recognition and auto-fill
     """
     
     def get_table_definitions(self) -> List[str]:
@@ -18,112 +18,137 @@ class PassengerSchema(BaseSchema):
             CREATE TABLE IF NOT EXISTS passenger_profiles (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 
-                -- Personal Information
+                -- REQUIRED PERSONAL INFO (airline mandatory fields that don't change)
                 first_name VARCHAR(255) NOT NULL,
                 middle_name VARCHAR(255),
                 last_name VARCHAR(255) NOT NULL,
                 date_of_birth DATE NOT NULL,
-                gender VARCHAR(20),
-                title VARCHAR(10),
+                gender VARCHAR(20) NOT NULL,
+                nationality VARCHAR(3) NOT NULL,
                 
-                -- Contact Information
-                email VARCHAR(255),
-                phone_number VARCHAR(50),
-                
-                -- Travel Documents (can have multiple)
-                primary_document_type VARCHAR(20),
+                -- TRAVEL DOCUMENTS (primary document)
+                primary_document_type VARCHAR(20) DEFAULT 'passport',
                 primary_document_number VARCHAR(50),
                 primary_document_expiry DATE,
                 primary_document_country VARCHAR(3),
-                nationality VARCHAR(3),
+                place_of_birth VARCHAR(100),
                 
-                -- Travel Preferences
-                seat_preference VARCHAR(20) DEFAULT 'any',
+                -- TRAVEL PREFERENCES (passenger's default preferences)
+                seat_preference VARCHAR(50) DEFAULT 'any',
                 meal_preference VARCHAR(50),
                 special_assistance TEXT,
-                medical_conditions TEXT,
                 dietary_restrictions TEXT,
+                preferred_class VARCHAR(20) DEFAULT 'economy',
                 
-                -- Frequent Traveler Information
+                -- FREQUENT TRAVELER PROGRAMS (tied to this person)
                 airline_loyalties JSONB DEFAULT '{}',
                 tsa_precheck_number VARCHAR(20),
                 global_entry_number VARCHAR(20),
+                known_traveler_number VARCHAR(20),
+                redress_number VARCHAR(20),
                 
-                -- System Fields
-                created_by_user_id INT REFERENCES users(id),
-                is_verified BOOLEAN DEFAULT FALSE,
-                verification_method VARCHAR(50),
+                -- MEDICAL/ACCESSIBILITY (permanent conditions)
+                medical_conditions TEXT,
+                mobility_assistance BOOLEAN DEFAULT FALSE,
+                vision_assistance BOOLEAN DEFAULT FALSE,
+                hearing_assistance BOOLEAN DEFAULT FALSE,
+                service_animal BOOLEAN DEFAULT FALSE,
+                oxygen_required BOOLEAN DEFAULT FALSE,
                 
                 -- Metadata
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                last_traveled_at TIMESTAMP,
+                last_used_at TIMESTAMP,
                 
                 -- Constraints
-                CONSTRAINT valid_passenger_email CHECK (email IS NULL OR email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
-                CONSTRAINT valid_passenger_phone CHECK (phone_number IS NULL OR phone_number ~ '^[+]?[0-9\s\-()]+$'),
-                CONSTRAINT valid_gender CHECK (gender IS NULL OR gender IN ('male', 'female', 'other', 'prefer_not_to_say'))
+                CONSTRAINT valid_passenger_gender CHECK (gender IN ('male', 'female', 'other')),
+                CONSTRAINT valid_document_type CHECK (primary_document_type IN ('passport', 'national_id', 'drivers_license', 'birth_certificate')),
+                CONSTRAINT valid_seat_pref CHECK (seat_preference IN ('window', 'aisle', 'any', 'exit_row', 'front', 'back', 'middle')),
+                CONSTRAINT valid_class_pref CHECK (preferred_class IN ('economy', 'premium_economy', 'business', 'first'))
             );
             """,
             
             """
-            CREATE TABLE IF NOT EXISTS passenger_documents (
+            CREATE TABLE IF NOT EXISTS booking_passengers (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                passenger_id UUID NOT NULL REFERENCES passenger_profiles(id) ON DELETE CASCADE,
+                booking_id UUID NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+                passenger_profile_id UUID NOT NULL REFERENCES passenger_profiles(id) ON DELETE CASCADE,
                 
-                -- Document Details
-                document_type VARCHAR(20) NOT NULL,
-                document_number VARCHAR(50) NOT NULL,
-                document_expiry DATE,
-                issuing_country VARCHAR(3) NOT NULL,
+                -- Booking-Specific Details
+                passenger_sequence INT NOT NULL,
+                is_primary_passenger BOOLEAN DEFAULT FALSE,
                 
-                -- Document Images/Files
-                document_image_ids JSONB DEFAULT '[]',
-                is_primary BOOLEAN DEFAULT FALSE,
-                is_verified BOOLEAN DEFAULT FALSE,
+                -- BOOKING-SPECIFIC SERVICES (vary per trip)
+                extra_baggage_count INT DEFAULT 0,
+                priority_boarding BOOLEAN DEFAULT FALSE,
+                seat_upgrade_requested BOOLEAN DEFAULT FALSE,
+                wheelchair_requested BOOLEAN DEFAULT FALSE,
+                unaccompanied_minor BOOLEAN DEFAULT FALSE,
+                
+                -- Seat Assignments (populated after booking)
+                assigned_seats JSONB DEFAULT '{}',
+                seat_assignment_status VARCHAR(20) DEFAULT 'pending',
+                
+                -- Check-in Status
+                checked_in_at TIMESTAMP,
+                boarding_pass_issued BOOLEAN DEFAULT FALSE,
+                boarding_pass_file_id UUID,
                 
                 -- Metadata
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 
                 -- Constraints
-                CONSTRAINT valid_document_type CHECK (document_type IN ('passport', 'national_id', 'drivers_license', 'birth_certificate')),
-                UNIQUE(passenger_id, document_type, document_number)
+                CONSTRAINT valid_seat_status CHECK (seat_assignment_status IN ('pending', 'assigned', 'confirmed', 'changed')),
+                UNIQUE(booking_id, passenger_sequence)
             );
             """,
             
             """
-            CREATE TABLE IF NOT EXISTS user_passenger_connections (
+            CREATE TABLE IF NOT EXISTS user_frequent_passengers (
                 id SERIAL PRIMARY KEY,
                 user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                passenger_id UUID NOT NULL REFERENCES passenger_profiles(id) ON DELETE CASCADE,
+                passenger_profile_id UUID NOT NULL REFERENCES passenger_profiles(id) ON DELETE CASCADE,
                 
-                -- Connection Details
+                -- Relationship info
                 relationship VARCHAR(50),
-                connection_type VARCHAR(30) NOT NULL,
-                trust_level VARCHAR(20) DEFAULT 'unverified',
+                nickname VARCHAR(100),
                 
-                -- When/How Connection Was Made
-                connected_via_booking_id UUID,
-                connection_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                verified_at TIMESTAMP,
-                verified_by_user BOOLEAN DEFAULT FALSE,
+                -- Usage tracking for ML/personalization
+                times_booked_together INT DEFAULT 1,
+                last_booked_together TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                total_trips_value DECIMAL(10,2) DEFAULT 0.00,
                 
-                -- Permissions
-                can_book_for_passenger BOOLEAN DEFAULT FALSE,
-                can_modify_passenger_details BOOLEAN DEFAULT FALSE,
-                can_view_passenger_history BOOLEAN DEFAULT FALSE,
+                -- Permissions & preferences
+                can_auto_suggest BOOLEAN DEFAULT TRUE,
+                can_book_on_behalf BOOLEAN DEFAULT FALSE,
+                
+                -- Smart suggestions context
+                common_routes JSONB DEFAULT '[]',
+                preferred_times JSONB DEFAULT '{}',
                 
                 -- Metadata
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 
-                -- Constraints
-                CONSTRAINT valid_connection_type CHECK (connection_type IN ('self', 'family', 'friend', 'colleague', 'auto_detected')),
-                CONSTRAINT valid_relationship CHECK (relationship IN ('self', 'spouse', 'child', 'parent', 'sibling', 'friend', 'colleague', 'other')),
-                CONSTRAINT valid_trust_level CHECK (trust_level IN ('unverified', 'pending', 'verified', 'trusted')),
-                UNIQUE(user_id, passenger_id)
+                CONSTRAINT valid_relationship CHECK (relationship IN ('self', 'spouse', 'partner', 'child', 'parent', 'sibling', 'friend', 'colleague', 'other')),
+                UNIQUE(user_id, passenger_profile_id)
             );
+            """,
+            
+            """
+            -- Helper function to calculate passenger type from date of birth
+            CREATE OR REPLACE FUNCTION get_passenger_type(birth_date DATE, travel_date DATE DEFAULT CURRENT_DATE) 
+            RETURNS VARCHAR(20) AS $$
+            BEGIN
+                CASE 
+                    WHEN AGE(travel_date, birth_date) < INTERVAL '2 years' THEN RETURN 'infant';
+                    WHEN AGE(travel_date, birth_date) < INTERVAL '12 years' THEN RETURN 'child';
+                    WHEN AGE(travel_date, birth_date) >= INTERVAL '65 years' THEN RETURN 'senior';
+                    ELSE RETURN 'adult';
+                END CASE;
+            END;
+            $$ LANGUAGE plpgsql;
             """
         ]
     
@@ -131,16 +156,15 @@ class PassengerSchema(BaseSchema):
         return [
             "CREATE INDEX IF NOT EXISTS idx_passenger_profiles_name ON passenger_profiles(first_name, last_name);",
             "CREATE INDEX IF NOT EXISTS idx_passenger_profiles_dob ON passenger_profiles(date_of_birth);",
-            "CREATE INDEX IF NOT EXISTS idx_passenger_profiles_created_by ON passenger_profiles(created_by_user_id);",
-            "CREATE INDEX IF NOT EXISTS idx_passenger_profiles_email ON passenger_profiles(email);",
-            "CREATE INDEX IF NOT EXISTS idx_passenger_profiles_phone ON passenger_profiles(phone_number);",
+            "CREATE INDEX IF NOT EXISTS idx_passenger_profiles_nationality ON passenger_profiles(nationality);",
+            "CREATE INDEX IF NOT EXISTS idx_passenger_profiles_document ON passenger_profiles(primary_document_number);",
+            "CREATE INDEX IF NOT EXISTS idx_passenger_profiles_last_used ON passenger_profiles(last_used_at);",
             
-            "CREATE INDEX IF NOT EXISTS idx_passenger_documents_passenger ON passenger_documents(passenger_id);",
-            "CREATE INDEX IF NOT EXISTS idx_passenger_documents_type ON passenger_documents(document_type);",
-            "CREATE INDEX IF NOT EXISTS idx_passenger_documents_primary ON passenger_documents(is_primary);",
+            "CREATE INDEX IF NOT EXISTS idx_booking_passengers_booking ON booking_passengers(booking_id);",
+            "CREATE INDEX IF NOT EXISTS idx_booking_passengers_profile ON booking_passengers(passenger_profile_id);",
+            "CREATE INDEX IF NOT EXISTS idx_booking_passengers_sequence ON booking_passengers(booking_id, passenger_sequence);",
             
-            "CREATE INDEX IF NOT EXISTS idx_user_passenger_connections_user ON user_passenger_connections(user_id);",
-            "CREATE INDEX IF NOT EXISTS idx_user_passenger_connections_passenger ON user_passenger_connections(passenger_id);",
-            "CREATE INDEX IF NOT EXISTS idx_user_passenger_connections_type ON user_passenger_connections(connection_type);",
-            "CREATE INDEX IF NOT EXISTS idx_user_passenger_connections_trust ON user_passenger_connections(trust_level);",
+            "CREATE INDEX IF NOT EXISTS idx_user_frequent_passengers_user ON user_frequent_passengers(user_id);",
+            "CREATE INDEX IF NOT EXISTS idx_user_frequent_passengers_passenger ON user_frequent_passengers(passenger_profile_id);",
+            "CREATE INDEX IF NOT EXISTS idx_user_frequent_passengers_relationship ON user_frequent_passengers(relationship);",
         ]

@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rafiki AI - Flight Booking Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 900px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .demo-indicator {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background: #fafbfc;
+        }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            animation: messageSlideIn 0.5s ease-out;
+        }
+
+        @keyframes messageSlideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-bubble {
+            max-width: 75%;
+            padding: 16px 20px;
+            border-radius: 20px;
+            word-wrap: break-word;
+            line-height: 1.5;
+            font-size: 15px;
+        }
+
+        .message.user .message-bubble {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            border-bottom-right-radius: 8px;
+            box-shadow: 0 4px 12px rgba(30, 60, 114, 0.3);
+        }
+
+        .message.agent .message-bubble {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 8px;
+            border: 1px solid #e1e8ed;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .avatar.agent {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .avatar.user {
+            background: #e1e8ed;
+            color: #657786;
+        }
+
+        .message-time {
+            font-size: 11px;
+            opacity: 0.6;
+            margin-top: 6px;
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 16px 20px;
+            background: white;
+            border: 1px solid #e1e8ed;
+            border-radius: 20px;
+            border-bottom-left-radius: 8px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dots span {
+            width: 6px;
+            height: 6px;
+            background: #667eea;
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.3; }
+            30% { transform: translateY(-10px); opacity: 1; }
+        }
+
+        .flight-card {
+            background: #f8fffe;
+            border: 1px solid #4ecdc4;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 8px 0;
+        }
+
+        .flight-route {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .flight-price {
+            font-weight: 700;
+            color: #1e3c72;
+            font-size: 18px;
+        }
+
+        .payment-form {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 8px 0;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 600;
+            font-size: 13px;
+            color: #495057;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .booking-confirmation {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 8px 0;
+            text-align: center;
+        }
+
+        .confirmation-code {
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            font-weight: 700;
+            color: #155724;
+            margin: 8px 0;
+        }
+
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+        }
+
+        .control-button {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin-right: 10px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .control-button:hover {
+            background: white;
+            transform: translateY(-2px);
+        }
+
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4);
+            transition: width 0.5s ease;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .container {
+                width: 95%;
+                height: 95vh;
+            }
+            
+            .chat-container {
+                padding: 20px 15px;
+            }
+            
+            .message-bubble {
+                max-width: 85%;
+                padding: 14px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="demo-indicator">LIVE DEMO</div>
+            <h1>🤖 Rafiki AI</h1>
+            <p>Natural Language Flight Booking Assistant</p>
+        </div>
+
+        <div class="controls">
+            <button class="control-button" onclick="restartDemo()">🔄 Restart</button>
+            <button class="control-button" onclick="pauseDemo()">⏸️ Pause</button>
+            <button class="control-button" onclick="speedUp()">⚡ Speed Up</button>
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+        </div>
+
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <script>
+        let demoSpeed = 1;
+        let isPaused = false;
+        let currentStep = 0;
+        let demoTimeout;
+
+        const conversation = [
+            {
+                type: 'agent',
+                message: 'Hi there! I\'m Rafiki, your AI travel assistant. I can help you discover and book flights in natural conversation. How can I help you today?',
+                delay: 3000
+            },
+            {
+                type: 'user',
+                message: 'Hey! My wife and I want to take a trip next week. We\'re thinking somewhere warm and tropical, maybe the Caribbean or Hawaii?',
+                delay: 4000
+            },
+            {
+                type: 'agent',
+                message: 'That sounds like a wonderful getaway! I\'d love to help you find the perfect tropical escape. Let me gather a few details to find you the best options.',
+                delay: 2500
+            },
+            {
+                type: 'agent',
+                message: 'First, where would you be flying from?',
+                delay: 1500
+            },
+            {
+                type: 'user',
+                message: 'We\'re in San Francisco',
+                delay: 2000
+            },
+            {
+                type: 'agent',
+                message: 'Perfect! San Francisco has great connections to tropical destinations. For next week, are you flexible with dates, or do you have specific days in mind?',
+                delay: 3000
+            },
+            {
+                type: 'user',
+                message: 'We\'re pretty flexible. Maybe leaving Friday the 13th and coming back the following Sunday? So like a weekend getaway',
+                delay: 3500
+            },
+            {
+                type: 'agent',
+                message: 'Excellent! So September 13th to 22nd - that\'s a nice 9-day trip. Between the Caribbean and Hawaii, do you have a preference? Hawaii tends to be closer from SF, while the Caribbean offers more variety in islands and cultures.',
+                delay: 4000
+            },
+            {
+                type: 'user',
+                message: 'Let\'s try Hawaii first. We\'ve never been and I hear Maui is beautiful!',
+                delay: 3000
+            },
+            {
+                type: 'agent',
+                message: 'Maui is absolutely gorgeous! Let me search for flights from San Francisco to Maui for September 13th, returning September 22nd for 2 adults.',
+                delay: 2500
+            },
+            {
+                type: 'agent',
+                message: 'I found several great options for your trip! Here are the top 3:',
+                delay: 3000,
+                followUp: {
+                    type: 'flights',
+                    data: [
+                        {
+                            id: 'FL001',
+                            airline: 'Hawaiian Airlines',
+                            route: 'SFO → OGG (Maui)',
+                            departure: '8:30 AM',
+                            arrival: '12:15 PM',
+                            price: '$485',
+                            details: 'Direct flight, 5h 45m'
+                        },
+                        {
+                            id: 'FL002', 
+                            airline: 'Alaska Airlines',
+                            route: 'SFO → OGG (Maui)',
+                            departure: '2:20 PM',
+                            arrival: '6:05 PM',
+                            price: '$522',
+                            details: 'Direct flight, 5h 45m'
+                        },
+                        {
+                            id: 'FL003',
+                            airline: 'United Airlines',
+                            route: 'SFO → OGG (Maui)',
+                            departure: '6:45 PM',
+                            arrival: '10:30 PM',
+                            price: '$456',
+                            details: 'Direct flight, 5h 45m'
+                        }
+                    ]
+                }
+            },
+            {
+                type: 'agent',
+                message: 'All flights are direct and around 5 hours 45 minutes. The morning Hawaiian flight gets you there early to enjoy your first day, while the United evening flight is the most budget-friendly. Which one catches your interest?',
+                delay: 3500
+            },
+            {
+                type: 'user',
+                message: 'The Hawaiian Airlines morning flight looks perfect! We\'d love to get there early and start enjoying the island. How do we book it?',
+                delay: 3500
+            },
+            {
+                type: 'agent',
+                message: 'Great choice! Hawaiian Airlines offers an authentic island experience. To proceed with booking, I\'ll need some information from you. Don\'t worry, this is all secure and encrypted.',
+                delay: 3000
+            },
+            {
+                type: 'agent',
+                message: 'First, could you please provide the full names as they appear on your passports?',
+                delay: 2000
+            },
+            {
+                type: 'user',
+                message: 'I\'m Michael Johnson and my wife is Sarah Johnson',
+                delay: 2500
+            },
+            {
+                type: 'agent',
+                message: 'Perfect! And could I get email addresses for both travelers? This is where we\'ll send your boarding passes and confirmation details.',
+                delay: 2500
+            },
+            {
+                type: 'user',
+                message: 'Mine is michael.johnson@email.com and Sarah\'s is sarah.johnson@email.com',
+                delay: 3000
+            },
+            {
+                type: 'agent',
+                message: 'Excellent! I\'ve prepared your booking details:\n\n✈️ **Flight Summary**\nSFO → OGG (Maui) - September 13th\nOGG → SFO - September 22nd\nHawaiian Airlines - 2 passengers\nTotal: $970 ($485 × 2)\n\nLet me process the payment to secure your seats.',
+                delay: 4000,
+                followUp: {
+                    type: 'payment'
+                }
+            },
+            {
+                type: 'agent',
+                message: '💳 **Payment Processing**\n\nFor security, I\'ll need your payment details:',
+                delay: 2000
+            },
+            {
+                type: 'user',
+                message: 'Sure, let me get my card... it\'s a Visa ending in 4532',
+                delay: 3000
+            },
+            {
+                type: 'agent',
+                message: 'Perfect! I\'ve securely processed your payment through our encrypted Stripe integration. Everything looks good!',
+                delay: 3000
+            },
+            {
+                type: 'agent',
+                message: '✅ **BOOKING CONFIRMED!**\n\nConfirmation Code: **RFK-HNL-7829**\n\n🎫 **Your Trip Details:**\n📅 September 13-22, 2025\n✈️ Hawaiian Airlines\n👥 Michael & Sarah Johnson\n💰 Total Paid: $970.00\n\nBoarding passes sent to your emails! Have an amazing trip to Maui! 🌺',
+                delay: 4000,
+                followUp: {
+                    type: 'confirmation'
+                }
+            },
+            {
+                type: 'agent',
+                message: 'Is there anything else I can help you with? I can assist with hotel recommendations, car rentals, or activities in Maui!',
+                delay: 3000
+            },
+            {
+                type: 'user',
+                message: 'This was amazing! So easy and natural. Thanks Rafiki!',
+                delay: 2500
+            },
+            {
+                type: 'agent',
+                message: 'You\'re very welcome! I\'m so happy I could help make your trip planning effortless. Have a wonderful time in Maui, and feel free to reach out if you need anything else for your travels! 🌺✈️',
+                delay: 3500
+            }
+        ];
+
+        function addMessage(message, isUser = false) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'agent'}`;
+
+            const avatarDiv = document.createElement('div');
+            avatarDiv.className = `avatar ${isUser ? 'user' : 'agent'}`;
+            avatarDiv.textContent = isUser ? 'U' : '🤖';
+
+            const contentDiv = document.createElement('div');
+            contentDiv.style.flex = '1';
+
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = 'message-bubble';
+            
+            // Handle special message types
+            if (message.followUp) {
+                if (message.followUp.type === 'flights') {
+                    let flightHTML = message.message + '\n\n';
+                    message.followUp.data.forEach(flight => {
+                        flightHTML += `
+                        <div class="flight-card">
+                            <div class="flight-route">
+                                <strong>${flight.airline}</strong>
+                                <span class="flight-price">${flight.price}</span>
+                            </div>
+                            <div>${flight.route}</div>
+                            <div>Departure: ${flight.departure} → Arrival: ${flight.arrival}</div>
+                            <div style="font-size: 12px; color: #666;">${flight.details}</div>
+                        </div>`;
+                    });
+                    bubbleDiv.innerHTML = flightHTML.replace(/\n/g, '<br>');
+                } else if (message.followUp.type === 'payment') {
+                    bubbleDiv.innerHTML = message.message.replace(/\n/g, '<br>') + `
+                    <div class="payment-form">
+                        <div class="form-group">
+                            <label>Card Number</label>
+                            <input type="text" value="**** **** **** 4532" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Expiry</label>
+                            <input type="text" value="12/26" readonly>
+                        </div>
+                        <div style="font-size: 12px; color: #666; margin-top: 8px;">
+                            🔒 Secured by Stripe • SSL Encrypted
+                        </div>
+                    </div>`;
+                } else if (message.followUp.type === 'confirmation') {
+                    bubbleDiv.innerHTML = message.message.replace(/\n/g, '<br>') + `
+                    <div class="booking-confirmation">
+                        <div>🎉 Booking Successfully Processed!</div>
+                        <div class="confirmation-code">RFK-HNL-7829</div>
+                        <div>Check your email for boarding passes</div>
+                    </div>`;
+                }
+            } else {
+                bubbleDiv.innerHTML = message.message.replace(/\n/g, '<br>');
+            }
+
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'message-time';
+            timeDiv.textContent = new Date().toLocaleTimeString();
+
+            contentDiv.appendChild(bubbleDiv);
+            contentDiv.appendChild(timeDiv);
+
+            if (!isUser) {
+                messageDiv.appendChild(avatarDiv);
+            }
+            messageDiv.appendChild(contentDiv);
+            if (isUser) {
+                messageDiv.appendChild(avatarDiv);
+            }
+
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            return messageDiv;
+        }
+
+        function showTypingIndicator() {
+            const chatContainer = document.getElementById('chatContainer');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message agent';
+            typingDiv.id = 'typing-indicator';
+
+            const avatarDiv = document.createElement('div');
+            avatarDiv.className = 'avatar agent';
+            avatarDiv.textContent = '🤖';
+
+            const indicatorDiv = document.createElement('div');
+            indicatorDiv.className = 'typing-indicator';
+            indicatorDiv.innerHTML = `
+                <div class="typing-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <span style="font-size: 13px; color: #666;">Rafiki is typing...</span>
+            `;
+
+            typingDiv.appendChild(avatarDiv);
+            typingDiv.appendChild(indicatorDiv);
+            chatContainer.appendChild(typingDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typing-indicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        function updateProgress() {
+            const progress = (currentStep / conversation.length) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+        }
+
+        function playNextMessage() {
+            if (isPaused || currentStep >= conversation.length) return;
+
+            const step = conversation[currentStep];
+            const delay = step.delay / demoSpeed;
+
+            if (step.type === 'agent') {
+                showTypingIndicator();
+                demoTimeout = setTimeout(() => {
+                    removeTypingIndicator();
+                    addMessage(step, false);
+                    currentStep++;
+                    updateProgress();
+                    playNextMessage();
+                }, delay);
+            } else {
+                demoTimeout = setTimeout(() => {
+                    addMessage(step, true);
+                    currentStep++;
+                    updateProgress();
+                    playNextMessage();
+                }, delay);
+            }
+        }
+
+        function restartDemo() {
+            clearTimeout(demoTimeout);
+            currentStep = 0;
+            isPaused = false;
+            document.getElementById('chatContainer').innerHTML = '';
+            document.getElementById('progressBar').style.width = '0%';
+            playNextMessage();
+        }
+
+        function pauseDemo() {
+            isPaused = !isPaused;
+            const button = document.querySelector('.control-button:nth-child(2)');
+            button.textContent = isPaused ? '▶️ Resume' : '⏸️ Pause';
+            
+            if (!isPaused) {
+                playNextMessage();
+            } else {
+                clearTimeout(demoTimeout);
+            }
+        }
+
+        function speedUp() {
+            demoSpeed = demoSpeed === 1 ? 2 : demoSpeed === 2 ? 4 : 1;
+            const button = document.querySelector('.control-button:nth-child(3)');
+            button.textContent = demoSpeed === 1 ? '⚡ Speed Up' : `${demoSpeed}x Speed`;
+        }
+
+        // Start demo automatically
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                playNextMessage();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

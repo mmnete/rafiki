@@ -23,13 +23,16 @@ class UserSchema(BaseSchema):
                 id SERIAL PRIMARY KEY,
                 phone_number VARCHAR(50) UNIQUE NOT NULL,
                 
-                -- Profile Information
+                -- Profile Information (contact details for bookings)
                 first_name VARCHAR(255),
                 middle_name VARCHAR(255),
                 last_name VARCHAR(255),
                 email VARCHAR(255),
                 date_of_birth DATE,
                 gender VARCHAR(20),
+                
+                -- Connection to their own passenger profile (optional)
+                self_passenger_profile_id UUID REFERENCES passenger_profiles(id) ON DELETE SET NULL,
                 
                 -- Location and Preferences
                 location VARCHAR(255),
@@ -49,12 +52,13 @@ class UserSchema(BaseSchema):
                 -- Metadata
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                last_login_at TIMESTAMP,
+                last_chat_at TIMESTAMP,
                 
                 -- Constraints
                 CONSTRAINT valid_email CHECK (email IS NULL OR email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
                 CONSTRAINT valid_phone CHECK (phone_number ~ '^[+]?[0-9\s\-()]+$'),
-                CONSTRAINT valid_language CHECK (preferred_language IN ('en', 'sw', 'fr', 'es'))
+                CONSTRAINT valid_language CHECK (preferred_language IN ('en', 'sw', 'fr', 'es')),
+                CONSTRAINT valid_user_gender CHECK (gender IN ('male', 'female', 'other', 'prefer_not_to_say'))
             );
             """,
             

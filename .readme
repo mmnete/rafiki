@@ -1,78 +1,124 @@
-Starting Redis locally:
-- sudo service redis-server start
-- sudo service redis-server status
-- local redis - 12345
-- to clear: sudo service redis-server stop
+# Flight Booking System
 
-Local Server:
-- python run.py
+## Development Setup
 
+### Prerequisites
+- **Docker Desktop** (includes Docker Compose)
+- **Git**
+- **Python 3.11+** (for virtual environment and testing)
 
+### Quick Start
+1. Clone the repository:
+   ```bash
+   git clone <your-repo-url>
+   cd <your-project-name>
+   ```
 
-Option 2: Install Ubuntu WSL
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv venv
+   
+   # On Windows:
+   venv\Scripts\activate
+   
+   # On macOS/Linux:
+   source venv/bin/activate
+   ```
 
-Right now, you’re not in Ubuntu — you’re in a minimal Docker shell.
-If you install Ubuntu WSL, you’ll get apt, sudo, and everything works like Linux:
+3. Install Python dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-In PowerShell:
+4. Make sure your installed docker is running.
 
-wsl --install -d Ubuntu
+4. Start the development environment:
+   ```bash
+   make run-local-with-chat
+   ```
 
+5. The application will be available and you can test it by opening the chat interface in your browser as indicated by the make command output.
 
-(or use the Microsoft Store to install Ubuntu).
+### Available Make Commands
 
-Inside Ubuntu WSL:
+```bash
+# Start local development server
+make run-local
 
-sudo apt update
-sudo apt install redis-server
-sudo service redis-server start
+# Start local server and open chat interface
+make run-local-with-chat
 
+# Run all tests
+make test
 
-Then Redis runs just like on Linux.
+# Run fast unit tests only
+make test-fast
 
+# Run model tests specifically
+make test-models
 
+# Run tests with coverage report
+make test-coverage
 
-PS C:\Users\Public\Desktop\personal_projects_1\rafiki> wsl --install -d Ubuntu
-Downloading: Ubuntu
-Installing: Ubuntu
-A distribution with the supplied name already exists. Use --name to chose a different name.
-Error code: Wsl/InstallDistro/Service/RegisterDistro/ERROR_ALREADY_EXISTS
-PS C:\Users\Public\Desktop\personal_projects_1\rafiki> wsl -d Ubuntu
-Welcome to Ubuntu 24.04.3 LTS (GNU/Linux 5.15.167.4-microsoft-standard-WSL2 x86_64)
+# Run evaluations
+make run-evals
 
- * Documentation:  https://help.ubuntu.com
- * Management:     https://landscape.canonical.com
- * Support:        https://ubuntu.com/pro
+# Install test dependencies
+make install-test-deps
 
- System information as of Sun Aug 31 13:49:36 PDT 2025
+# Update requirements.txt
+make freeze-req
+```
 
-  System load:  0.4                 Processes:             55
-  Usage of /:   0.2% of 1006.85GB   Users logged in:       0
-  Memory usage: 5%                  IPv4 address for eth0: 172.22.117.54
-  Swap usage:   0%
+### Development Workflow
 
- * Strictly confined Kubernetes makes edge and IoT secure. Learn how MicroK8s
-   just raised the bar for easy, resilient and secure K8s cluster deployment.
+1. **Start development:** `make run-local`
+2. **Run tests:** `make test-fast` (for quick feedback)
+3. **Full test suite:** `make test` (before committing)
+4. **Test with coverage:** `make test-coverage` (to check test coverage)
 
-   https://ubuntu.com/engage/secure-kubernetes-at-the-edge
+### Services
 
-This message is shown once a day. To disable it please create the
-/home/mnete/.hushlogin file.
-mnete@mmnete-pc:/mnt/c/Users/Public/Desktop/personal_projects_1/rafiki$ sudo service redis-server start
-[sudo] password for mnete:
-mnete@mmnete-pc:/mnt/c/Users/Public/Desktop/personal_projects_1/rafiki$ sudo service redis-server status
-● redis-server.service - Advanced key-value store
-     Loaded: loaded (/usr/lib/systemd/system/redis-server.service; enabled; preset: enabled)
-     Active: active (running) since Sun 2025-08-31 13:49:36 PDT; 42s ago
-       Docs: http://redis.io/documentation,
-             man:redis-server(1)
-   Main PID: 141 (redis-server)
-     Status: "Ready to accept connections"
-      Tasks: 5 (limit: 9350)
-     Memory: 11.2M ()
-     CGroup: /system.slice/redis-server.service
-             └─141 "/usr/bin/redis-server 127.0.0.1:6379"
+When you run `make run-local`, the following services start:
+- **Application API:** Available via Docker
+- **PostgreSQL Database:** Available via Docker
+- **Chat Interface:** `chat_tester.html` in your browser
 
-Aug 31 13:49:35 mmnete-pc systemd[1]: Starting redis-server.service - Advanced key-value store...
-Aug 31 13:49:36 mmnete-pc systemd[1]: Started redis-server.service - Advanced key-value store.
-mnete@mmnete-pc:/mnt/c/Users/Public/Desktop/personal_projects_1/rafiki$
+### Troubleshooting
+
+**Port conflicts:**
+- Check if ports 5432 (postgres) or 8000 (app) are already in use
+- Stop the conflicting services or modify `docker-compose.yml`
+
+**Database issues:**
+```bash
+# Reset everything
+docker-compose down -v
+make run-local
+```
+
+**Permission issues (Linux):**
+```bash
+sudo chown -R $USER:$USER .
+```
+
+**Python virtual environment issues:**
+```bash
+# Recreate virtual environment
+rm -rf venv
+python -m venv venv
+source venv/bin/activate  # or venv\Scripts\activate on Windows
+pip install -r requirements.txt
+```
+
+### Project Structure
+```
+├── app/                    # Application code
+├── tests/                  # Test suite
+├── local_run/             # Local development files
+├── docker-compose.yml     # Development environment
+├── Dockerfile            # App container definition
+├── requirements.txt      # Python dependencies
+├── Makefile             # Development commands
+└── README.md            # This file
+```

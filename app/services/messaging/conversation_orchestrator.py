@@ -23,7 +23,7 @@ class ConversationOrchestrator:
         self.max_iterations = max_iterations
     
     def process_conversation_turn(self, prompt: str, user_id: str, user_message: str, 
-                                available_tool_functions: Dict[str, Callable]) -> Tuple[str, List[Dict[str, Any]]]:
+                                available_tool_functions: Dict[str, Callable], available_tool_context: Dict[str, Callable] = {}) -> Tuple[str, List[Dict[str, Any]]]:
         """
         Process a complete conversation turn with tool calling support
         
@@ -44,6 +44,8 @@ class ConversationOrchestrator:
         for iteration in range(self.max_iterations):
             print(f"[{user_id}] --- Iteration {iteration + 1}/{self.max_iterations} ---")
             
+            print(f"--- Current Prompt: {current_prompt} ---")
+            
             # Generate model response
             raw_response = self.model_service.generate_text_content(current_prompt)
             print(f"[{user_id}] Raw response: '{raw_response[:100]}...'")
@@ -62,6 +64,7 @@ class ConversationOrchestrator:
                 tool_results = self.tool_executor.execute_tool_calls(
                     parsed_response.tool_calls, 
                     available_tool_functions, 
+                    available_tool_context,
                     user_id
                 )
                 all_tool_results.extend(tool_results)

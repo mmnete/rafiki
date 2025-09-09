@@ -22,7 +22,20 @@ test-fast:
 	python -m pytest tests/unit/ -v --disable-warnings --ignore=tests/evals
 
 run-evals:
-	python tests/evals/run_eval.py
+	python -u tests/evals/run_eval.py
+
+run-local:
+	@echo "Starting local development environment..."
+	docker-compose up --build -d
+	@echo "Services started! Open chat_tester.html in your browser to test the system."
+	@echo "Or visit: file://$(PWD)/chat_tester.html"
+
+run-local-with-chat:
+	@echo "Starting local development environment..."
+	docker-compose up --build -d
+	@sleep 3
+	@echo "Opening chat interface..."
+	open local_run/chat_tester.html || xdg-open local_run/chat_tester.html || start local_run/chat_tester.html
 
 # Update requirements.txt with currently installed packages
 freeze-req:

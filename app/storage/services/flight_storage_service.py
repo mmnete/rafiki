@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from app.storage.db_service import StorageService
+import uuid
 
 @dataclass
 class FlightSearch:
@@ -373,7 +374,7 @@ class FlightStorageService:
                            airline_codes, route_summary, total_duration_minutes,
                            stops_count, bookable_until, seats_available,
                            fare_rules, complete_offer_data, created_at
-                    FROM flight_offers WHERE id = %s;
+                    FROM flight_offers WHERE flight_offer_id = %s;
                 """, (offer_id,))
                 
                 row = cur.fetchone()
@@ -534,3 +535,68 @@ class FlightStorageService:
         except Exception as e:
             print(f"Error getting search statistics: {e}")
             return {}
+    
+    def create_flight_offers_from_raw_response(self, search_id: str, raw_results: Dict[str, Any]) -> List[FlightOffer]:
+        """
+        Create FlightOffer dataclass instances from raw flight search results
+        
+        Args:
+            search_id: The search ID from your database
+            raw_results: The raw results dict from search_flights() containing 'flights' key
+        
+        Returns:
+            List of FlightOffer dataclass instances
+        """
+        flight_offers = []
+        
+        # Extract flights from raw_results
+        flights = raw_results.get('flights', [])
+        
+        for flight in flights:
+            if not isinstance(flight, dict):
+                continue
+                
+            try:
+                # Extract pricing info
+                total_price = Decimal(str(flight.get('price_total', 0)))
+                base_price = Decimal(str(flight.get('base_price', 0)))
+                
+                # Calculate taxes and fees (total - base)
+                taxes_and_fees = total_price - base_price if base_price > 0 else Decimal('0')
+                
+                # Handle bookable_until from lastTicketingDate
+                bookable_until = None
+                if flight.get('last_ticketing_date'):
+                    try:
+                        bookable_until = datetime.fromisoformat(flight['last_ticketing_date'].replace('Z', '+00:00'))
+                    except (ValueError, AttributeError):
+                        bookable_until = None
+                
+                # Create FlightOffer instance
+                flight_offer = FlightOffer(
+                    id=str(uuid.uuid4()),  # Generate new UUID for database primary key
+                    search_id=search_id,
+                    flight_offer_id=flight.get('flight_offer_id', str(uuid.uuid4())),
+                    amadeus_offer_id=flight.get('amadeus_offer_id'),
+                    base_price=base_price,
+                    taxes_and_fees=taxes_and_fees,
+                    total_price=total_price,
+                    currency=flight.get('currency', 'USD'),
+                    airline_codes=flight.get('airlines', []) or [flight.get('airline_code')] if flight.get('airline_code') else [], # type: ignore
+                    route_summary=f"{flight.get('origin')} -> {flight.get('destination')}" if flight.get('origin') and flight.get('destination') else None,
+                    total_duration_minutes=flight.get('duration_minutes'),
+                    stops_count=flight.get('stops', 0),
+                    bookable_until=bookable_until,
+                    seats_available=flight.get('seats_available'),
+                    fare_rules={},  # You might want to extract this from _full_amadeus_data if needed
+                    complete_offer_data=flight,  # Store the entire flight dict
+                    created_at=datetime.utcnow()
+                )
+                
+                flight_offers.append(flight_offer)
+                
+            except Exception as e:
+                print(f"Error creating FlightOffer from flight data: {e}")
+                continue
+        
+        return flight_offers

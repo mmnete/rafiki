@@ -108,10 +108,14 @@ class ConversationHandler:
 
             available_tools = self.tool_manager.get_available_tools_for_user(user)
             available_tool_functions = {}
+            available_tool_context = {}
             for name in available_tools:
                 tool_function = self.tool_manager.get_tool_function(name)
+                tool_context = self.tool_manager.get_tool_context(name)
                 if tool_function is not None:
                     available_tool_functions[name] = tool_function
+                if tool_context is not None:
+                    available_tool_context[name] = tool_context
 
             # Step 7: Call AI model 
             if cancellation_check():
@@ -119,7 +123,7 @@ class ConversationHandler:
 
             # Your existing conversation processing
             ai_response, tool_results = self.conversation_orchestrator.process_conversation_turn(
-                prompt, str(user.id), processed_message, available_tool_functions
+                prompt, str(user.id), processed_message, available_tool_functions, available_tool_context
             )
 
             if cancellation_check():
@@ -130,12 +134,28 @@ class ConversationHandler:
 
             # Calculate processing time
             processing_time_ms = int((time.time() - start_time) * 1000)
-
+            
+            # Extract context summaries from tool results
+            context_summaries = []
+            for tool_result in tool_results:
+                if tool_result.get("success") and tool_result.get("context_summary"):
+                    context_summaries.append(tool_result["context_summary"])
+            
+            # Build response to save (context + AI response)
+            ai_response_to_save = ai_response
+            if context_summaries:
+                ai_response_to_save = "\n".join(context_summaries) + "\n\n" + ai_response
+                
+            print("ai respnse saved")
+            print("================")
+            print(f"{ai_response_to_save}")
+            print("================")
+            
             # Save the conversation with the AI response (fixed variable name)
             self.conversation_storage_service.save_conversation(
                 user.id,
                 processed_message,
-                ai_response,  # Fixed: was "final_response" which didn't exist
+                ai_response_to_save,  # Fixed: was "final_response" which didn't exist
                 tools_used=available_tools,
                 processing_time_ms=processing_time_ms,
                 has_media=has_media
@@ -145,7 +165,7 @@ class ConversationHandler:
 
         except Exception as e:
             print(f"Error in conversation handling: {e}")
-            error_message = "Sorry, there was an error processing your message."
+            error_message = f"Sorry, there was an error processing your message. {e}"
             self._send_response_to_user(phone_number, error_message)
             return error_message
 

@@ -19,6 +19,8 @@ class ToolConfig:
     examples: List[str]
     execute_function: Callable
     access_level: str = "all"
+    extract_context: Optional[Callable[[Dict[str, Any], str], str]] = None
+    
 
 class ToolCallManager:
     """
@@ -138,10 +140,31 @@ class ToolCallManager:
     def can_user_access_tool(self, user, tool_name: str) -> bool:
         """Check if user has access to specific tool"""
         return tool_name in self.get_available_tools_for_user(user)
+
+    def get_tool_context(self, tool_name: str) -> Optional[Callable]:
+        """Get executable function for a tool with attached config for context extraction"""
+        if tool_name not in self.tools:
+            return None
+
+        tool_config = self.tools[tool_name]
+
+        # Safely check if extract_context exists and is not None
+        extract_context = getattr(tool_config, "extract_context", None)
+        if extract_context is None:
+            return None
+
+        return extract_context
+
     
     def get_tool_function(self, tool_name: str) -> Optional[Callable]:
-        """Get executable function for a tool"""
-        return self.tools.get(tool_name, {}).execute_function if tool_name in self.tools else None
+        """Get executable function for a tool with attached config for context extraction"""
+        if tool_name not in self.tools:
+            return None
+        
+        tool_config = self.tools[tool_name]
+        tool_function = tool_config.execute_function
+        
+        return tool_function
     
     def execute_tool_for_user(self, user, tool_name: str, **kwargs) -> Dict[str, Any]:
         """Execute tool with access validation"""
@@ -179,7 +202,8 @@ class ToolCallManager:
             - Determine which information needs collection
             - Guide user through onboarding process""",
             examples=["<call>get_user_details()</call>"],
-            execute_function=self._get_user_details_wrapper
+            execute_function=self._get_user_details_wrapper,
+            extract_context=self._extract_user_details_context
         )
     
     def _get_user_details_wrapper(self, user_id: int) -> Dict[str, Any]:
@@ -249,7 +273,8 @@ class ToolCallManager:
                 "<call>update_user_profile(first_name='Sarah', last_name='Johnson')</call>",
                 "<call>update_user_profile(location='London, UK', preferred_language='en')</call>"
             ],
-            execute_function=lambda user_id, **kwargs: self.services['user_storage_service'].update_user(user_id, **kwargs)
+            execute_function=lambda user_id, **kwargs: self.services['user_storage_service'].update_user(user_id, **kwargs),
+            extract_context=self._extract_update_profile_context
         )
     
     def _search_flights_config(self) -> ToolConfig:
@@ -274,7 +299,8 @@ class ToolCallManager:
             - For price comparison: search nearby airports
             - Always return search_id - required for creating bookings""",
             examples=["<call>search_flights(origin='SFO', destination='LAX', departure_date='2025-09-15')</call>"],
-            execute_function=self._delegate_to_flight_service
+            execute_function=self._delegate_to_flight_service,
+            extract_context=self._extract_flight_search_context
         )
     
     def _get_flight_details_config(self) -> ToolConfig:
@@ -293,99 +319,109 @@ class ToolCallManager:
             - Seat selection options
             - Booking requirements and documents needed""",
             examples=["<call>get_flight_details(flight_id='offer_123')</call>"],
-            execute_function=lambda user_id, flight_id: self.services['flight_details_service'].get_flight_details(flight_id)
+            execute_function=lambda user_id, flight_id: self.services['flight_details_service'].get_flight_details(flight_id),
+            extract_context=self._extract_flight_details_context
         )
     
     def _create_flight_booking_config(self) -> ToolConfig:
         return ToolConfig(
             name="create_flight_booking",
-            description="Create draft booking from search results - no PNR created yet",
+            description="Create draft booking from search results",
             access_level="onboarded",
             parameters=[
                 ToolParameter("search_id", "string", True, "Search ID from flight search"),
                 ToolParameter("flight_offer_ids", "array", True, "Selected flight offer IDs"),
+                ToolParameter("passenger_count", "integer", False, "Total number of travelers", 1),
+                ToolParameter("booking_type", "string", False, "individual/family/group/corporate", "individual"),
             ],
-            instructions="""Create initial booking record for passenger collection phase.
-
-            **Important:** This only creates a draft booking in database. PNR creation 
-            with airlines happens later in finalize_booking after all passenger details collected.
-
-            **Next steps after this tool:**
-            1. Add passenger details with manage_booking_passengers
-            2. Finalize booking to create PNR and payment link""",
-            examples=["<call>create_flight_booking(search_id='search_123', flight_offer_ids=['offer_456'])</call>"],
-            execute_function=self._delegate_to_booking_service
+            instructions="""Create draft booking. Next step: collect ALL passenger details with manage_booking_passengers.""",
+            examples=["<call>create_flight_booking(search_id='search_123', flight_offer_ids=['offer_456'], passenger_count=2, booking_type='family')</call>"],
+            execute_function=lambda user_id, **kwargs: self._delegate_to_booking_service(user_id, _tool_name='create_flight_booking', **kwargs),
+            extract_context=self._extract_booking_creation_context
         )
-    
+
     def _manage_booking_passengers_config(self) -> ToolConfig:
         return ToolConfig(
             name="manage_booking_passengers",
-            description="Add, update, or retrieve passenger details for booking",
+            description="Add passengers and collect complete travel details",
             access_level="active",
             parameters=[
                 ToolParameter("booking_id", "string", True, "Booking identifier"),
-                ToolParameter("action", "string", True, "'add', 'update', or 'get'"),
+                ToolParameter("action", "string", True, "'add', 'update', 'get'"),
                 ToolParameter("passenger_id", "string", False, "Required for update action"),
-                ToolParameter("passenger_type", "string", False, "'adult', 'child', or 'infant'"),
                 ToolParameter("first_name", "string", False, "Passenger first name"),
                 ToolParameter("last_name", "string", False, "Passenger last name"),
-                ToolParameter("date_of_birth", "string", False, "Date of birth (YYYY-MM-DD) - Required for booking"),
-                ToolParameter("gender", "string", False, "Gender (male/female/other)"),
-                ToolParameter("passport_number", "string", False, "Passport number - Required for international flights"),
-                ToolParameter("document_expiry", "string", False, "Passport expiry date (YYYY-MM-DD)"),
-                ToolParameter("nationality", "string", False, "Nationality (2-letter country code)"),
-                ToolParameter("email", "string", False, "Email address"),
-                ToolParameter("phone", "string", False, "Phone number"),
-                ToolParameter("is_primary", "boolean", False, "Is primary passenger"),
-                ToolParameter("seat_preference", "string", False, "Seat preference"),
-                ToolParameter("meal_preference", "string", False, "Meal preference"),
+                ToolParameter("date_of_birth", "string", False, "Date of birth (YYYY-MM-DD)"),
+                ToolParameter("gender", "string", False, "male/female/other"),
+                ToolParameter("passport_number", "string", False, "Passport number"),
+                ToolParameter("nationality", "string", False, "Nationality (2-letter code)"),
+                ToolParameter("seat_preference", "string", False, "window/aisle/any"),
+                ToolParameter("meal_preference", "string", False, "vegetarian/vegan/kosher/halal/standard"),
+                ToolParameter("emergency_contact_name", "string", False, "Emergency contact name"),
+                ToolParameter("emergency_contact_phone", "string", False, "Emergency contact phone"),
+                ToolParameter("emergency_contact_relationship", "string", False, "Relationship to passenger"),
             ],
-            instructions="""Unified passenger management for bookings.
+            instructions="""Collect ALL required details before allowing finalization:
 
-            **Actions:**
-            - add: Add new passenger to booking (requires first_name, last_name, date_of_birth, passport_number, nationality)
-            - update: Modify existing passenger details  
-            - get: Retrieve passenger list or search history
-
-            **Required for Amadeus booking:**
-            - first_name, last_name, date_of_birth, nationality, passport_number
-
-            **Workflow:**
-            1. Add all required passengers with complete details
-            2. Update any details as needed
-            3. Proceed to finalize_booking when complete""",
+            **Required for each passenger:**
+            - Personal: first_name, last_name, date_of_birth, gender, nationality
+            - Travel: passport_number, seat_preference, meal_preference
+            
+            **Required for booking:**
+            - Emergency contact: name, phone, relationship
+            
+            **DO NOT proceed to finalize_booking until ALL details collected.**
+            Use action='get' to check completion status.""",
             examples=[
-                "<call>manage_booking_passengers(booking_id='BK123', action='add', passenger_type='adult', first_name='John', last_name='Doe', date_of_birth='1990-01-01', passport_number='A12345678', nationality='US')</call>",
+                "<call>manage_booking_passengers(booking_id='BK123', action='add', first_name='John', last_name='Doe', date_of_birth='1990-01-01', nationality='US', passport_number='A12345678', seat_preference='window', meal_preference='vegetarian')</call>",
                 "<call>manage_booking_passengers(booking_id='BK123', action='get')</call>"
             ],
-            execute_function=self._delegate_to_booking_service
+            execute_function=lambda user_id, **kwargs: self._delegate_to_booking_service(user_id, _tool_name='manage_booking_passengers', **kwargs),
+            extract_context=self._extract_passenger_management_context
         )
-        
+
     def _finalize_booking_config(self) -> ToolConfig:
         return ToolConfig(
             name="finalize_booking",
-            description="Create PNR with airline, get final pricing, generate payment link",
+            description="Create airline reservation and get final pricing",
             access_level="active",
             parameters=[
-                ToolParameter("booking_id", "string", True, "Booking with complete passenger details"),
+                ToolParameter("booking_id", "string", True, "Booking with complete details"),
             ],
-            instructions="""Critical step that completes the booking process.
-
-            **This tool will:**
-            1. Create PNR (booking reference) with airline via Amadeus
-            2. Get final confirmed pricing from airline
-            3. Generate Stripe payment session URL
-            4. Return payment link for user
-
-            **Prerequisites:**
-            - All passenger details must be complete
-            - Booking must be in draft status
-
-            **After this step:**
-            - User receives payment URL to complete purchase
-            - Booking status becomes 'pending_payment'""",
+            instructions="""Creates PNR with airline and returns final price for user confirmation.
+            
+            **Only use when:**
+            - ALL passenger details complete (names, DOB, passport, seat/meal prefs)
+            - Emergency contact provided
+            - User wants to proceed with booking
+            
+            **This will:**
+            - Create actual airline reservation (PNR)
+            - Show final confirmed price
+            - Ask user to confirm before payment collection""",
             examples=["<call>finalize_booking(booking_id='BK123')</call>"],
-            execute_function=self._delegate_to_booking_service
+            execute_function=lambda user_id, **kwargs: self._delegate_to_booking_service(user_id, _tool_name='finalize_booking', **kwargs),
+            extract_context=self._extract_finalize_booking_context
+        )
+
+    def _generate_payment_link_config(self) -> ToolConfig:
+        return ToolConfig(
+            name="generate_payment_link",
+            description="Generate payment URL after user confirms final price",
+            access_level="active",
+            parameters=[
+                ToolParameter("booking_id", "string", True, "Finalized booking ID"),
+            ],
+            instructions="""Generate Stripe payment link for confirmed booking.
+            
+            **Only use after:**
+            - finalize_booking completed successfully
+            - User explicitly confirms they want to pay
+            
+            Returns secure payment URL for user to complete purchase.""",
+            examples=["<call>generate_payment_link(booking_id='BK123')</call>"],
+            execute_function=lambda user_id, **kwargs: self._generate_payment_link(user_id, **kwargs),
+            extract_context=self._extract_payment_link_context
         )
     
     def _get_booking_details_config(self) -> ToolConfig:
@@ -407,7 +443,8 @@ class ToolCallManager:
                 "<call>get_booking_details(booking_id='BK123')</call>",
                 "<call>get_booking_details(user_bookings=true)</call>"
             ],
-            execute_function=self._delegate_to_booking_service
+            execute_function=self._delegate_to_booking_service,
+            extract_context=self._extract_booking_details_context
         )
     
     def _cancel_booking_config(self) -> ToolConfig:
@@ -428,7 +465,8 @@ class ToolCallManager:
 
             **Note:** Refund policies depend on airline fare rules and timing.""",
             examples=["<call>cancel_booking(booking_id='BK123', reason='Change of plans')</call>"],
-            execute_function=self._delegate_to_booking_service
+            execute_function=self._delegate_to_booking_service,
+            extract_context=self._extract_cancel_booking_context
         )
     
     # =============================================================================
@@ -436,18 +474,358 @@ class ToolCallManager:
     # =============================================================================
     
     def _delegate_to_flight_service(self, user_id, **kwargs):
-        """Delegate to flight service and cache results"""
         try:
-            results = self.services['flight_service'].search_flights(**kwargs)
-            search_id = self.services['shared_storage_service'].cache_search_results(user_id, kwargs, results)
-            return {'search_id': search_id, 'flights': results, 'search_params': kwargs}
+            # search_flights returns a tuple: (summarized_results, raw_results)
+            summarized_results, raw_results = self.services['flight_service'].search_flights(**kwargs)
+            
+            # Cache the full raw results for booking purposes
+            search_id = self.services['shared_storage_service'].cache_search_results(
+                user_id, kwargs, raw_results
+            )
+            
+            # Add search_id to summarized results if not already there
+            if isinstance(summarized_results, dict):
+                summarized_results['search_id'] = search_id
+                
+            # Add search params to summarized results for context
+            summarized_results['search_params'] = kwargs
+            
+            # Return ONLY the summarized results to the model (not raw_results!)
+            return summarized_results
+            
         except Exception as e:
             return {"error": f"Flight search failed: {str(e)}"}
     
+    
     def _delegate_to_booking_service(self, user_id, **kwargs):
-        """Delegate to booking service"""
+        """Delegate to booking service with enhanced action handling"""
+        print(f"Booking service delegation called with user_id: {user_id}")
+        print(f"Input kwargs: {kwargs}")
+        
         try:
-            return self.services['booking_storage_service'].handle_booking_operation(user_id, **kwargs)
+            # Handle intelligent booking type determination for update_booking action
+            if kwargs.get('action') == 'update_booking' and 'passenger_count' in kwargs and 'booking_type' not in kwargs:
+                passenger_count = kwargs.get('passenger_count', 1)
+                if passenger_count == 1:
+                    kwargs['booking_type'] = 'individual'
+                elif 2 <= passenger_count <= 6:
+                    kwargs['booking_type'] = 'family'
+                elif passenger_count >= 7:
+                    kwargs['booking_type'] = 'group'
+                
+                print(f"Auto-determined booking_type: {kwargs['booking_type']} for {passenger_count} passengers")
+            
+            # Map the tool calls to the appropriate actions
+            tool_name = kwargs.get('_tool_name', 'unknown')
+            
+            # Determine action based on the tool call or explicit action
+            if 'action' not in kwargs:
+                action_mapping = {
+                    'create_flight_booking': 'create',
+                    'manage_booking_passengers': kwargs.get('action', 'add'),
+                    'finalize_booking': 'finalize',
+                    'get_booking_details': 'get',
+                    'cancel_booking': 'cancel'
+                }
+                
+                # Try to determine action from context
+                if 'search_id' in kwargs and 'flight_offer_ids' in kwargs:
+                    action = 'create'
+                elif 'booking_id' in kwargs and 'first_name' in kwargs:
+                    action = 'add'
+                elif 'booking_id' in kwargs and 'passenger_id' in kwargs:
+                    action = 'update'
+                elif 'booking_id' in kwargs and kwargs.get('user_bookings'):
+                    action = 'get'
+                elif 'booking_id' in kwargs and 'reason' in kwargs:
+                    action = 'cancel'
+                elif 'booking_id' in kwargs and ('passenger_count' in kwargs or 'booking_type' in kwargs):
+                    action = 'update_booking'
+                elif 'booking_id' in kwargs and tool_name == 'finalize_booking':
+                    action = 'finalize'
+                else:
+                    action = action_mapping.get(tool_name, 'create')
+                
+                kwargs['action'] = action
+            
+            print(f"Determined action: {kwargs['action']}")
+            print(f"Final kwargs being passed: {kwargs}")
+            
+            # Call the booking service
+            result = self.services['booking_storage_service'].handle_booking_operation(user_id, **kwargs)
+            
+            print(f"Booking service result: {result}")
+            return result
+            
+        except KeyError as ke:
+            error_msg = f"Missing required service or parameter: {str(ke)}"
+            print(f"KeyError in booking delegation: {error_msg}")
+            return {"error": error_msg}
         except Exception as e:
-            return {"error": f"Booking operation failed: {str(e)}"}
+            error_msg = f"Booking operation failed: {str(e)}"
+            print(f"Exception in booking delegation: {error_msg}")
+            import traceback
+            traceback.print_exc()
+            return {"error": error_msg}
+        
+    # =============================================================================
+    # Functions that returnt he context of each search
+    # =============================================================================
+    
+    # Add these methods to your ToolCallManager class
+
+    def _extract_user_details_context(self, result: Dict[str, Any], user_id: str) -> str:
+        """Extract context for user details check"""
+        if 'error' in result:
+            return f"<call>get_user_details()</call>\nError: {result['error']}"
+        
+        name = f"{result.get('first_name', '')} {result.get('last_name', '')}".strip()
+        location = result.get('location', '')
+        language = result.get('preferred_language', '')
+        
+        context = f"<call>get_user_details()</call>\n"
+        
+        if result.get('onboarding_complete'):
+            context += f"User: {name} from {location} (language: {language})\n"
+            context += "Status: Onboarding complete"
+        else:
+            missing = result.get('missing_fields', [])
+            context += f"User: {name or 'Name missing'}\n"
+            context += f"Missing required fields: {', '.join(missing)}"
+        
+        return context
+
+    def _extract_update_profile_context(self, result: Dict[str, Any], user_id: str) -> str:
+        """Extract context for profile updates"""
+        
+        # Handle case where result is a boolean (success/failure)
+        if isinstance(result, bool):
+            if result:
+                return f"<call>update_user_profile(...)</call>\nProfile updated successfully"
+            else:
+                return f"<call>update_user_profile(...)</call>\nProfile update failed"
+        
+        # Handle case where result is None
+        if result is None:
+            return f"<call>update_user_profile(...)</call>\nNo result returned"
+        
+        # Handle case where result is not a dictionary
+        if not isinstance(result, dict):
+            return f"<call>update_user_profile(...)</call>\nUnexpected result type: {type(result).__name__} = {result}"
+        
+        # Handle dictionary result
+        if 'error' in result:
+            return f"<call>update_user_profile(...)</call>\nError: {result['error']}"
+        
+        if 'success' in result and result['success']:
+            updated_fields = result.get('updated_fields', [])
+            if updated_fields:
+                return f"<call>update_user_profile(...)</call>\nProfile updated successfully. Updated fields: {', '.join(updated_fields)}"
+            else:
+                return f"<call>update_user_profile(...)</call>\nProfile updated successfully"
+        
+        # Default case
+        return f"<call>update_user_profile(...)</call>\nProfile operation completed with result: {result}"
+
+    def _extract_flight_search_context(self, result: Dict[str, Any], user_id: str) -> str:
+        """Extract concise but complete context for flight search results - FIXED VERSION"""
+        search_params = result.get('search_params', {})
+        origin = search_params.get('origin', '')
+        destination = search_params.get('destination', '')
+        date = search_params.get('departure_date', '')
+        
+        call_str = f"<call>search_flights(origin='{origin}', destination='{destination}', departure_date='{date}')</call>"
+        
+        if 'error' in result:
+            return f"{call_str}\nError: {result['error']}"
+        
+        flights = result.get('flights', [])
+        search_id = result.get('search_id', '')
+        summary = result.get('summary', {})
+        
+        if not flights:
+            return f"{call_str}\nNo flights found for {origin} → {destination}"
+        
+        context = f"{call_str}\n"
+        context += f"Search ID: {search_id}\n"
+        context += f"Found {summary.get('total_found', len(flights))} flights {origin}→{destination} on {date}. "
+        context += f"Prices: {summary.get('price_range', 'varies')}\n"
+        context += "Available flights:\n"
+        
+        # Show top flights with booking essentials - FIXED COMPARISON
+        for i, flight in enumerate(flights[:5], 1):
+            flight_id = flight.get('id') or flight.get('flight_offer_id', '')
+            price = flight.get('price', flight.get('price_total', 0))
+            airline = flight.get('airline', flight.get('airline_name', ''))
+            departure = flight.get('departure', '')
+            arrival = flight.get('arrival', '')
+            stops = flight.get('stops', 0)
+            
+            # FIX: Handle price formatting more safely
+            try:
+                if isinstance(price, str):
+                    # If price is already a string like "$103", use it directly
+                    price_str = price
+                elif isinstance(price, (int, float)):
+                    price_str = f"${price:.0f}"
+                else:
+                    price_str = "Price TBD"
+            except (ValueError, TypeError):
+                price_str = "Price TBD"
+            
+            # FIX: Safely handle stops comparison
+            try:
+                stops_int = int(stops) if stops is not None else 0
+                stops_text = "direct" if stops_int == 0 else f"{stops_int} stop{'s' if stops_int > 1 else ''}"
+            except (ValueError, TypeError):
+                stops_text = "connection info unavailable"
+            
+            context += f"{i}. ID:{flight_id} | {airline} {price_str} | {departure}-{arrival} | {stops_text}\n"
+        
+        context += f"\nTo book: use search_id='{search_id}' with exact flight ID from above"
+        return context
+
+    def _extract_flight_details_context(self, result: Dict[str, Any], user_id: str) -> str:
+        """Extract context for flight details"""
+        flight_id = result.get('flight_id', 'unknown')
+        call_str = f"<call>get_flight_details(flight_id='{flight_id}')</call>"
+        
+        if 'error' in result:
+            return f"{call_str}\nError: {result['error']}"
+        
+        # Include key details the user might reference later
+        context = f"{call_str}\n"
+        context += f"Retrieved details for flight {flight_id}\n"
+        
+        # Add key details if available
+        if result.get('baggage_info'):
+            context += f"Baggage: {result.get('baggage_summary', 'Details available')}\n"
+        if result.get('seat_options'):
+            context += "Seat selection available\n"
+        
+        return context
+
+    def _extract_booking_details_context(self, result: Dict[str, Any], user_id: str) -> str:
+        """Extract context for booking lookup"""
+        if result.get('user_bookings'):
+            call_str = f"<call>get_booking_details(user_bookings=true)</call>"
+            
+            if 'error' in result:
+                return f"{call_str}\nError: {result['error']}"
+            
+            bookings = result.get('bookings', [])
+            context = f"{call_str}\n"
+            context += f"User has {len(bookings)} bookings:\n"
+            for booking in bookings[:3]:  # Show recent 3
+                bid = booking.get('booking_reference', booking.get('id', ''))
+                status = booking.get('status', '')
+                amount = booking.get('total_amount', 0)
+                context += f"• {bid}: {status} (${amount})\n"
+        else:
+            booking_id = result.get('booking_id', '')
+            call_str = f"<call>get_booking_details(booking_id='{booking_id}')</call>"
+            
+            if 'error' in result:
+                return f"{call_str}\nError: {result['error']}"
+            
+            status = result.get('status', '')
+            pnr = result.get('pnr', '')
+            context = f"{call_str}\n"
+            context += f"Booking {booking_id}: {status}\n"
+            if pnr:
+                context += f"PNR: {pnr}\n"
+        
+        return context
+
+    def _extract_cancel_booking_context(self, result: Dict[str, Any], user_id: str) -> str:
+        """Extract context for booking cancellation - FIXED VERSION"""
+        booking_id = result.get('booking_id', '')
+        reason = result.get('reason', '')
+        call_str = f"<call>cancel_booking(booking_id='{booking_id}', reason='{reason}')</call>"
+        
+        if 'error' in result:
+            return f"{call_str}\nError: {result['error']}"
+        
+        refund_amount = result.get('refund_amount', 0)
+        context = f"{call_str}\n"
+        context += f"Booking {booking_id} cancelled\n"
+        
+        # FIX: Safely format refund amount
+        try:
+            if refund_amount and float(refund_amount) > 0:
+                refund_str = f"${float(refund_amount):.0f}"
+                context += f"Refund: {refund_str} processed"
+            else:
+                context += "No refund applicable"
+        except (ValueError, TypeError):
+            context += "Refund status: Processing"
+        
+        return context
+
+    def _extract_booking_creation_context(self, result: Dict[str, Any], user_id: str) -> str:
+        """Extract context for booking creation"""
+        booking_context = self.services['booking_storage_service'].extract_booking_operation_context(
+            result, 'create'
+        )
+        
+        print(f"Booking creation context: {booking_context}")
+        
+        return booking_context
+
+    def _extract_passenger_management_context(self, result: Dict[str, Any], user_id: str) -> str:
+        """Extract context for enhanced passenger and booking management"""
+        action = result.get('action', '')
+        operation_map = {
+            'add': 'add_passenger',
+            'update': 'update_passenger', 
+            'update_booking': 'update_booking',
+            'get': 'get',
+            'add_emergency_contact': 'add_emergency_contact'
+        }
+        
+        operation = operation_map.get(action, action)
+        booking_context = self.services['booking_storage_service'].extract_booking_operation_context(
+            result, operation, **{k: v for k, v in result.items() if k != 'action'}
+        )
+        
+        return booking_context
+
+    def _extract_finalize_booking_context(self, result: Dict[str, Any], user_id: str) -> str:
+        """Extract context for booking finalization"""
+        booking_context = self.services['booking_storage_service'].extract_booking_operation_context(
+            result, 'finalize'
+        )
+        
+        return booking_context
+
+    def _generate_payment_link(self, user_id: int, **kwargs) -> Dict[str, Any]:
+        """Dummy payment link generator"""
+        booking_id = kwargs.get('booking_id')
+        
+        # TODO: Integrate with actual Stripe payment link generation
+        payment_url = f"https://checkout.stripe.com/pay/session_{booking_id}_{user_id}"
+        
+        return {
+            'success': True,
+            'booking_id': booking_id,
+            'payment_url': payment_url,
+            'expires_in': '24 hours',
+            'message': 'Payment link generated. Complete payment within 24 hours.'
+        }
+
+    def _extract_payment_link_context(self, result: Dict[str, Any], user_id: str) -> str:
+        """Extract context for payment link generation"""
+        booking_id = result.get('booking_id', '')
+        
+        if 'error' in result:
+            return f"<call>generate_payment_link(booking_id='{booking_id}')</call>\nError: {result['error']}"
+        
+        payment_url = result.get('payment_url', '')
+        expires_in = result.get('expires_in', '24 hours')
+        
+        return f"""<call>generate_payment_link(booking_id='{booking_id}')</call>
+    SUCCESS: Payment link generated
+    URL: {payment_url}
+    Expires: {expires_in}
+    User must complete payment to confirm booking."""
 

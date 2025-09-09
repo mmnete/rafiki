@@ -109,7 +109,19 @@ class ConversationStorageService:
                 
                 conversations = []
                 for row in cur.fetchall():
-                    tools_used_list = json.loads(row[6]) if row[6] else None
+                    # Fix: Handle tools_used properly - it might be a JSON string or already a list
+                    tools_used_list = None
+                    if row[6]:
+                        if isinstance(row[6], str):
+                            # If it's a string, parse it as JSON
+                            try:
+                                tools_used_list = json.loads(row[6])
+                            except json.JSONDecodeError:
+                                tools_used_list = None
+                        elif isinstance(row[6], list):
+                            # If it's already a list, use it directly
+                            tools_used_list = row[6]
+                    
                     conv = Conversation(
                         id=row[0],
                         user_id=row[1],

@@ -22,27 +22,29 @@ class SchemaManager:
         self.storage = storage
         
         # Define schemas with their dependencies (what they reference)
+        # IMPORTANT: PassengerSchema should NOT contain booking_passengers table anymore
+        # booking_passengers is now in BookingSchema to fix dependency issues
         self.schema_dependencies = {
-            'users': UserSchema(),
-            'passenger_profiles': PassengerSchema(),  # References users
-            'flight_searches': FlightSchema(),        # References users
+            'users': UserSchema(),                    # Base user authentication tables
+            'passenger_profiles': PassengerSchema(),  # Contains passenger_profiles, user_sessions, user_frequent_passengers (NOT booking_passengers)
+            'flight_searches': FlightSchema(),        # References users 
+            'bookings': BookingSchema(),              # References users, passenger_profiles, contains booking_passengers
             'stored_files': DocumentSchema(),         # References users, bookings, passenger_profiles
-            'bookings': BookingSchema(),              # References users, flight_searches
             'conversations': ConversationSchema(),    # References users, bookings, flight_searches, stored_files
             'payments': PaymentSchema(),              # References users, bookings
             'personalization': PersonalizationSchema() # References users, passenger_profiles
         }
         
-        # Define the dependency graph (table -> list of tables it depends on)
+        # Define the dependency graph (schema -> list of schemas it depends on)
         self.dependencies = {
-            'users': [],
-            'passenger_profiles': ['users'],
-            'flight_searches': ['users'],
-            'stored_files': ['users', 'bookings', 'passenger_profiles'],  # Will be created after bookings
-            'bookings': ['users', 'flight_searches'],
+            'users': [],                              # Base tables, no dependencies
+            'passenger_profiles': ['users'],          # References users
+            'flight_searches': ['users'],             # References users
+            'bookings': ['users', 'passenger_profiles'], # References users, passenger_profiles, AND contains booking_passengers
+            'stored_files': ['users', 'bookings', 'passenger_profiles'], # References users, bookings, passenger_profiles
             'conversations': ['users', 'bookings', 'flight_searches', 'stored_files'],
-            'payments': ['users', 'bookings'],
-            'personalization': ['users', 'passenger_profiles']
+            'payments': ['users', 'bookings'],        # References users, bookings
+            'personalization': ['users', 'passenger_profiles'] # References users, passenger_profiles
         }
     
     def _get_creation_order(self) -> List[str]:
@@ -54,25 +56,25 @@ class SchemaManager:
         temp_visited = set()
         result = []
         
-        def visit(table):
-            if table in temp_visited:
-                raise ValueError(f"Circular dependency detected involving {table}")
-            if table in visited:
+        def visit(schema_name):
+            if schema_name in temp_visited:
+                raise ValueError(f"Circular dependency detected involving {schema_name}")
+            if schema_name in visited:
                 return
             
-            temp_visited.add(table)
+            temp_visited.add(schema_name)
             
             # Visit all dependencies first
-            for dependency in self.dependencies.get(table, []):
+            for dependency in self.dependencies.get(schema_name, []):
                 visit(dependency)
             
-            temp_visited.remove(table)
-            visited.add(table)
-            result.append(table)
+            temp_visited.remove(schema_name)
+            visited.add(schema_name)
+            result.append(schema_name)
         
-        # Visit all tables
-        for table in self.dependencies.keys():
-            visit(table)
+        # Visit all schemas
+        for schema_name in self.dependencies.keys():
+            visit(schema_name)
         
         return result
     
@@ -86,12 +88,12 @@ class SchemaManager:
         
         try:
             creation_order = self._get_creation_order()
-            print(f"📋 Creating tables in dependency order: {' -> '.join(creation_order)}")
+            print(f"📋 Creating schemas in dependency order: {' -> '.join(creation_order)}")
             
             with self.storage.conn.cursor() as cur:
                 # First pass: Create tables in dependency order
-                for table_name in creation_order:
-                    schema = self.schema_dependencies[table_name]
+                for schema_name in creation_order:
+                    schema = self.schema_dependencies[schema_name]
                     print(f"📋 Creating tables for {schema.__class__.__name__}...")
                     
                     # Create tables
@@ -104,12 +106,16 @@ class SchemaManager:
                                 print(f"  ✅ Created table: {actual_table}")
                         except Exception as e:
                             print(f"  ❌ Error creating table in {schema.__class__.__name__}: {e}")
+                            print(f"  SQL: {table_sql[:200]}...")  # Print first 200 chars for debugging
                             return False
+                
+                # Commit after all tables are created
+                self.storage.conn.commit()
                 
                 # Second pass: Create indexes (after all tables exist)
                 print("\n📊 Creating indexes...")
-                for table_name in creation_order:
-                    schema = self.schema_dependencies[table_name]
+                for schema_name in creation_order:
+                    schema = self.schema_dependencies[schema_name]
                     
                     for index_sql in schema.get_indexes():
                         try:
@@ -118,11 +124,16 @@ class SchemaManager:
                             print(f"  ⚠️  Index creation warning in {schema.__class__.__name__}: {e}")
                             # Don't fail on index errors as they might already exist
                 
+                # Commit after indexes
+                self.storage.conn.commit()
+                
                 print("\n✅ All database schemas created successfully")
                 return True
                 
         except Exception as e:
             print(f"❌ Schema creation failed: {e}")
+            if self.storage.conn:
+                self.storage.conn.rollback()
             return False
     
     def drop_all_tables(self) -> bool:
@@ -138,19 +149,22 @@ class SchemaManager:
             drop_order = list(reversed(creation_order))
             
             with self.storage.conn.cursor() as cur:
-                for table_name in drop_order:
+                for schema_name in drop_order:
                     # Get all actual table names from each schema
-                    schema = self.schema_dependencies[table_name]
+                    schema = self.schema_dependencies[schema_name]
                     for table_sql in schema.get_table_definitions():
                         if "CREATE TABLE IF NOT EXISTS" in table_sql:
                             actual_table = table_sql.split("CREATE TABLE IF NOT EXISTS")[1].split("(")[0].strip()
                             cur.execute(f"DROP TABLE IF EXISTS {actual_table} CASCADE;")
                             print(f"🗑️  Dropped table: {actual_table}")
                 
+                self.storage.conn.commit()
                 return True
                 
         except Exception as e:
             print(f"❌ Error dropping tables: {e}")
+            if self.storage.conn:
+                self.storage.conn.rollback()
             return False
     
     def verify_tables_exist(self) -> bool:
@@ -164,7 +178,7 @@ class SchemaManager:
             with self.storage.conn.cursor() as cur:
                 all_tables_exist = True
                 
-                for table_name, schema in self.schema_dependencies.items():
+                for schema_name, schema in self.schema_dependencies.items():
                     for table_sql in schema.get_table_definitions():
                         if "CREATE TABLE IF NOT EXISTS" in table_sql:
                             actual_table = table_sql.split("CREATE TABLE IF NOT EXISTS")[1].split("(")[0].strip()

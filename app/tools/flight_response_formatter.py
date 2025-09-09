@@ -349,22 +349,3 @@ class FlightResponseFormatter:
             'FIRST': 'Daraja la Kwanza'
         }
         return translations.get(booking_class.upper(), booking_class)
-
-# Integration with existing tool config
-def enhanced_search_flights_implementation(**kwargs):
-    """Enhanced flight search with formatted response"""
-    from app.services.api.flights.flight_service import AmadeusFlightScraper
-    
-    scraper = AmadeusFlightScraper()
-    raw_results = scraper.search_flights(**kwargs)
-    
-    # Format the response
-    formatter = FlightResponseFormatter()
-    formatted_response = formatter.format_flight_response(raw_results, kwargs)
-    
-    return {
-        'raw_data': raw_results,
-        'formatted_response': formatted_response.formatted_output,
-        'search_links': formatted_response.search_links,
-        'flight_count': len(formatted_response.flights)
-    }

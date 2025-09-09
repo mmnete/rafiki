@@ -18,6 +18,7 @@ class PendingResponse:
     timestamp: datetime
     retries: int = 0
     max_retries: int = 3
+    request_id: Optional[str] = None  # NEW: Track request ID
 
 class ResponseDeliveryService:
     """
@@ -90,12 +91,13 @@ class ResponseDeliveryService:
                 self.delivery_thread.join(timeout=5)
                 print("📤 Response delivery worker stopped")
     
-    def queue_response(self, phone_number: str, message: str):
+    def queue_response(self, phone_number: str, message: str, request_id: Optional[str] = None):
         """Queue a response for delivery to the user"""
         response = PendingResponse(
             phone_number=phone_number,
             message=message,
-            timestamp=datetime.now()
+            timestamp=datetime.now(),
+            request_id=request_id
         )
         self.delivery_queue.put(response)
         
@@ -155,7 +157,7 @@ class ResponseDeliveryService:
         """Deliver a single response via Twilio and store for testing"""
         try:
             # Store response for testing purposes
-            self._store_response_for_testing(response.phone_number, response.message)
+            self._store_response_for_testing(response.phone_number, response.message, response.request_id)
             
             if self.test_mode or not self.twilio_client:
                 # For testing/development - just log the message
@@ -178,19 +180,28 @@ class ResponseDeliveryService:
             print(f"❌ Delivery failed to {response.phone_number}: {e}")
             return False
     
-    def _store_response_for_testing(self, phone_number: str, message: str):
+    def _store_response_for_testing(self, phone_number: str, message: str, request_id: Optional[str] = None):
         """Store response for testing/evaluation purposes"""
-        # Store locally
+        # Convert current time to JavaScript timestamp (milliseconds)
+        js_timestamp = int(time.time() * 1000)
+        
+        # Store locally with proper timestamp format
         self.responses[phone_number] = {
             'message': message,
-            'timestamp': time.time()
+            'timestamp': js_timestamp,  # JavaScript compatible timestamp
+            'request_id': request_id,
+            'delivered_at': datetime.now().isoformat()
         }
+        
+        print(f"🧪 Stored response for testing: {phone_number} at timestamp {js_timestamp}")
         
         # Also try to store in testing endpoint for eval script
         try:
             requests.post(f"{self.flask_app_url}/testing/store-response", json={
                 'phone_number': phone_number,
-                'response': message
+                'response': message,
+                'timestamp': js_timestamp,
+                'request_id': request_id
             }, timeout=2)
         except Exception as e:
             # Don't fail delivery if testing endpoint is down
@@ -204,12 +215,32 @@ class ResponseDeliveryService:
         """Check if there are pending deliveries for a phone number"""
         return self.delivery_queue.qsize() > 0
     
-    def get_latest_response(self, phone_number: str) -> Optional[str]:
+    def get_latest_response(self, phone_number: str, since_timestamp: Optional[int] = None) -> Optional[dict]:
         """Get latest response for testing purposes"""
         response_data = self.responses.get(phone_number)
-        return response_data['message'] if response_data else None
+        
+        if not response_data:
+            print(f"🧪 No response found for {phone_number}")
+            return None
+        
+        # Check if response is newer than requested timestamp
+        if since_timestamp and response_data['timestamp'] < since_timestamp:
+            print(f"🧪 Response for {phone_number} is older than requested (stored: {response_data['timestamp']}, requested: {since_timestamp})")
+            return None
+        
+        print(f"🧪 Returning response for {phone_number}: timestamp {response_data['timestamp']}")
+        return response_data
     
     def clear_responses(self, phone_number: str):
         """Clear stored responses for testing"""
         if phone_number in self.responses:
             del self.responses[phone_number]
+            print(f"🧪 Cleared responses for {phone_number}")
+    
+    def has_response_since(self, phone_number: str, since_timestamp: int) -> bool:
+        """Check if there's a response newer than the given timestamp"""
+        response_data = self.responses.get(phone_number)
+        if not response_data:
+            return False
+        
+        return response_data['timestamp'] >= since_timestamp

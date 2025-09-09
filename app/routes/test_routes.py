@@ -250,18 +250,52 @@ response_storage = {}
 @testing_bp.route("/testing/store-response", methods=["POST"])
 def store_response():
     """Store a response for testing purposes"""
-    data = request.get_json()
-    phone_number = data.get('phone_number')
-    response_text = data.get('response')
-    
-    if phone_number and response_text:
+    try:
+        data = request.get_json()
+        
+        if not data:
+            print("Warning: No JSON data provided to store-response endpoint")
+            return jsonify({"error": "No JSON data provided"}), 400
+        
+        phone_number = data.get('phone_number')
+        response_text = data.get('response')
+        request_id = data.get('request_id')
+        client_timestamp = data.get('timestamp')  # Timestamp from the delivery service
+        
+        print(f"🧪 Storing response for testing - Phone: {phone_number}, Request ID: {request_id}")
+        
+        if not phone_number or not response_text:
+            print(f"Warning: Missing required data - Phone: {phone_number}, Response: {bool(response_text)}")
+            return jsonify({"error": "Missing phone_number or response"}), 400
+        
+        # Use client timestamp if provided, otherwise generate new millisecond timestamp
+        if client_timestamp:
+            timestamp_ms = client_timestamp
+            print(f"Using client-provided timestamp: {timestamp_ms}")
+        else:
+            timestamp_ms = int(time.time() * 1000)
+            print(f"Generated new timestamp: {timestamp_ms}")
+        
+        # Store the response with consistent millisecond timestamps
         response_storage[phone_number] = {
             'response': response_text,
-            'timestamp': time.time()
+            'timestamp': timestamp_ms,  # Now in milliseconds like JavaScript
+            'request_id': request_id,
+            'stored_at': time.time(),  # Keep server time for debugging
+            'response_length': len(response_text)
         }
-        return jsonify({"status": "stored"}), 200
+        
+        print(f"✅ Successfully stored response for {phone_number} at timestamp {timestamp_ms} - Length: {len(response_text)} chars")
+        
+        return jsonify({
+            "status": "stored",
+            "timestamp": timestamp_ms,
+            "phone_number": phone_number
+        }), 200
     
-    return jsonify({"error": "Invalid data"}), 400
+    except Exception as e:
+        print(f"❌ Error storing response: {str(e)}")
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
 @testing_bp.route("/testing/get-response/<phone_number>", methods=["GET"])
 def get_response(phone_number):

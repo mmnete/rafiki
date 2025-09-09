@@ -59,5 +59,5 @@ class CancellationAwareProcessor:
             
         except Exception as e:
             print(f"Error in cancellation-aware processing for {phone_number}: {e}")
-            return "Sorry, there was an error processing your message."
+            return f"Sorry, there was an error processing your message. {e}"
     
