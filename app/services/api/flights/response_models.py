@@ -114,6 +114,7 @@ class ModelSearchResponse:
     flights: List[ModelFlightOffer]
     summary: Dict[str, Any]  # Basic summary stats
     search_id: Optional[str] = None
+    search_params: Optional[Dict[str, Any]] = None
     error_message: Optional[str] = None
 
 

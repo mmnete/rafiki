@@ -18,6 +18,9 @@ class PassengerSchema(BaseSchema):
             CREATE TABLE IF NOT EXISTS passenger_profiles (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 
+                -- Optional link to user account (if this passenger is also a user)
+                user_id INT REFERENCES users(id) ON DELETE SET NULL,
+                
                 -- REQUIRED PERSONAL INFO (airline mandatory fields that don't change)
                 first_name VARCHAR(255) NOT NULL,
                 middle_name VARCHAR(255),
@@ -64,46 +67,12 @@ class PassengerSchema(BaseSchema):
                 CONSTRAINT valid_passenger_gender CHECK (gender IN ('male', 'female', 'other')),
                 CONSTRAINT valid_document_type CHECK (primary_document_type IN ('passport', 'national_id', 'drivers_license', 'birth_certificate')),
                 CONSTRAINT valid_seat_pref CHECK (seat_preference IN ('window', 'aisle', 'any', 'exit_row', 'front', 'back', 'middle')),
-                CONSTRAINT valid_class_pref CHECK (preferred_class IN ('economy', 'premium_economy', 'business', 'first'))
+                CONSTRAINT valid_class_pref CHECK (preferred_class IN ('economy', 'premium_economy', 'business', 'first')),
+            
+                -- Ensure one-to-one relationship: a user can only have one passenger profile
+                UNIQUE(user_id)
             );
             """,
-            
-            """
-            CREATE TABLE IF NOT EXISTS booking_passengers (
-                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                booking_id UUID NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
-                passenger_profile_id UUID NOT NULL REFERENCES passenger_profiles(id) ON DELETE CASCADE,
-                
-                -- Booking-Specific Details
-                passenger_sequence INT NOT NULL,
-                is_primary_passenger BOOLEAN DEFAULT FALSE,
-                
-                -- BOOKING-SPECIFIC SERVICES (vary per trip)
-                extra_baggage_count INT DEFAULT 0,
-                priority_boarding BOOLEAN DEFAULT FALSE,
-                seat_upgrade_requested BOOLEAN DEFAULT FALSE,
-                wheelchair_requested BOOLEAN DEFAULT FALSE,
-                unaccompanied_minor BOOLEAN DEFAULT FALSE,
-                
-                -- Seat Assignments (populated after booking)
-                assigned_seats JSONB DEFAULT '{}',
-                seat_assignment_status VARCHAR(20) DEFAULT 'pending',
-                
-                -- Check-in Status
-                checked_in_at TIMESTAMP,
-                boarding_pass_issued BOOLEAN DEFAULT FALSE,
-                boarding_pass_file_id UUID,
-                
-                -- Metadata
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                
-                -- Constraints
-                CONSTRAINT valid_seat_status CHECK (seat_assignment_status IN ('pending', 'assigned', 'confirmed', 'changed')),
-                UNIQUE(booking_id, passenger_sequence)
-            );
-            """,
-            
             """
             CREATE TABLE IF NOT EXISTS user_frequent_passengers (
                 id SERIAL PRIMARY KEY,
@@ -135,7 +104,6 @@ class PassengerSchema(BaseSchema):
                 UNIQUE(user_id, passenger_profile_id)
             );
             """,
-            
             """
             -- Helper function to calculate passenger type from date of birth
             CREATE OR REPLACE FUNCTION get_passenger_type(birth_date DATE, travel_date DATE DEFAULT CURRENT_DATE) 

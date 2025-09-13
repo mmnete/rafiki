@@ -1,6 +1,7 @@
 # unified_toolcall_manager.py - Clean Tool Configuration Only
 from typing import Dict, List, Any, Optional, Callable
 from dataclasses import dataclass
+from enum import Enum
 
 @dataclass
 class ToolParameter:
@@ -10,6 +11,10 @@ class ToolParameter:
     description: str
     default: Any = None
 
+class ToolRunningStyle(Enum):
+    FORCED_ALWAYS = 1
+    REQUESTED_BY_MODEL = 2
+
 @dataclass
 class ToolConfig:
     name: str
@@ -18,6 +23,7 @@ class ToolConfig:
     instructions: str
     examples: List[str]
     execute_function: Callable
+    running_style: ToolRunningStyle = ToolRunningStyle.REQUESTED_BY_MODEL
     access_level: str = "all"
     extract_context: Optional[Callable[[Dict[str, Any], str], str]] = None
     
@@ -48,7 +54,7 @@ class ToolCallManager:
     def _register_all_tools(self):
         """Register tools in progressive access order"""
         # Phase 1: Onboarding
-        self.register_tool(self._get_user_details_config())
+        # self.register_tool(self._get_user_details_config())
         self.register_tool(self._update_user_profile_config())
         
         # Phase 2: Flight Search & Booking Creation
@@ -73,11 +79,26 @@ class ToolCallManager:
         available_tools = []
         
         for tool_name, tool_config in self.tools.items():
+            # Forced toolcalls will always be run immediately when the request comes in.
+            if tool_config.running_style == ToolRunningStyle.FORCED_ALWAYS:
+                continue
+            
             if tool_config.access_level == "all":
                 available_tools.append(tool_name)
             elif tool_config.access_level == "onboarded" and self._is_user_onboarded(user):
                 available_tools.append(tool_name)
             elif tool_config.access_level == "active" and self._is_user_active(user):
+                available_tools.append(tool_name)
+        
+        return available_tools
+    
+    def get_forced_tools(self) -> List[str]:
+        """Get tools available based on user onboarding status"""
+        available_tools = []
+        
+        for tool_name, tool_config in self.tools.items():
+            # Forced toolcalls will always be run immediately when the request comes in.
+            if tool_config.running_style == ToolRunningStyle.FORCED_ALWAYS:
                 available_tools.append(tool_name)
         
         return available_tools
@@ -202,6 +223,7 @@ class ToolCallManager:
             - Determine which information needs collection
             - Guide user through onboarding process""",
             examples=["<call>get_user_details()</call>"],
+            running_style=ToolRunningStyle.FORCED_ALWAYS,
             execute_function=self._get_user_details_wrapper,
             extract_context=self._extract_user_details_context
         )
@@ -235,19 +257,6 @@ class ToolCallManager:
             "created_at": user.created_at.isoformat() if user.created_at else None,
             "updated_at": user.updated_at.isoformat() if user.updated_at else None,
             "last_login_at": user.last_login_at.isoformat() if user.last_login_at else None,
-            
-            # Onboarding status helpers
-            "onboarding_complete": all([
-                user.first_name, user.last_name, user.location, user.preferred_language
-            ]),
-            "missing_fields": [
-                field for field, value in {
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "location": user.location,
-                    "preferred_language": user.preferred_language
-                }.items() if not value
-            ]
         }
     
     def _update_user_profile_config(self) -> ToolConfig:
@@ -483,12 +492,8 @@ class ToolCallManager:
                 user_id, kwargs, raw_results
             )
             
-            # Add search_id to summarized results if not already there
-            if isinstance(summarized_results, dict):
-                summarized_results['search_id'] = search_id
-                
-            # Add search params to summarized results for context
-            summarized_results['search_params'] = kwargs
+            summarized_results.search_params = kwargs
+            summarized_results.search_id = search_id
             
             # Return ONLY the summarized results to the model (not raw_results!)
             return summarized_results
@@ -575,23 +580,38 @@ class ToolCallManager:
     # Add these methods to your ToolCallManager class
 
     def _extract_user_details_context(self, result: Dict[str, Any], user_id: str) -> str:
-        """Extract context for user details check"""
+        """Extract context for user details check with clear capability status"""
         if 'error' in result:
             return f"<call>get_user_details()</call>\nError: {result['error']}"
         
         name = f"{result.get('first_name', '')} {result.get('last_name', '')}".strip()
         location = result.get('location', '')
-        language = result.get('preferred_language', '')
+        email = result.get('email', '')
         
         context = f"<call>get_user_details()</call>\n"
+        context += f"User Profile: {name or '[No name provided]'}"
+        if location:
+            context += f" - {location}"
+        if email:
+            context += f" - {email}"
+        context += "\n\n"
         
-        if result.get('onboarding_complete'):
-            context += f"User: {name} from {location} (language: {language})\n"
-            context += "Status: Onboarding complete"
+        # Clear capability status
+        missing_for_search = result.get('needed_for_searching', [])
+        missing_for_booking = result.get('needed_for_booking', [])
+        
+        if missing_for_search:
+            context += "CAPABILITY STATUS: CANNOT SEARCH FLIGHTS\n"
+            context += f"Reason: Missing required field - {', '.join(missing_for_search)}\n"
+            context += "Action Required: Must collect phone number before user can search for any flights\n"
+        elif missing_for_booking:
+            context += "CAPABILITY STATUS: CAN SEARCH FLIGHTS ONLY\n"
+            context += f"Missing for booking: {', '.join(missing_for_booking)}\n"
+            context += "Action Required: User can browse and search flights, but cannot complete bookings until missing information is provided\n"
+            context += "Prompt user to provide missing details if they want to book flights\n"
         else:
-            missing = result.get('missing_fields', [])
-            context += f"User: {name or 'Name missing'}\n"
-            context += f"Missing required fields: {', '.join(missing)}"
+            context += "CAPABILITY STATUS: FULL ACCESS\n"
+            context += "User can search flights AND complete bookings - all required information is available\n"
         
         return context
 

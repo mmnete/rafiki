@@ -37,8 +37,8 @@ class DuffelProvider(FlightProvider):
         return getenv(key) or ""
     
     def search_flights(self, origin: str, destination: str, departure_date: str,
-                      return_date: Optional[str] = None, passengers: List[Passenger] = [],
-                      travel_class: str = "ECONOMY") -> Tuple[ModelSearchResponse, FlightSearchResponse]:
+                  return_date: Optional[str] = None, passengers: List[Passenger] = [],
+                  travel_class: str = "ECONOMY") -> Tuple[ModelSearchResponse, FlightSearchResponse]:
         """Search flights using Duffel API based on official documentation"""
         try:
             passengers = passengers or [Passenger(
@@ -80,23 +80,42 @@ class DuffelProvider(FlightProvider):
                 "data": {
                     "slices": slices,
                     "passengers": duffel_passengers,
-                    "cabin_class": self._map_travel_class(travel_class),
-                    "return_offers": True  # Return offers with the request
+                    "cabin_class": self._map_travel_class(travel_class)
                 }
             }
             
-            # Make API request
+            # Update headers to include Duffel-Version
+            headers = self.headers.copy()
+            headers["Duffel-Version"] = "v2"
+            headers["Accept-Encoding"] = "gzip"
+            
+            # Make API request - KEY FIX: Use return_offers=false and then fetch offers separately
             response = requests.post(
                 f"{self.base_url}/air/offer_requests",
-                headers=self.headers,
-                json=offer_request_data
+                headers=headers,
+                json=offer_request_data,
+                params={"return_offers": "false", "supplier_timeout": "10000"}
             )
             response.raise_for_status()
             
             offer_request = response.json()
+            offer_request_id = offer_request.get("data", {}).get("id")
+            
+            if not offer_request_id:
+                raise Exception("No offer request ID returned")
+            
+            # Now fetch the offers separately (this is the correct Duffel pattern)
+            offers_response = requests.get(
+                f"{self.base_url}/air/offers",
+                headers=headers,
+                params={"offer_request_id": offer_request_id}
+            )
+            offers_response.raise_for_status()
+            
+            offers_data = offers_response.json()
             
             # Transform response to our standard format
-            return self._transform_duffel_response(offer_request)
+            return self._transform_duffel_response(offers_data)
             
         except requests.exceptions.RequestException as e:
             error_msg = f"Duffel search failed: {str(e)}"
@@ -110,6 +129,7 @@ class DuffelProvider(FlightProvider):
                 create_error_model_response(error_msg),
                 create_error_search_response(error_msg, "duffel")
             )
+    
     
     def get_final_price(self, offer_id: str) -> PricingResponse:
         """Get final confirmed pricing using Duffel's Get single offer endpoint"""
@@ -313,10 +333,10 @@ class DuffelProvider(FlightProvider):
         except:
             return None
     
-    def _transform_duffel_response(self, offer_request: Dict) -> Tuple[ModelSearchResponse, FlightSearchResponse]:
+    def _transform_duffel_response(self, offers_response: Dict) -> Tuple[ModelSearchResponse, FlightSearchResponse]:
         """Transform Duffel response to our standard format"""
         try:
-            offers = offer_request.get("data", {}).get("offers", [])
+            offers = offers_response.get("data", [])
             
             if not offers:
                 error_msg = "No flights found for your search criteria"

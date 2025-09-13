@@ -1,12 +1,15 @@
 from typing import List, Dict, Optional, Callable
 import json
 import time
+import logging
 from app.services.prompting.prompt_builder import PromptBuilder
 from app.services.messaging.conversation_orchestrator import ConversationOrchestrator
 from app.storage.services.conversation_storage_service import ConversationStorageService
 from app.storage.services.user_storage_service import UserStorageService
 from app.tools.tool_call_manager import ToolCallManager
 from app.services.messaging.response_delivery_service import ResponseDeliveryService
+
+logger = logging.getLogger(__name__)
 
 class ConversationHandler:
     """
@@ -56,9 +59,13 @@ class ConversationHandler:
         start_time = time.time()
 
         try:
+            logger.info(f"Starting message handling for {phone_number}")
             # Step 1: Get user (check cancellation)
             if cancellation_check():
+                logger.info("Message processing cancelled during initial check")
                 return None
+            
+            logger.debug("Attempting to create or retrieve user")
 
             user = self.user_storage_service.get_or_create_user(phone_number)
             if not user:
@@ -66,6 +73,7 @@ class ConversationHandler:
 
             # Step 2: Process images (check cancellation)
             if cancellation_check():
+                logger.info("Message processing cancelled before image processing")
                 return None
 
             has_media = len(media_urls) > 0
@@ -73,16 +81,19 @@ class ConversationHandler:
                 message, media_urls, cancellation_check
             )
             if processed_message is None:  # Cancelled during image processing
+                logger.info("Message processing cancelled during image processing")
                 return None
 
             # Step 3: Get user context (check cancellation)
             if cancellation_check():
+                logger.info("Message processing cancelled before building user context")
                 return None
 
             user_context = self._build_user_context(user)
 
             # Step 4: Get conversation history (check cancellation)
             if cancellation_check():
+                logger.info("Message processing cancelled before retrieving conversation history")
                 return None
 
             conversation_history = (
@@ -93,6 +104,7 @@ class ConversationHandler:
 
             # Step 5: Build prompt (check cancellation)
             if cancellation_check():
+                logger.info("Message processing cancelled before building prompt")
                 return None
 
             prompt = self.prompt_builder.build_conversation_prompt(
@@ -104,6 +116,7 @@ class ConversationHandler:
 
             # Step 6: Get available tools (check cancellation)
             if cancellation_check():
+                logger.info("Message processing cancelled before retrieving tools")
                 return None
 
             available_tools = self.tool_manager.get_available_tools_for_user(user)
@@ -119,6 +132,7 @@ class ConversationHandler:
 
             # Step 7: Call AI model 
             if cancellation_check():
+                logger.info("Message processing cancelled before AI model call")
                 return None
 
             # Your existing conversation processing
@@ -127,6 +141,7 @@ class ConversationHandler:
             )
 
             if cancellation_check():
+                logger.info("Message processing cancelled after AI model call")
                 return None
 
             # NEW: Send the AI response to the user
@@ -146,10 +161,7 @@ class ConversationHandler:
             if context_summaries:
                 ai_response_to_save = "\n".join(context_summaries) + "\n\n" + ai_response
                 
-            print("ai respnse saved")
-            print("================")
-            print(f"{ai_response_to_save}")
-            print("================")
+            logger.debug(f"AI response to save: {ai_response_to_save}")
             
             # Save the conversation with the AI response (fixed variable name)
             self.conversation_storage_service.save_conversation(
@@ -161,10 +173,11 @@ class ConversationHandler:
                 has_media=has_media
             )
 
+            logger.info(f"Message handling completed successfully for {phone_number} in {processing_time_ms}ms")
             return ai_response  # Fixed: return the actual AI response
 
         except Exception as e:
-            print(f"Error in conversation handling: {e}")
+            logger.error(f"Error in conversation handling for {phone_number}: {e}", exc_info=True)
             error_message = f"Sorry, there was an error processing your message. {e}"
             self._send_response_to_user(phone_number, error_message)
             return error_message
@@ -174,7 +187,7 @@ class ConversationHandler:
         if hasattr(self, 'response_delivery_service') and self.response_delivery_service:
             self.response_delivery_service.queue_response(phone_number, response)
         else:
-            print(f"📱 [NO DELIVERY SERVICE] Response for {phone_number}: {response}")
+            logger.info(f"📱 [NO DELIVERY SERVICE] Response for {phone_number}: {response}")
 
     def _process_images_if_present(
         self,
@@ -201,7 +214,7 @@ class ConversationHandler:
                 ):
                     image_descriptions.append(parsed_response.content)
                 else:
-                    print(f"Warning: Failed to describe image {img_info.get('url')}")
+                    logger.info(f"Warning: Failed to describe image {img_info.get('url')}")
                     image_descriptions.append("an image")
 
             # Prepend image descriptions to message
@@ -209,17 +222,58 @@ class ConversationHandler:
             return f"User has provided images: {descriptions_str}. {message}"
 
         except Exception as e:
-            print(f"Error processing images: {e}")
+            logger.error(f"Error processing images: {e}")
             return message  # Fallback to original message
 
     def _build_user_context(self, user) -> dict:
-        """Build user context for prompt building"""
-        return {
+        """Build user context for prompt building with capability assessment"""
+        
+        # Basic user info
+        context = {
             "phone_number": user.phone_number,
             "first_name": user.first_name,
             "last_name": user.last_name,
+            "email": getattr(user, "email", None),
+            "date_of_birth": getattr(user, "date_of_birth", None),
             "location": user.location,
             "preferred_language": user.preferred_language,
             "status": getattr(user, "status", "unknown"),
             "created_at": getattr(user, "created_at", "Unknown"),
         }
+        
+        # Capability assessment
+        missing_for_search = []
+        if not user.phone_number:
+            missing_for_search.append("phone_number")
+        
+        missing_for_booking = []
+        for field, value in {
+            "phone_number": user.phone_number,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": getattr(user, "email", None),
+            "date_of_birth": getattr(user, "date_of_birth", None),
+            "location": user.location
+        }.items():
+            if not value:
+                missing_for_booking.append(field)
+        
+        # Add capability status with clear instructions
+        if missing_for_search:
+            context["flight_capability"] = "CANNOT_SEARCH"
+            context["capability_message"] = f"User cannot search flights. Missing: {', '.join(missing_for_search)}. Do not offer flight searches."
+        elif missing_for_booking:
+            context["flight_capability"] = "CAN_SEARCH_ONLY"
+            context["capability_message"] = f"User can search flights but cannot book. Allow searches and exploration. Only ask for missing booking details ({', '.join(missing_for_booking)}) if user explicitly wants to proceed with booking."
+        else:
+            context["flight_capability"] = "FULL_ACCESS"
+            context["capability_message"] = "User can search and book flights"
+        
+        context["missing_for_search"] = missing_for_search
+        context["missing_for_booking"] = missing_for_booking
+        
+        # Clear instruction for the model
+        context["data_collection_policy"] = "IMPORTANT: Only request missing user details when user is ready to book. Let them search and explore freely with current information level."
+        
+        return context
+

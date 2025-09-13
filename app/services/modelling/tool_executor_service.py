@@ -1,6 +1,9 @@
 import concurrent.futures
 import traceback
 import json
+from decimal import Decimal
+from datetime import datetime
+from dataclasses import is_dataclass, asdict
 from typing import List, Dict, Any, Callable, Optional
 from app.services.modelling.response_parser import ToolCall
 
@@ -137,23 +140,31 @@ class ToolExecutorService:
         """Format tool execution results for model consumption"""
         if not tool_results:
             return ""
-        
+            
         formatted_results = ["<tool_results>"]
-        
+            
         for result in tool_results:
             tool_name = result.get("tool_name", "unknown")
-            
+                    
             if result.get("success", False):
                 # Successful execution
                 result_data = result.get("result", {})
                 formatted_results.append(f'<result tool_name="{tool_name}">')
-                formatted_results.append(f'<output>{json.dumps(result_data)}</output>')
+                
+                # Safe JSON serialization with dataclass support
+                try:
+                    json_output = json.dumps(result_data, default=self._json_serializer)
+                except (TypeError, ValueError) as e:
+                    # Fallback to string representation
+                    json_output = json.dumps(str(result_data))
+                        
+                formatted_results.append(f'<output>{json_output}</output>')
                 formatted_results.append('</result>')
             else:
                 # Failed execution
                 error_msg = result.get("error", "Unknown error")
                 error_type = result.get("error_type", "Error")
-                
+                            
                 formatted_results.append(f'<result tool_name="{tool_name}">')
                 formatted_results.append('<error>')
                 formatted_results.append(f'<type>{error_type}</type>')
@@ -161,6 +172,37 @@ class ToolExecutorService:
                 formatted_results.append('<action_required>This tool call failed. You can retry, inform the user, or proceed if other tools provided sufficient information.</action_required>')
                 formatted_results.append('</error>')
                 formatted_results.append('</result>')
-        
+                
         formatted_results.append("</tool_results>")
         return "\n".join(formatted_results)
+
+    def _json_serializer(self, obj: Any) -> Any:
+        """Custom JSON serializer for complex objects"""
+        # Handle dataclass objects
+        if is_dataclass(obj):
+            return asdict(obj) # type: ignore
+        
+        # Handle datetime objects
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        
+        # Handle Decimal objects
+        if isinstance(obj, Decimal):
+            return float(obj)
+        
+        # Handle other common non-serializable types
+        if hasattr(obj, '__dict__'):
+            # Convert object to dict, handling nested dataclasses
+            result = {}
+            for key, value in obj.__dict__.items():
+                try:
+                    # Recursively handle nested objects
+                    result[key] = self._json_serializer(value) if not isinstance(value, (str, int, float, bool, type(None))) else value
+                except:
+                    result[key] = str(value)
+            return result
+        
+        # Final fallback - convert to string
+        return str(obj)
+
+    

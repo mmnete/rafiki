@@ -1,4 +1,4 @@
-# Flight Booking System
+# Rafiki AI
 
 ## Development Setup
 
@@ -32,12 +32,12 @@
 
 4. Make sure your installed docker is running.
 
-4. Start the development environment:
+5. Start the local server testing the chat on browser:
    ```bash
    make run-local-with-chat
    ```
 
-5. The application will be available and you can test it by opening the chat interface in your browser as indicated by the make command output.
+6. The application will be available and you can test it by opening the chat interface in your browser as indicated by the make command output.
 
 ### Available Make Commands
 
@@ -121,4 +121,125 @@ pip install -r requirements.txt
 ├── requirements.txt      # Python dependencies
 ├── Makefile             # Development commands
 └── README.md            # This file
+```
+
+## Production Deployment (Heroku)
+
+### Prerequisites for Deployment
+- **Heroku CLI** installed
+- **Access to the Heroku app** (you'll be added as a collaborator)
+
+### One-Time Setup
+
+1. **Install Heroku CLI:**
+   ```bash
+   # macOS
+   brew tap heroku/brew && brew install heroku
+   
+   # Windows
+   # Download from https://devcenter.heroku.com/articles/heroku-cli
+   
+   # Ubuntu/Debian
+   curl https://cli-assets.heroku.com/install.sh | sh
+   ```
+
+2. **Login to Heroku:**
+   ```bash
+   heroku login
+   ```
+
+3. **Add Heroku remote** (replace `your-app-name` with actual app name):
+   ```bash
+   heroku git:remote -a your-app-name
+   ```
+
+### Deployment Process
+
+1. **Test locally first:**
+   ```bash
+   make test
+   make run-local-with-chat
+   ```
+
+2. **Commit your changes:**
+   ```bash
+   git add .
+   git commit -m "Your commit message"
+   git push origin main
+   ```
+
+3. **Deploy to production:**
+   ```bash
+   git push heroku main
+   ```
+
+4. **Monitor deployment:**
+   ```bash
+   heroku logs --tail
+   ```
+
+### Useful Heroku Commands
+
+```bash
+# View app status
+heroku ps
+
+# View recent logs
+heroku logs --tail
+
+# Open app in browser
+heroku open
+
+# Run database migrations/setup
+heroku run python -m app.storage.init_db
+
+# Access production shell
+heroku run bash
+
+# View environment variables
+heroku config
+
+# Restart the app
+heroku restart
+```
+
+### Pre-Deployment Checklist
+
+- [ ] All tests pass locally (`make test`)
+- [ ] Local development works (`make run-local-with-chat`)
+- [ ] Changes committed to git
+- [ ] Code reviewed (if required)
+- [ ] Database migrations tested (if any)
+
+### Deployment Troubleshooting
+
+**Build failures:**
+```bash
+# Check detailed build logs
+heroku logs --tail
+
+# Clear build cache if needed
+heroku builds:cache:purge
+```
+
+**App not starting:**
+```bash
+# Check dyno status
+heroku ps
+
+# Restart if needed
+heroku restart
+
+# Check for errors
+heroku logs --tail
+```
+
+**Database issues:**
+```bash
+# Check database status
+heroku pg:info
+
+# Reset database (⚠️ CAUTION: destroys all data)
+heroku pg:reset DATABASE_URL
+heroku run python -m app.storage.init_db
 ```

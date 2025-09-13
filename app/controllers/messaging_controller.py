@@ -55,6 +55,7 @@ class MessagingController:
         # 1. Input validation (controller responsibility)
         validation_result = validate_messaging_request(form_data, provider="twilio")
         if not validation_result.is_valid:
+            print("Invalid message found")
             return self.response_builder.build_error_response("Invalid request"), 400
         
         if not self.is_valid_supported_number(validation_result.require_phone()):
@@ -63,6 +64,8 @@ class MessagingController:
         # 2. Rate limiting check (delegate to service)
         if self.rate_limit_service.is_rate_limited(validation_result.require_phone()):
             return self.response_builder.build_rate_limit_response(), 429
+        
+        print("queueing message now!")
         
         # 3. Message queuing (delegate to service)
         queued_message = self.message_queue_service.queue_message(

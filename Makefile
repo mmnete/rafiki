@@ -35,7 +35,14 @@ run-local-with-chat:
 	docker-compose up --build -d
 	@sleep 3
 	@echo "Opening chat interface..."
-	open local_run/chat_tester.html || xdg-open local_run/chat_tester.html || start local_run/chat_tester.html
+	@( \
+		(command -v open >/dev/null 2>&1 && open local_run/chat_tester.html) || \
+		(command -v xdg-open >/dev/null 2>&1 && xdg-open local_run/chat_tester.html) || \
+		(command -v cmd >/dev/null 2>&1 && cmd /c start local_run/chat_tester.html) || \
+		(command -v powershell >/dev/null 2>&1 && powershell -Command "Start-Process 'local_run/chat_tester.html'") || \
+		echo "✅ Services started! Please manually open local_run/chat_tester.html in your browser" \
+	) 2>/dev/null || echo "✅ Services started! Please manually open local_run/chat_tester.html in your browser"
+	@echo "💡 Direct file path: file://$(PWD)/local_run/chat_tester.html"
 
 # Update requirements.txt with currently installed packages
 freeze-req:

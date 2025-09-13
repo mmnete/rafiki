@@ -31,9 +31,6 @@ class UserSchema(BaseSchema):
                 date_of_birth DATE,
                 gender VARCHAR(20),
                 
-                -- Connection to their own passenger profile (optional)
-                self_passenger_profile_id UUID REFERENCES passenger_profiles(id) ON DELETE SET NULL,
-                
                 -- Location and Preferences
                 location VARCHAR(255),
                 preferred_language VARCHAR(10) DEFAULT 'en',

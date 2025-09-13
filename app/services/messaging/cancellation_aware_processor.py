@@ -1,9 +1,12 @@
 from typing import List, Dict, Optional, Callable
 from datetime import datetime
 import json
+import logging
 
 from app.services.prompting.prompt_builder import PromptBuilder
 from app.services.messaging.conversation_handler import ConversationHandler
+
+logger = logging.getLogger(__name__)
 
 class CancellationAwareProcessor:
     """
@@ -35,10 +38,11 @@ class CancellationAwareProcessor:
         Returns:
             str: AI response or None if cancelled
         """
+        logger.info("Processing message async")
         try:
             # Check cancellation before starting
             if cancellation_check():
-                print(f"Message processing cancelled before start for {phone_number}")
+                logger.info(f"Message processing cancelled before start for {phone_number}")
                 return None
             
             # Delegate to conversation handler with cancellation check
@@ -51,13 +55,12 @@ class CancellationAwareProcessor:
             
             # Check cancellation after processing
             if cancellation_check():
-                print(f"Message processing cancelled after completion for {phone_number}")
+                logger.info(f"Message processing cancelled after completion for {phone_number}")
                 # Could implement cleanup here if needed
                 return None
             
             return response
             
         except Exception as e:
-            print(f"Error in cancellation-aware processing for {phone_number}: {e}")
+            logger.error(f"Error in cancellation-aware processing for {phone_number}: {e}")
             return f"Sorry, there was an error processing your message. {e}"
-    

@@ -2,6 +2,7 @@ from app.services.redis_storage_manager import implemented_redis_storage_manager
 import json
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
+from dataclasses import asdict
 
 class SharedStorageService:
     """Service for caching search results and temporary data"""
@@ -15,10 +16,12 @@ class SharedStorageService:
         # Generate search ID
         search_id = self._generate_search_id(user_id, search_params)
         
+        serialized_results = asdict(results)
+        
         # Cache data
         cache_data = {
             'search_params': search_params,
-            'results': results,
+            'results': serialized_results,
             'cached_at': datetime.now().isoformat(),
             'user_id': user_id
         }

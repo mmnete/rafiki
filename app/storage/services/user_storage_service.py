@@ -4,6 +4,7 @@
 from typing import Dict, Any, List, Optional
 import json
 import secrets
+import logging
 from dataclasses import dataclass
 from datetime import datetime, date, timedelta
 from app.storage.db_service import StorageService
@@ -18,7 +19,6 @@ class User:
     email: Optional[str]
     date_of_birth: Optional[date]
     gender: Optional[str]
-    self_passenger_profile_id: Optional[str]  # NEW FIELD
     location: Optional[str]
     preferred_language: str
     timezone: Optional[str]
@@ -60,13 +60,15 @@ class UserStorageService:
     def create_user(self, phone_number: str, **user_data) -> Optional[int]:
         """Create a new user account"""
         if not self.storage.conn:
+            logging.warning("No database connection available.")
             return None
         
         try:
             with self.storage.conn.cursor() as cur:
-                # Check if user already exists
+                logging.info(f"Checking if user already exists with phone_number={phone_number}")
                 existing_user = self.get_user_by_phone(phone_number)
                 if existing_user:
+                    logging.warning(f"User already exists: {existing_user}")
                     return existing_user.id
                 
                 # Build insert data
@@ -77,44 +79,62 @@ class UserStorageService:
                     'is_trusted_tester': user_data.get('is_trusted_tester', False),
                     'is_active': user_data.get('is_active', True)
                 }
+                logging.info(f"Initial insert_data: {insert_data}")
                 
                 # Add optional profile fields
                 profile_fields = [
                     'first_name', 'middle_name', 'last_name', 'email', 
                     'date_of_birth', 'gender', 'location', 'timezone',
-                    'self_passenger_profile_id'  # NEW FIELD
                 ]
                 for field in profile_fields:
                     if field in user_data:
                         insert_data[field] = user_data[field]
+                        logging.info(f"Added field {field}={user_data[field]}")
                 
                 # Handle JSON fields
                 if 'travel_preferences' in user_data:
-                    insert_data['travel_preferences'] = json.dumps(user_data['travel_preferences'])
+                    try:
+                        insert_data['travel_preferences'] = json.dumps(user_data['travel_preferences'])
+                        logging.info(f"Encoded travel_preferences: {insert_data['travel_preferences']}")
+                    except Exception as je:
+                        logging.error(f"Failed to encode travel_preferences: {je}")
                 if 'notification_preferences' in user_data:
-                    insert_data['notification_preferences'] = json.dumps(user_data['notification_preferences'])
+                    try:
+                        insert_data['notification_preferences'] = json.dumps(user_data['notification_preferences'])
+                        logging.info(f"Encoded notification_preferences: {insert_data['notification_preferences']}")
+                    except Exception as je:
+                        logging.error(f"Failed to encode notification_preferences: {je}")
                 
                 # Build query
                 fields = list(insert_data.keys())
                 placeholders = ', '.join(['%s'] * len(fields))
                 field_names = ', '.join(fields)
                 
-                cur.execute(f"""
+                query = f"""
                     INSERT INTO users ({field_names})
                     VALUES ({placeholders})
                     RETURNING id;
-                """, list(insert_data.values()))
+                """
+                values = list(insert_data.values())
+                
+                logging.info(f"Final query: {query}")
+                logging.info(f"Values: {values}")
+                
+                cur.execute(query, values)
                 
                 result = cur.fetchone()
                 if result:
+                    logging.info(f"User created with id={result[0]}")
                     return result[0]
                 else:
-                    print("Create user returned no result")
+                    logging.warning("Create user returned no result")
                     return None
-                
+        
         except Exception as e:
-            print(f"Error creating user: {e}")
+            logging.exception(f"Error creating user: {e}")
             return None
+
+    
     
     def get_user(self, user_id: int) -> Optional[User]:
         """Get user by ID"""
@@ -125,7 +145,7 @@ class UserStorageService:
             with self.storage.conn.cursor() as cur:
                 cur.execute("""
                     SELECT id, phone_number, first_name, middle_name, last_name,
-                           email, date_of_birth, gender, self_passenger_profile_id,
+                           email, date_of_birth, gender,
                            location, preferred_language, timezone, status, 
                            onboarding_completed_at, is_trusted_tester, is_active, 
                            travel_preferences, notification_preferences,
@@ -139,7 +159,7 @@ class UserStorageService:
                 return None
                 
         except Exception as e:
-            print(f"Error getting user: {e}")
+            logging.error(f"Error getting user: {e}")
             return None
     
     def get_user_by_phone(self, phone_number: str) -> Optional[User]:
@@ -151,7 +171,7 @@ class UserStorageService:
             with self.storage.conn.cursor() as cur:
                 cur.execute("""
                     SELECT id, phone_number, first_name, middle_name, last_name,
-                           email, date_of_birth, gender, self_passenger_profile_id,
+                           email, date_of_birth, gender,
                            location, preferred_language, timezone, status, 
                            onboarding_completed_at, is_trusted_tester, is_active, 
                            travel_preferences, notification_preferences,
@@ -165,19 +185,24 @@ class UserStorageService:
                 return None
                 
         except Exception as e:
-            print(f"Error getting user by phone: {e}")
+            logging.error(f"Error getting user by phone: {e}")
             return None
     
     def get_or_create_user(self, phone_number: str, **user_data) -> Optional[User]:
         """Get an existing user by phone number, or create a new user if none exists"""
         if not self.storage.conn:
+            logging.warning("no database connection found")
             return None
+        
+        logging.info("checking for a user now")
 
         try:
             # Try to get existing user
             existing_user = self.get_user_by_phone(phone_number)
             if existing_user:
                 return existing_user
+            
+            logging.info(f"trying to create user now {phone_number}")
 
             # Create new user
             user_id = self.create_user(phone_number, **user_data)
@@ -186,7 +211,7 @@ class UserStorageService:
             return None
 
         except Exception as e:
-            print(f"Error in get_or_create_user: {e}")
+            logging.error(f"Error in get_or_create_user: {e}")
             return None
     
     def update_user(self, user_id: int, **update_data) -> bool:
@@ -202,7 +227,7 @@ class UserStorageService:
                 
                 valid_fields = {
                     'first_name', 'middle_name', 'last_name', 'email',
-                    'date_of_birth', 'gender', 'self_passenger_profile_id',
+                    'date_of_birth', 'gender',
                     'location', 'preferred_language', 'timezone', 'status', 
                     'onboarding_completed_at', 'is_trusted_tester', 'is_active', 
                     'travel_preferences', 'notification_preferences', 'last_chat_at'
@@ -234,16 +259,8 @@ class UserStorageService:
                 return cur.rowcount > 0
                 
         except Exception as e:
-            print(f"Error updating user: {e}")
+            logging.error(f"Error updating user: {e}")
             return False
-    
-    def link_passenger_profile(self, user_id: int, passenger_profile_id: str) -> bool:
-        """Link user to their passenger profile"""
-        return self.update_user(user_id, self_passenger_profile_id=passenger_profile_id)
-    
-    def unlink_passenger_profile(self, user_id: int) -> bool:
-        """Unlink user from their passenger profile"""
-        return self.update_user(user_id, self_passenger_profile_id=None)
     
     def complete_onboarding(self, user_id: int) -> bool:
         """Mark user onboarding as complete"""
@@ -286,7 +303,7 @@ class UserStorageService:
                 return None
                 
         except Exception as e:
-            print(f"Error creating session: {e}")
+            logging.error(f"Error creating session: {e}")
             return None
     
     def get_session(self, session_token: str) -> Optional[UserSession]:
@@ -316,7 +333,7 @@ class UserStorageService:
                 return None
                 
         except Exception as e:
-            print(f"Error getting session: {e}")
+            logging.error(f"Error getting session: {e}")
             return None
     
     def validate_session(self, session_token: str) -> Optional[int]:
@@ -335,7 +352,7 @@ class UserStorageService:
                 return cur.rowcount > 0
                 
         except Exception as e:
-            print(f"Error revoking session: {e}")
+            logging.error(f"Error revoking session: {e}")
             return False
     
     def cleanup_expired_sessions(self) -> int:
@@ -349,7 +366,7 @@ class UserStorageService:
                 return cur.rowcount
                 
         except Exception as e:
-            print(f"Error cleaning up sessions: {e}")
+            logging.error(f"Error cleaning up sessions: {e}")
             return 0
     
     def _row_to_user(self, row) -> User:
@@ -363,19 +380,18 @@ class UserStorageService:
             email=row[5],
             date_of_birth=row[6],
             gender=row[7],
-            self_passenger_profile_id=row[8],  # NEW FIELD
-            location=row[9],
-            preferred_language=row[10],
-            timezone=row[11],
-            status=row[12],
-            onboarding_completed_at=row[13],
-            is_trusted_tester=row[14],
-            is_active=row[15],
-            travel_preferences=json.loads(row[16]) if row[16] else {},
-            notification_preferences=json.loads(row[17]) if row[17] else {},
-            created_at=row[18],
-            updated_at=row[19],
-            last_chat_at=row[20]
+            location=row[8],
+            preferred_language=row[9],
+            timezone=row[10],
+            status=row[11],
+            onboarding_completed_at=row[12],
+            is_trusted_tester=row[13],
+            is_active=row[14],
+            travel_preferences=json.loads(row[15]) if row[15] else {},
+            notification_preferences=json.loads(row[16]) if row[16] else {},
+            created_at=row[17],
+            updated_at=row[18],
+            last_chat_at=row[19]
         )
     
     def _generate_session_token(self) -> str:
@@ -399,9 +415,6 @@ class UserStorageService:
             "is_student_or_recent_grad": getattr(user, "is_student_or_recent_grad", None),
             "completed_bookings_count": getattr(user, "completed_bookings_count", 0),
         }
-
-        # Flag if user has a linked passenger profile
-        context["has_linked_passenger_profile"] = bool(getattr(user, "self_passenger_profile_id", None))
 
         # Known travelers list
         known_travelers = context["travel_preferences"].get("known_travelers") if context["travel_preferences"] else []

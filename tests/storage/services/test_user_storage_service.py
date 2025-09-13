@@ -56,23 +56,6 @@ class TestUserStorageService:
         assert 'INSERT INTO users' in insert_call_args[0][0]
         assert 'phone_number' in insert_call_args[0][0]
         assert 'first_name' in insert_call_args[0][0]
-        assert 'self_passenger_profile_id' not in insert_call_args[0][0]  # Not provided
-    
-    def test_create_user_with_passenger_profile_id(self, user_service, mock_storage, sample_user_data):
-        """Test user creation with passenger profile link"""
-        # Setup
-        sample_user_data['self_passenger_profile_id'] = 'uuid-123-456'
-        mock_cursor = Mock()
-        mock_storage.conn.cursor.return_value.__enter__.return_value = mock_cursor
-        mock_cursor.fetchone.side_effect = [None, (123,)]
-        
-        # Execute
-        user_id = user_service.create_user(**sample_user_data)
-        
-        # Verify
-        assert user_id == 123
-        insert_call_args = mock_cursor.execute.call_args_list[1]
-        assert 'self_passenger_profile_id' in insert_call_args[0][0]
     
     def test_create_user_already_exists(self, user_service, mock_storage, sample_user_data):
         """Test creating user that already exists returns existing ID"""
@@ -80,8 +63,7 @@ class TestUserStorageService:
         existing_user = User(
             id=456, phone_number=sample_user_data['phone_number'],
             first_name='Jane', middle_name=None, last_name='Smith',
-            email='jane@example.com', date_of_birth=None, gender=None,
-            self_passenger_profile_id=None, location=None, preferred_language='en',
+            email='jane@example.com', date_of_birth=None, gender=None, location=None, preferred_language='en',
             timezone=None, status='active', onboarding_completed_at=None,
             is_trusted_tester=False, is_active=True, travel_preferences={},
             notification_preferences={}, created_at=datetime.now(),
@@ -110,7 +92,7 @@ class TestUserStorageService:
         mock_storage.conn.cursor.return_value.__enter__.return_value = mock_cursor
         mock_cursor.fetchone.return_value = (
             123, '+1234567890', 'John', 'M', 'Doe', 'john@example.com',
-            date(1990, 1, 1), 'male', 'uuid-passenger-123', 'SF', 'en', 'PST',
+            date(1990, 1, 1), 'male', 'SF', 'en', 'PST',
             'active', datetime(2024, 1, 1), False, True,
             '{"seat": "window"}', '{"email": true}',
             datetime(2024, 1, 1), datetime(2024, 1, 2), datetime(2024, 1, 3)
@@ -129,7 +111,6 @@ class TestUserStorageService:
         assert user.email == 'john@example.com'
         assert user.date_of_birth == date(1990, 1, 1)
         assert user.gender == 'male'
-        assert user.self_passenger_profile_id == 'uuid-passenger-123'
         assert user.location == 'SF'
         assert user.preferred_language == 'en'
         assert user.timezone == 'PST'
@@ -142,7 +123,6 @@ class TestUserStorageService:
         # Verify query
         query_call = mock_cursor.execute.call_args[0][0]
         assert 'SELECT' in query_call
-        assert 'self_passenger_profile_id' in query_call
         assert 'WHERE id = %s' in query_call
     
     def test_get_user_not_found(self, user_service, mock_storage):
@@ -234,7 +214,6 @@ class TestUserStorageService:
         result = user_service.update_user(
             123,
             first_name='Jane',
-            self_passenger_profile_id='new-uuid-456',
             travel_preferences={'seat': 'aisle'}
         )
         
@@ -245,7 +224,6 @@ class TestUserStorageService:
         query_call = mock_cursor.execute.call_args[0]
         assert 'UPDATE users' in query_call[0]
         assert 'first_name = %s' in query_call[0]
-        assert 'self_passenger_profile_id = %s' in query_call[0]
         assert 'travel_preferences = %s' in query_call[0]
         assert 'updated_at = CURRENT_TIMESTAMP' in query_call[0]
         assert 'WHERE id = %s' in query_call[0]
@@ -280,7 +258,6 @@ class TestUserStorageService:
         
         # Verify update query includes passenger profile ID
         query_call = mock_cursor.execute.call_args[0]
-        assert 'self_passenger_profile_id = %s' in query_call[0]
         assert 'uuid-passenger-456' in query_call[1]
     
     def test_unlink_passenger_profile(self, user_service, mock_storage):
@@ -298,7 +275,6 @@ class TestUserStorageService:
         
         # Verify update query sets passenger profile ID to NULL
         query_call = mock_cursor.execute.call_args[0]
-        assert 'self_passenger_profile_id = %s' in query_call[0]
         assert None in query_call[1]
     
     def test_complete_onboarding(self, user_service, mock_storage):
@@ -551,7 +527,6 @@ class TestUserStorageService:
         assert user.email == 'john@example.com'
         assert user.date_of_birth == date(1990, 1, 1)
         assert user.gender == 'male'
-        assert user.self_passenger_profile_id == 'uuid-passenger-123'
         assert user.location == 'SF'
         assert user.preferred_language == 'en'
         assert user.timezone == 'PST'
