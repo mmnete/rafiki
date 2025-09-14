@@ -6,9 +6,9 @@ from typing import Any, Optional
 
 # Try to import Redis and its exceptions, fallback to local storage if not available
 try:
-    import redis
+    import redis # type: ignore
     # Import specific exceptions after the module is successfully imported
-    from redis import exceptions as redis_exceptions 
+    from redis import exceptions as redis_exceptions  # type: ignore
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False

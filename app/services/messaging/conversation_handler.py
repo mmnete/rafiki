@@ -8,6 +8,8 @@ from app.storage.services.conversation_storage_service import ConversationStorag
 from app.storage.services.user_storage_service import UserStorageService
 from app.tools.tool_call_manager import ToolCallManager
 from app.services.messaging.response_delivery_service import ResponseDeliveryService
+from app.tools.tool_output_format import process_model_response
+
 
 logger = logging.getLogger(__name__)
 
@@ -145,7 +147,7 @@ class ConversationHandler:
                 return None
 
             # NEW: Send the AI response to the user
-            self._send_response_to_user(phone_number, ai_response)
+            self._send_response_to_user(phone_number, process_model_response(ai_response))
 
             # Calculate processing time
             processing_time_ms = int((time.time() - start_time) * 1000)

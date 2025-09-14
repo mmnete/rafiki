@@ -1,7 +1,7 @@
 import os
 from typing import Dict, List, Optional, Protocol, Any, Union, Iterator
-import openai
-import google.generativeai as genai
+import openai # type: ignore
+import google.generativeai as genai # type: ignore
 import requests
 import base64
 import PIL.Image # type: ignore
@@ -183,8 +183,8 @@ class GeminiBackend:
         
         genai.configure(api_key=api_key) # type: ignore
         
-        self.text_model = genai.GenerativeModel("gemini-1.5-flash") # type: ignore
-        self.vision_model = genai.GenerativeModel("gemini-1.5-flash") # type: ignore
+        self.text_model = genai.GenerativeModel("gemini-2.5-pro") # type: ignore
+        self.vision_model = genai.GenerativeModel("gemini-2.5-pro") # type: ignore
         self.supports_vision: bool = True
 
     def generate_text_content(self, text: str, task: Optional[str] = None) -> str:
