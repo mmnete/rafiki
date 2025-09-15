@@ -1,187 +1,237 @@
 import re
 from typing import Dict, Any
 
+
 def parse_and_replace_display_functions(response_text: str) -> str:
-    """Parse display function calls and replace with formatted content"""
+    """Parse all display_ui function calls and replace with WhatsApp-friendly formatting"""
     
-    # Parse display_main_flights
-    main_flights_pattern = r'<display_main_flights\s+([^>]+)\s*/>'
-    response_text = re.sub(main_flights_pattern, _replace_main_flights, response_text)
-    
-    # Parse display_nearby_flights  
-    nearby_flights_pattern = r'<display_nearby_flights\s+([^>]+)\s*/>'
-    response_text = re.sub(nearby_flights_pattern, _replace_nearby_flights, response_text)
-    
-    # Parse display_comparison_sites
-    comparison_pattern = r'<display_comparison_sites\s+([^>]+)\s*/>'
-    response_text = re.sub(comparison_pattern, _replace_comparison_sites, response_text)
+    # Process each type of display function
+    response_text = _process_flight_displays(response_text)
+    response_text = _process_comparison_sites(response_text)
+    response_text = _process_booking_displays(response_text)
+    response_text = _process_payment_displays(response_text)
     
     return response_text
 
-def _parse_function_attributes(attr_string: str) -> Dict[str, str]:
-    """Parse function attributes from string"""
-    attributes = {}
-    pattern = r'(\w+)=["\']([^"\']*)["\']'
-    matches = re.findall(pattern, attr_string)
-    for key, value in matches:
-        attributes[key] = value
-    return attributes
 
-def _replace_main_flights(match) -> str:
-    """Replace main flights display function with formatted content"""
-    attrs = _parse_function_attributes(match.group(1))
+def _process_flight_displays(text: str) -> str:
+    """Process flight display functions"""
+    # Pattern to match both display_main_flight and display_nearby_flight
+    flight_pattern = r'<display_ui>(display_(?:main|nearby)_flight)\(([^)]+)\)</display_ui>'
     
-    search_id = attrs.get('search_id', '')
-    route = attrs.get('route', '')
-    date = attrs.get('date', '')
-    return_date = attrs.get('return_date', '')
-    flights_data = attrs.get('flights', '')
-    
-    # Parse flights data
-    flights = []
-    if flights_data:
-        for flight_str in flights_data.split('|'):
-            if ':' in flight_str:
-                parts = flight_str.split(':')
-                if len(parts) >= 7:
-                    flights.append({
-                        'id': parts[0],
-                        'airline': parts[1], 
-                        'price': parts[2],
-                        'departure': parts[3],
-                        'arrival': parts[4],
-                        'duration': parts[5],
-                        'stops': parts[6]
-                    })
-    
-    # Determine trip type
-    trip_type = "ROUND-TRIP" if return_date else "ONE-WAY"
-    
-    # Clean, spaced formatting
-    display = f"✈️ *BEST FLIGHTS - {route.upper()}* ({trip_type})\n"
-    display += f"📅 Outbound: {date}"
-    if return_date:
-        display += f" | Return: {return_date}"
-    display += "\n"
-    display += "─" * 5 + "\n"
-    
-    for i, flight in enumerate(flights[:3], 1):
-        airline = flight['airline'].title()
-        price = flight['price'] if flight['price'].startswith('$') else f"${flight['price']}"
-        departure = flight['departure']
-        arrival = flight['arrival']
-        duration = flight['duration']
-        stops = flight['stops']
-        flight_id = flight['id']
+    def replace_flight(match):
+        function_name = match.group(1)
+        params_str = match.group(2)
+        params = _parse_parameters(params_str)
         
-        # Format stops with emoji
-        if stops.lower() == 'direct':
-            stops_display = "🎯 *Direct Flight*"
+        if 'nearby' in function_name:
+            return _format_nearby_flight(params)
         else:
-            stops_display = f"↔️ {stops}"
-        
-        display += f"*{i}. {airline}* - *{price}*\n"
-        display += f"   🕐 {departure} → {arrival}\n"
-        display += f"   ⏱️ {duration} | {stops_display}\n"
-        # display += f"   🆔 `{flight_id}`\n\n"
+            return _format_main_flight(params)
     
-    display += "─" * 5 + "\n"
-    display += f"📋 *Search ID:* `{search_id}`\n\n"
-    
-    return display
+    return re.sub(flight_pattern, replace_flight, text)
 
-def _replace_nearby_flights(match) -> str:
-    """Replace nearby flights display function with formatted content"""
-    attrs = _parse_function_attributes(match.group(1))
-    
-    route = attrs.get('route', '')
-    date = attrs.get('date', '')
-    return_date = attrs.get('return_date', '')
-    flights_data = attrs.get('flights', '')
-    
-    if not flights_data:
-        return ""
-    
-    # Parse flights data
-    flights = []
-    if flights_data:
-        for flight_str in flights_data.split('|'):
-            if ':' in flight_str:
-                parts = flight_str.split(':')
-                if len(parts) >= 7:
-                    flights.append({
-                        'id': parts[0],
-                        'airline': parts[1],
-                        'price': parts[2], 
-                        'departure': parts[3],
-                        'arrival': parts[4],
-                        'duration': parts[5],
-                        'stops': parts[6]
-                    })
-    
-    trip_type = "ROUND-TRIP" if return_date else "ONE-WAY"
-    
-    display = f"🏢 *NEARBY AIRPORTS* ({trip_type})\n"
-    display += "💰 *Save money with these alternatives:*\n"
-    display += f"📅 Outbound: {date}"
-    if return_date:
-        display += f" | Return: {return_date}"
-    display += "\n"
-    display += "─" * 5 + "\n"
-    
-    for i, flight in enumerate(flights[:3], 1):
-        airline = flight['airline'].title()
-        price = flight['price'] if flight['price'].startswith('$') else f"${flight['price']}"
-        departure = flight['departure']
-        arrival = flight['arrival']
-        duration = flight['duration']
-        stops = flight['stops']
-        
-        stops_display = "🎯 *Direct*" if stops.lower() == 'direct' else f"↔️ {stops}"
-        
-        display += f"*{i}. {airline}* - *{price}*\n"
-        display += f"   🕐 {departure} → {arrival}\n"
-        display += f"   ⏱️ {duration} | {stops_display}\n\n"
-    
-    display += "─" * 5 + "\n"
-    
-    return display
 
-def _replace_comparison_sites(match) -> str:
-    """Replace comparison sites display function with formatted content"""
-    attrs = _parse_function_attributes(match.group(1))
+def _process_comparison_sites(text: str) -> str:
+    """Process comparison sites display"""
+    comparison_pattern = r'<display_ui>display_comparison_sites\(([^)]+)\)</display_ui>'
     
-    origin = attrs.get('origin', '')
-    destination = attrs.get('destination', '') 
-    date = attrs.get('date', '')
-    return_date = attrs.get('return_date', '')
+    def replace_comparison(match):
+        params_str = match.group(1)
+        params = _parse_parameters(params_str)
+        return _format_comparison_sites(params)
+    
+    return re.sub(comparison_pattern, replace_comparison, text)
+
+
+def _process_booking_displays(text: str) -> str:
+    """Process booking summary displays"""
+    booking_pattern = r'<display_ui>display_booking_summary\(([^)]+)\)</display_ui>'
+    
+    def replace_booking(match):
+        params_str = match.group(1)
+        params = _parse_parameters(params_str)
+        return _format_booking_summary(params)
+    
+    return re.sub(booking_pattern, replace_booking, text)
+
+
+def _process_payment_displays(text: str) -> str:
+    """Process payment link displays"""
+    payment_pattern = r'<display_ui>display_payment_link\(([^)]+)\)</display_ui>'
+    
+    def replace_payment(match):
+        params_str = match.group(1)
+        params = _parse_parameters(params_str)
+        return _format_payment_link(params)
+    
+    return re.sub(payment_pattern, replace_payment, text)
+
+
+def _parse_parameters(params_str: str) -> Dict[str, str]:
+    """Parse function parameters with robust handling of quotes"""
+    params = {}
+    
+    # Handle both single and double quotes, with escaped quotes
+    param_pattern = r'(\w+)=(["\'])([^"\']*?)\2'
+    matches = re.findall(param_pattern, params_str)
+    
+    for key, quote_type, value in matches:
+        params[key] = value.strip()
+    
+    return params
+
+
+def _format_main_flight(params: Dict[str, str]) -> str:
+    """Format main flight for WhatsApp display"""
+    airline = params.get('airline', 'Unknown')
+    price = params.get('price', '0')
+    origin = params.get('origin_airport', '')
+    destination = params.get('destination_airport', '')
+    dep_date = params.get('departure_date', '')
+    dep_time = params.get('departure_time', '')
+    arr_date = params.get('arrival_date', '')
+    arr_time = params.get('arrival_time', '')
+    duration = params.get('duration', '')
+    stops = params.get('stops', 'Unknown')
+    connection_airport = params.get('connection_airport', '')
+    connection_time = params.get('connection_time', '')
+    
+    # Format price
+    price_formatted = f"${price}" if not price.startswith('$') else price
+    
+    # Build compact WhatsApp format
+    display = f"✈️ *{airline}* - *{price_formatted}*\n"
+    display += f"📍 {origin} → {destination}\n"
+    
+    # Handle timing
+    if dep_date == arr_date:
+        display += f"🕐 {dep_date}: {dep_time} → {arr_time}\n"
+    else:
+        display += f"🛫 {dep_date} {dep_time}\n"
+        display += f"🛬 {arr_date} {arr_time}\n"
+    
+    # Handle connections
+    if stops.lower() == 'direct':
+        display += f"⏱️ {duration} • Direct flight"
+    else:
+        if connection_airport and connection_time:
+            display += f"⏱️ {duration} • Via {connection_airport} ({connection_time})"
+        else:
+            display += f"⏱️ {duration} • {stops}"
+    
+    return display + "\n"
+
+
+def _format_nearby_flight(params: Dict[str, str]) -> str:
+    """Format nearby airport flight for WhatsApp display"""
+    airline = params.get('airline', 'Unknown')
+    price = params.get('price', '0')
+    origin = params.get('origin_airport', '')
+    destination = params.get('destination_airport', '')
+    dep_date = params.get('departure_date', '')
+    dep_time = params.get('departure_time', '')
+    arr_date = params.get('arrival_date', '')
+    arr_time = params.get('arrival_time', '')
+    duration = params.get('duration', '')
+    stops = params.get('stops', 'Unknown')
+    
+    # Format price
+    price_formatted = f"${price}" if not price.startswith('$') else price
+    
+    # Build compact WhatsApp format with alternative indicator
+    display = f"🔄 *Alternative: {airline}* - *{price_formatted}*\n"
+    display += f"📍 {origin} → {destination}\n"
+    
+    # Handle timing
+    if dep_date == arr_date:
+        display += f"🕐 {dep_date}: {dep_time} → {arr_time}\n"
+    else:
+        display += f"🛫 {dep_date} {dep_time}\n"
+        display += f"🛬 {arr_date} {arr_time}\n"
+    
+    # Handle stops
+    stops_text = "Direct" if stops.lower() == 'direct' else stops
+    display += f"⏱️ {duration} • {stops_text}"
+    
+    return display + "\n"
+
+
+def _format_comparison_sites(params: Dict[str, str]) -> str:
+    """Format comparison sites for WhatsApp display"""
+    origin = params.get('origin', '')
+    destination = params.get('destination', '')
+    date = params.get('departure_date', '')
     
     # Generate realistic comparison data
-    comparison_sites = [
-        {'name': 'Kayak.com', 'price': '$329'},
-        {'name': 'Expedia.com', 'price': '$345'},
-        {'name': 'Booking.com', 'price': '$356'}
+    sites = [
+        {'name': 'Kayak', 'price': '$289', 'domain': 'kayak.com'},
+        {'name': 'Expedia', 'price': '$302', 'domain': 'expedia.com'},
+        {'name': 'Google Flights', 'price': '$295', 'domain': 'google.com/flights'},
+        {'name': 'Booking.com', 'price': '$318', 'domain': 'booking.com'}
     ]
     
-    trip_type = "round-trip" if return_date else "one-way"
-    
-    display = f"🔍 *PRICE COMPARISON*\n"
-    display += f"Here are what other platforms offer for {trip_type} {origin} → {destination}:\n"
-    display += f"📅 {date}"
-    if return_date:
-        display += f" to {return_date}"
-    display += "\n"
-    
-    for site in comparison_sites:
-        name = site['name']
-        price = site['price']
-        display += f"• *{name}:* {price}\n"
-    
-    display += "\n" + "─" *5 + "\n"
+    display = "💰 *Compare prices:*\n"
+    for site in sites:
+        display += f"• *{site['name']}*: {site['price']} - {site['domain']}\n"
     
     return display
 
-# Usage example:
+
+def _format_booking_summary(params: Dict[str, str]) -> str:
+    """Format booking summary for WhatsApp display"""
+    booking_id = params.get('booking_id', '')
+    pnr = params.get('pnr', '')
+    total_price = params.get('total_price', '0')
+    passengers = params.get('passengers', '[]')
+    
+    # Parse passengers if it's a string representation of a list
+    if isinstance(passengers, str):
+        try:
+            # Simple parsing for passenger list
+            passenger_list = passengers.strip('[]').replace("'", "").replace('"', '').split(', ')
+        except:
+            passenger_list = ['Passenger details pending']
+    else:
+        passenger_list = passengers
+    
+    price_formatted = f"${total_price}" if not total_price.startswith('$') else total_price
+    
+    display = f"📋 *Booking Summary*\n"
+    display += f"🎫 Booking ID: {booking_id}\n"
+    if pnr:
+        display += f"✈️ Airline Confirmation: {pnr}\n"
+    display += f"👥 Passengers: {', '.join(passenger_list)}\n"
+    display += f"💵 Total: *{price_formatted}*\n"
+    
+    return display
+
+
+def _format_payment_link(params: Dict[str, str]) -> str:
+    """Format payment link for WhatsApp display"""
+    payment_url = params.get('payment_url', '')
+    amount = params.get('amount', '0')
+    expires_in = params.get('expires_in', '24 hours')
+    
+    amount_formatted = f"${amount}" if not amount.startswith('$') else amount
+    
+    display = f"💳 *Secure Payment*\n"
+    display += f"💰 Amount: *{amount_formatted}*\n"
+    display += f"⏰ Link expires in: {expires_in}\n"
+    display += f"🔗 Pay now: {payment_url}\n"
+    
+    return display
+
+
+# Main function to process model responses
 def process_model_response(response: str) -> str:
-    """Process model response and replace display functions"""
-    return parse_and_replace_display_functions(response)
+    """
+    Main function to process model response and replace all display functions
+    with WhatsApp-optimized formatting
+    """
+    processed_response = parse_and_replace_display_functions(response)
+    
+    # Clean up any extra whitespace
+    processed_response = re.sub(r'\n{3,}', '\n\n', processed_response)
+    
+    return processed_response.strip()

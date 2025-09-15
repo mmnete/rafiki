@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional, Tuple
 from .response_models import (
-    FlightSearchResponse, ModelSearchResponse, PricingResponse, 
+    FlightSearchResponse, SimplifiedSearchResponse, PricingResponse, 
     BookingResponse, CancellationResponse, Passenger
 )
 
@@ -11,9 +11,9 @@ class FlightProvider(ABC):
     @abstractmethod
     def search_flights(self, origin: str, destination: str, departure_date: str,
                       return_date: Optional[str] = None, passengers: List[Passenger] = [],
-                      travel_class: str = "ECONOMY") -> Tuple[ModelSearchResponse, FlightSearchResponse]:
+                      travel_class: str = "ECONOMY") -> Tuple[SimplifiedSearchResponse, FlightSearchResponse]:
         """
-        Search for flights. Returns (model_response, full_response) tuple.
+        Search for flights. Returns (simplified_response, full_response) tuple.
         
         Args:
             origin: IATA code for departure airport/city
@@ -24,7 +24,7 @@ class FlightProvider(ABC):
             travel_class: Cabin class (ECONOMY, BUSINESS, etc.)
             
         Returns:
-            Tuple of (ModelSearchResponse, FlightSearchResponse)
+            Tuple of (SimplifiedSearchResponse, FlightSearchResponse)
         """
         pass
     

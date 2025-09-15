@@ -5,8 +5,9 @@ from dataclasses import dataclass
 from enum import Enum
 import requests
 import time
+import os
 
-from app.services.modelling.model_backend import GeminiBackend, OpenAIBackend
+from app.services.modelling.model_backend import GeminiBackend, OpenAIBackend, ClaudeBackend, create_backend
 from app.services.modelling.response_parser import ResponseParser, ParsedResponse, ResponseType
 from app.services.modelling.tool_executor_service import ToolExecutorService
 
@@ -27,9 +28,9 @@ class ModelService:
     - Response callbacks for real-time delivery
     """
     
-    def __init__(self, use_openai: bool = False):
-        self.use_openai = use_openai
-        self._initialize_backend()
+    def __init__(self):
+        model_backend = os.getenv("MODEL_BACKEND", "claude")
+        self.backend = create_backend(model_backend)
     
     def _initialize_backend(self):
         """Initialize the appropriate backend"""

@@ -3,11 +3,13 @@ import requests
 import json
 import re
 from datetime import datetime
+from decimal import Decimal
 from .base_provider import FlightProvider
 from .response_models import (
-    FlightSearchResponse, ModelSearchResponse, PricingResponse, 
+    FlightSearchResponse, SimplifiedSearchResponse, PricingResponse, 
     BookingResponse, CancellationResponse, Passenger,
-    FlightOffer, FlightSegment, FlightSearchSummary, ModelFlightOffer,
+    FlightOffer, FlightSegment, FlightSearchSummary, SimplifiedFlightOffer,
+    Pricing, Baggage, FareDetails, AncillaryServices, CabinClass, TripType, PassengerType,
     create_error_search_response, create_error_model_response,
     create_error_pricing_response, create_error_booking_response,
     create_error_cancellation_response
@@ -37,15 +39,22 @@ class DuffelProvider(FlightProvider):
         return getenv(key) or ""
     
     def search_flights(self, origin: str, destination: str, departure_date: str,
-                  return_date: Optional[str] = None, passengers: List[Passenger] = [],
-                  travel_class: str = "ECONOMY") -> Tuple[ModelSearchResponse, FlightSearchResponse]:
+                      return_date: Optional[str] = None, passengers: List[Passenger] = [],
+                      travel_class: str = "ECONOMY") -> Tuple[SimplifiedSearchResponse, FlightSearchResponse]:
         """Search flights using Duffel API based on official documentation"""
         try:
-            passengers = passengers or [Passenger(
-                passenger_type="adult", first_name="", last_name="", 
-                date_of_birth="1990-01-01", gender="", email="", 
-                phone="", nationality=""
-            )]
+            # Create default passenger if none provided
+            if not passengers:
+                passengers = [Passenger(
+                    passenger_type=PassengerType.ADULT,
+                    first_name="",
+                    last_name="",
+                    date_of_birth=datetime(1990, 1, 1),
+                    gender="",
+                    email="",
+                    phone="",
+                    nationality=""
+                )]
             
             # Build slices for the journey
             slices = [
@@ -67,7 +76,7 @@ class DuffelProvider(FlightProvider):
             # Transform passengers to Duffel format (minimal for search)
             duffel_passengers = []
             for passenger in passengers:
-                p_data = {"type": passenger.passenger_type}
+                p_data = {"type": passenger.passenger_type.value}
                 
                 # Add age if specified (for children/infants)
                 if passenger.age:
@@ -129,7 +138,6 @@ class DuffelProvider(FlightProvider):
                 create_error_model_response(error_msg),
                 create_error_search_response(error_msg, "duffel")
             )
-    
     
     def get_final_price(self, offer_id: str) -> PricingResponse:
         """Get final confirmed pricing using Duffel's Get single offer endpoint"""
@@ -257,9 +265,9 @@ class DuffelProvider(FlightProvider):
             
             return CancellationResponse(
                 success=True,
-                cancellation_id=confirmed_data["id"],
                 refund_amount=float(confirmed_data.get("refund_amount", 0)) / 100,
                 refund_currency=confirmed_data.get("refund_currency", "USD"),
+                cancellation_id=confirmed_data["id"],
                 cancellation_confirmed_at=confirmed_data.get("confirmed_at"),
                 provider_data={"cancellation": confirmed_data}
             )
@@ -288,11 +296,14 @@ class DuffelProvider(FlightProvider):
         duffel_passengers = []
         
         for passenger in passengers:
+            # Format dates for Duffel
+            born_on = passenger.date_of_birth.strftime("%Y-%m-%d")
+            
             duffel_passenger = {
-                "type": passenger.passenger_type,
+                "type": passenger.passenger_type.value,
                 "given_name": passenger.first_name,
                 "family_name": passenger.last_name,
-                "born_on": passenger.date_of_birth,
+                "born_on": born_on,
                 "email": passenger.email,
                 "phone_number": passenger.phone,
                 "loyalty_programme_accounts": [],
@@ -301,10 +312,11 @@ class DuffelProvider(FlightProvider):
             
             # Add passport/identity document if provided
             if passenger.passport_number:
+                expires_on = passenger.passport_expiry.strftime("%Y-%m-%d") if passenger.passport_expiry else "2030-12-31"
                 duffel_passenger["identity_documents"].append({
                     "type": "passport",
                     "number": passenger.passport_number,
-                    "expires_on": passenger.passport_expiry or "2030-12-31",
+                    "expires_on": expires_on,
                     "issuing_country_code": passenger.nationality or "US"
                 })
             
@@ -333,7 +345,7 @@ class DuffelProvider(FlightProvider):
         except:
             return None
     
-    def _transform_duffel_response(self, offers_response: Dict) -> Tuple[ModelSearchResponse, FlightSearchResponse]:
+    def _transform_duffel_response(self, offers_response: Dict) -> Tuple[SimplifiedSearchResponse, FlightSearchResponse]:
         """Transform Duffel response to our standard format"""
         try:
             offers = offers_response.get("data", [])
@@ -362,39 +374,43 @@ class DuffelProvider(FlightProvider):
             
             # Create summary
             if flight_offers:
-                prices = [offer.price_total for offer in flight_offers]
-                airlines = list(set([offer.airline_code for offer in flight_offers]))
+                prices = [flight_offer.pricing.price_total for flight_offer in flight_offers]
+                airlines = list(set([flight_offer.airline_code for flight_offer in flight_offers]))
                 
                 search_summary = FlightSearchSummary(
                     total_offers=len(flight_offers),
                     price_range_min=min(prices),
                     price_range_max=max(prices),
-                    currency=flight_offers[0].currency,
-                    airlines=airlines,
-                    routes_available=1
+                    currency=flight_offers[0].pricing.currency,
+                    routes_available=1,
+                    airlines=airlines
                 )
             else:
                 search_summary = FlightSearchSummary(
-                    total_offers=0, price_range_min=0.0, price_range_max=0.0,
-                    currency="USD", airlines=[], routes_available=0
+                    total_offers=0,
+                    price_range_min=Decimal("0"),
+                    price_range_max=Decimal("0"),
+                    currency="USD",
+                    routes_available=0,
+                    airlines=[]
                 )
             
             # Create responses
             full_response = FlightSearchResponse(
                 success=True,
-                flights=flight_offers,
                 search_summary=search_summary,
+                flights=flight_offers,
                 provider_name="duffel"
             )
             
-            model_response = ModelSearchResponse(
+            model_response = SimplifiedSearchResponse(
                 success=True,
-                flights=model_offers,
                 summary={
                     "total_found": len(flight_offers),
-                    "price_range": f"${search_summary.price_range_min:.0f}-${search_summary.price_range_max:.0f}",
+                    "price_range": f"${float(search_summary.price_range_min):.0f}-${float(search_summary.price_range_max):.0f}",
                     "airlines": airlines[:3]
-                }
+                },
+                flights=model_offers
             )
             
             return model_response, full_response
@@ -414,6 +430,29 @@ class DuffelProvider(FlightProvider):
         base_amount = float(offer["base_amount"]) / 100
         currency = offer["total_currency"]
         
+        # Create pricing object
+        pricing = Pricing(
+            price_total=Decimal(str(total_amount)),
+            base_price=Decimal(str(base_amount)),
+            currency=currency
+        )
+        
+        # Create baggage object (default values)
+        baggage = Baggage(
+            carry_on_included=True,
+            checked_bags_included=0
+        )
+        
+        # Create fare details (defaults)
+        fare_details = FareDetails(
+            fare_class="Economy",
+            refundable=False,
+            changeable=True
+        )
+        
+        # Create ancillary services (defaults)
+        ancillary_services = AncillaryServices()
+        
         # Process slices to get segments
         all_segments = []
         airlines = set()
@@ -431,41 +470,39 @@ class DuffelProvider(FlightProvider):
         last_segment = all_segments[-1] if all_segments else None
         
         # Determine trip type
-        trip_type = "round_trip" if len(offer.get("slices", [])) > 1 else "one_way"
-        if total_stops == 0:
-            trip_type += "_direct" if trip_type == "one_way" else ""
+        num_slices = len(offer.get("slices", []))
+        if num_slices > 1:
+            trip_type = TripType.ROUND_TRIP
+        elif total_stops == 0:
+            trip_type = TripType.ONE_WAY_DIRECT
         else:
-            trip_type += "_connecting" if trip_type == "one_way" else ""
+            trip_type = TripType.ONE_WAY_CONNECTING
         
         # Calculate duration
         total_duration = offer.get("total_duration", "")
         duration_minutes = self._parse_duration_to_minutes(total_duration)
         
+        # Parse datetime strings
+        departure_time = self._parse_datetime(first_segment.departure_time) if first_segment else datetime.now()
+        arrival_time = self._parse_datetime(last_segment.arrival_time) if last_segment else datetime.now()
+        
         return FlightOffer(
-            flight_offer_id=f"duffel_{offer_id}",
+            offer_id=f"duffel_{offer_id}",
             provider_offer_id=offer_id,
-            price_total=total_amount,
-            base_price=base_amount,
-            currency=currency,
             origin=first_segment.departure_iata if first_segment else "",
             destination=last_segment.arrival_iata if last_segment else "",
-            departure_time=first_segment.departure_time if first_segment else "",
-            arrival_time=last_segment.arrival_time if last_segment else "",
-            trip_type=trip_type,
-            duration=total_duration,
+            departure_time=departure_time,
+            arrival_time=arrival_time,
             duration_minutes=duration_minutes or 0,
-            flight_duration_minutes=duration_minutes or 0,
+            trip_type=trip_type,
             total_segments=len(all_segments),
             stops=total_stops,
             airline_code=first_segment.airline_code if first_segment else "",
-            airline_name=first_segment.airline_name if first_segment else "",
-            airlines=list(airlines),
+            pricing=pricing,
+            baggage=baggage,
+            fare_details=fare_details,
+            ancillary_services=ancillary_services,
             segments=all_segments,
-            checked_bags=0,  # Would need to parse from conditions
-            cabin_bags=1,    # Default assumption
-            seats_available=None,
-            instant_ticketing=False,
-            last_ticketing_date=None,
             provider_data={"full_offer": offer}
         )
     
@@ -476,53 +513,58 @@ class DuffelProvider(FlightProvider):
         
         duration_minutes = self._parse_duration_to_minutes(segment.get("duration", ""))
         
+        # Parse datetime strings
+        departure_time = self._parse_datetime(segment.get("departing_at", ""))
+        arrival_time = self._parse_datetime(segment.get("arriving_at", ""))
+        
         return FlightSegment(
             airline_code=operating_carrier.get("iata_code", ""),
             airline_name=operating_carrier.get("name", ""),
             flight_number=segment.get("flight_number", ""),
             departure_iata=segment.get("origin", {}).get("iata_code", ""),
             arrival_iata=segment.get("destination", {}).get("iata_code", ""),
-            departure_terminal=segment.get("origin", {}).get("terminal"),
-            arrival_terminal=segment.get("destination", {}).get("terminal"),
-            departure_time=segment.get("departing_at", ""),
-            arrival_time=segment.get("arriving_at", ""),
-            duration=segment.get("duration", ""),
+            departure_time=departure_time,
+            arrival_time=arrival_time,
             duration_minutes=duration_minutes or 0,
             stops=0,  # Duffel segments are individual flights, stops are between segments
+            cabin_class=CabinClass.ECONOMY,  # Default for now
+            departure_terminal=segment.get("origin", {}).get("terminal"),
+            arrival_terminal=segment.get("destination", {}).get("terminal"),
             aircraft_code=aircraft.get("iata_code"),
             aircraft_name=aircraft.get("name"),
             operating_carrier=operating_carrier.get("iata_code"),
             segment_id=segment.get("id")
         )
     
-    def _create_model_offer(self, flight_offer: FlightOffer) -> ModelFlightOffer:
+    def _parse_datetime(self, datetime_str: str) -> datetime:
+        """Parse Duffel datetime string to datetime object"""
+        if not datetime_str:
+            return datetime.now()
+        try:
+            # Duffel format: "2024-09-21T06:00:00"
+            return datetime.fromisoformat(datetime_str.replace('Z', '+00:00'))
+        except:
+            return datetime.now()
+    
+    def _create_model_offer(self, flight_offer: FlightOffer) -> SimplifiedFlightOffer:
         """Create simplified model offer from full flight offer"""
-        # Format duration nicely
-        duration_str = self._format_duration(flight_offer.duration) # type: ignore
+        # Format duration from minutes
+        duration_str = self._format_duration_minutes(flight_offer.duration_minutes)
         
         # Format stops
         stops_text = "Direct" if flight_offer.stops == 0 else f"{flight_offer.stops} stop{'s' if flight_offer.stops > 1 else ''}"
         
-        # Extract time from datetime strings
-        departure_time = ""
-        arrival_time = ""
+        # Extract time from datetime objects
+        departure_time = flight_offer.departure_time.strftime("%H:%M")
+        arrival_time = flight_offer.arrival_time.strftime("%H:%M")
         
-        if flight_offer.departure_time:
-            try:
-                departure_time = flight_offer.departure_time.split('T')[1][:5] if 'T' in flight_offer.departure_time else flight_offer.departure_time[:5]
-            except:
-                departure_time = ""
+        # Get airline name from first segment
+        airline_name = flight_offer.segments[0].airline_name if flight_offer.segments else "Unknown"
         
-        if flight_offer.arrival_time:
-            try:
-                arrival_time = flight_offer.arrival_time.split('T')[1][:5] if 'T' in flight_offer.arrival_time else flight_offer.arrival_time[:5]
-            except:
-                arrival_time = ""
-        
-        return ModelFlightOffer(
-            id=flight_offer.flight_offer_id,
-            price=f"${flight_offer.price_total:.0f}",
-            airline=flight_offer.airline_name,
+        return SimplifiedFlightOffer(
+            id=flight_offer.offer_id,
+            price=f"${float(flight_offer.pricing.price_total):.0f}",
+            airline=airline_name,
             route=f"{flight_offer.origin} → {flight_offer.destination}",
             departure=departure_time,
             arrival=arrival_time,
@@ -544,6 +586,23 @@ class DuffelProvider(FlightProvider):
         hours = int(match.group(1) or 0)
         minutes = int(match.group(2) or 0)
         return hours * 60 + minutes
+    
+    def _format_duration_minutes(self, duration_minutes: int) -> str:
+        """Format duration minutes to display string"""
+        if not duration_minutes:
+            return ""
+            
+        hours = duration_minutes // 60
+        minutes = duration_minutes % 60
+        
+        if hours and minutes:
+            return f"{hours}h {minutes}m"
+        elif hours:
+            return f"{hours}h"
+        elif minutes:
+            return f"{minutes}m"
+        else:
+            return ""
     
     def _format_duration(self, duration_str: str) -> str:
         """Format duration string for display"""
@@ -567,4 +626,4 @@ class DuffelProvider(FlightProvider):
             return f"{minutes}m"
         else:
             return ""
-    
+        

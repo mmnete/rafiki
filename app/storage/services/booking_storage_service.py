@@ -10,7 +10,7 @@ from datetime import datetime, date
 from decimal import Decimal
 from app.storage.db_service import StorageService
 from app.storage.services.shared_storage import SharedStorageService
-from app.services.api.flights.response_models import Passenger
+from app.services.api.flights.response_models import Passenger, PassengerType
 from app.services.api.flights.flight_service import FlightService
 
 @dataclass
@@ -924,19 +924,23 @@ class BookingStorageService:
                 
                 passengers = []
                 for row in cur.fetchall():
-                    # Import the Passenger class from your response models
+                    # Convert date strings to datetime objects
+                    date_of_birth = row[2] if isinstance(row[2], datetime) else datetime.fromisoformat(row[2]) if row[2] else datetime(1990, 1, 1)
+                    passport_expiry = None
+                    if row[6]:
+                        passport_expiry = row[6] if isinstance(row[6], datetime) else datetime.fromisoformat(row[6])
                     
                     passenger = Passenger(
-                        passenger_type="adult",  # Default, could be enhanced
+                        passenger_type=PassengerType.ADULT,  # Default, could be enhanced
                         first_name=row[0] or "",
                         last_name=row[1] or "",
-                        date_of_birth=row[2].isoformat() if row[2] else "1990-01-01",
+                        date_of_birth=date_of_birth,
                         gender=row[3] or "M",
                         email="",  # Would need to be stored separately
                         phone="",  # Would need to be stored separately
                         nationality=row[4] or "US",
                         passport_number=row[5],
-                        passport_expiry=row[6].isoformat() if row[6] else "2030-12-31"
+                        passport_expiry=passport_expiry
                     )
                     passengers.append(passenger)
                 

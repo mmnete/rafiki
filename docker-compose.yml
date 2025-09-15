@@ -25,6 +25,13 @@ services:
       DATABASE_URL: "postgresql://postgres:12345@postgres:5432/rafiki_ai"
       REDIS_URL: "redis://redis:6379/0"
       FLASK_ENV: "development"
+      PYTHONUNBUFFERED: 1
     depends_on:
       - postgres
       - redis
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+

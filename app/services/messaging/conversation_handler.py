@@ -50,8 +50,8 @@ class ConversationHandler:
     def handle_message_with_cancellation(
         self,
         phone_number: str,
-        message: str,
-        media_urls: List[Dict[str, str]],
+        message: str, # This is the user query
+        media_urls: List[Dict[str, str]], # These are image inputs.
         cancellation_check: Callable[[], bool],
     ) -> Optional[str]:
         """

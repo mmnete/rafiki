@@ -188,8 +188,9 @@ class ToolExecutorService:
                 formatted_results.append('</result>')
                 
         formatted_results.append("</tool_results>")
-        logger.info("Successfully formatted tool results for model")
-        return "\n".join(formatted_results)
+        tool_results_block = "\n".join(formatted_results)
+        logger.info(f"Successfully formatted tool results for model. Full tool_results block is {tool_results_block}")
+        return tool_results_block
 
     def _json_serializer(self, obj: Any) -> Any:
         """Custom JSON serializer for complex objects"""

@@ -5,11 +5,13 @@ import re
 import time
 import hashlib
 from datetime import datetime
+from decimal import Decimal
 from .base_provider import FlightProvider
 from .response_models import (
-    FlightSearchResponse, ModelSearchResponse, PricingResponse, 
+    FlightSearchResponse, SimplifiedSearchResponse, PricingResponse, 
     BookingResponse, CancellationResponse, Passenger,
-    FlightOffer, FlightSegment, FlightSearchSummary, ModelFlightOffer,
+    FlightOffer, FlightSegment, FlightSearchSummary, SimplifiedFlightOffer,
+    Pricing, Baggage, FareDetails, AncillaryServices, CabinClass, TripType, PassengerType,
     create_error_search_response, create_error_model_response,
     create_error_pricing_response, create_error_booking_response,
     create_error_cancellation_response
@@ -61,19 +63,26 @@ class AmadeusProvider(FlightProvider):
     
     def search_flights(self, origin: str, destination: str, departure_date: str,
                       return_date: Optional[str] = None, passengers: List[Passenger] = [],
-                      travel_class: str = "ECONOMY") -> Tuple[ModelSearchResponse, FlightSearchResponse]:
+                      travel_class: str = "ECONOMY") -> Tuple[SimplifiedSearchResponse, FlightSearchResponse]:
         """Search flights using Amadeus API"""
         try:
-            passengers = passengers or [Passenger(
-                passenger_type="adult", first_name="", last_name="", 
-                date_of_birth="1990-01-01", gender="", email="", 
-                phone="", nationality=""
-            )]
+            # Create default passenger if none provided
+            if not passengers:
+                passengers = [Passenger(
+                    passenger_type=PassengerType.ADULT,
+                    first_name="",
+                    last_name="",
+                    date_of_birth=datetime(1990, 1, 1),
+                    gender="",
+                    email="",
+                    phone="",
+                    nationality=""
+                )]
             
             # Count passenger types
-            adults = sum(1 for p in passengers if p.passenger_type == "adult")
-            children = sum(1 for p in passengers if p.passenger_type == "child")
-            infants = sum(1 for p in passengers if p.passenger_type == "infant")
+            adults = sum(1 for p in passengers if p.passenger_type == PassengerType.ADULT)
+            children = sum(1 for p in passengers if p.passenger_type == PassengerType.CHILD)
+            infants = sum(1 for p in passengers if p.passenger_type == PassengerType.INFANT)
             
             # Prepare API request
             url = f"{self.base_url}/v2/shopping/flight-offers"
@@ -182,9 +191,12 @@ class AmadeusProvider(FlightProvider):
         amadeus_travelers = []
         
         for idx, passenger in enumerate(passengers):
+            # Format date for Amadeus
+            date_str = passenger.date_of_birth.strftime("%Y-%m-%d")
+            
             traveler = {
                 "id": str(idx + 1),
-                "dateOfBirth": passenger.date_of_birth,
+                "dateOfBirth": date_str,
                 "name": {
                     "firstName": passenger.first_name,
                     "lastName": passenger.last_name
@@ -206,10 +218,11 @@ class AmadeusProvider(FlightProvider):
             
             # Add documents if available
             if passenger.passport_number:
+                expiry_str = passenger.passport_expiry.strftime("%Y-%m-%d") if passenger.passport_expiry else "2030-12-31"
                 traveler["documents"] = [{
                     "documentType": "PASSPORT",
                     "number": passenger.passport_number,
-                    "expiryDate": passenger.passport_expiry or "2030-12-31",
+                    "expiryDate": expiry_str,
                     "issuanceCountry": passenger.nationality or "US",
                     "validityCountry": passenger.nationality or "US",
                     "nationality": passenger.nationality or "US",
@@ -220,7 +233,7 @@ class AmadeusProvider(FlightProvider):
         
         return amadeus_travelers
     
-    def _transform_amadeus_response(self, api_response: Dict) -> Tuple[ModelSearchResponse, FlightSearchResponse]:
+    def _transform_amadeus_response(self, api_response: Dict) -> Tuple[SimplifiedSearchResponse, FlightSearchResponse]:
         """Transform Amadeus response to our standard format"""
         try:
             offers = api_response.get("data", [])
@@ -254,39 +267,43 @@ class AmadeusProvider(FlightProvider):
             
             # Create summary
             if flight_offers:
-                prices = [offer.price_total for offer in flight_offers]
-                airlines = list(set([offer.airline_code for offer in flight_offers]))
+                prices = [flight_offer.pricing.price_total for flight_offer in flight_offers]
+                airlines = list(set([flight_offer.airline_code for flight_offer in flight_offers]))
                 
                 search_summary = FlightSearchSummary(
                     total_offers=len(flight_offers),
                     price_range_min=min(prices),
                     price_range_max=max(prices),
-                    currency=flight_offers[0].currency,
-                    airlines=airlines,
-                    routes_available=1
+                    currency=flight_offers[0].pricing.currency,
+                    routes_available=1,
+                    airlines=airlines
                 )
             else:
                 search_summary = FlightSearchSummary(
-                    total_offers=0, price_range_min=0.0, price_range_max=0.0,
-                    currency="USD", airlines=[], routes_available=0
+                    total_offers=0,
+                    price_range_min=Decimal("0"),
+                    price_range_max=Decimal("0"),
+                    currency="USD",
+                    routes_available=0,
+                    airlines=[]
                 )
             
             # Create responses
             full_response = FlightSearchResponse(
                 success=True,
-                flights=flight_offers,
                 search_summary=search_summary,
+                flights=flight_offers,
                 provider_name="amadeus"
             )
             
-            model_response = ModelSearchResponse(
+            model_response = SimplifiedSearchResponse(
                 success=True,
-                flights=model_offers,
                 summary={
                     "total_found": len(flight_offers),
-                    "price_range": f"${search_summary.price_range_min:.0f}-${search_summary.price_range_max:.0f}",
+                    "price_range": f"${float(search_summary.price_range_min):.0f}-${float(search_summary.price_range_max):.0f}",
                     "airlines": airlines[:3]
-                }
+                },
+                flights=model_offers
             )
             
             return model_response, full_response
@@ -310,6 +327,29 @@ class AmadeusProvider(FlightProvider):
         base_amount = float(price_info.get("base", 0))
         currency = price_info.get("currency", "USD")
         
+        # Create pricing object
+        pricing = Pricing(
+            price_total=Decimal(str(total_amount)),
+            base_price=Decimal(str(base_amount)),
+            currency=currency
+        )
+        
+        # Create baggage object (default values for now)
+        baggage = Baggage(
+            carry_on_included=True,
+            checked_bags_included=0
+        )
+        
+        # Create fare details (defaults for now)
+        fare_details = FareDetails(
+            fare_class="Economy",
+            refundable=False,
+            changeable=True
+        )
+        
+        # Create ancillary services (defaults)
+        ancillary_services = AncillaryServices()
+        
         # Process itineraries and segments
         all_segments = []
         airlines = set()
@@ -328,98 +368,103 @@ class AmadeusProvider(FlightProvider):
         
         # Determine trip type
         num_itineraries = len(offer.get("itineraries", []))
-        trip_type = "round_trip" if num_itineraries > 1 else "one_way"
-        if total_stops == 0:
-            trip_type += "_direct" if trip_type == "one_way" else ""
+        if num_itineraries > 1:
+            trip_type = TripType.ROUND_TRIP
+        elif total_stops == 0:
+            trip_type = TripType.ONE_WAY_DIRECT
         else:
-            trip_type += "_connecting" if trip_type == "one_way" else ""
+            trip_type = TripType.ONE_WAY_CONNECTING
         
         # Calculate duration
         first_itinerary = offer.get("itineraries", [{}])[0]
         duration = first_itinerary.get("duration", "")
         duration_minutes = self._parse_duration_to_minutes(duration)
         
+        # Parse datetime strings
+        departure_time = self._parse_datetime(first_segment.departure_time) if first_segment else datetime.now()
+        arrival_time = self._parse_datetime(last_segment.arrival_time) if last_segment else datetime.now()
+        
         return FlightOffer(
-            flight_offer_id=f"amadeus_{offer_id}",
+            offer_id=f"amadeus_{offer_id}",
             provider_offer_id=offer_id,
-            price_total=total_amount,
-            base_price=base_amount,
-            currency=currency,
             origin=first_segment.departure_iata if first_segment else "",
             destination=last_segment.arrival_iata if last_segment else "",
-            departure_time=first_segment.departure_time if first_segment else "",
-            arrival_time=last_segment.arrival_time if last_segment else "",
-            trip_type=trip_type,
-            duration=duration,
+            departure_time=departure_time,
+            arrival_time=arrival_time,
             duration_minutes=duration_minutes or 0,
-            flight_duration_minutes=duration_minutes or 0,
+            trip_type=trip_type,
             total_segments=len(all_segments),
             stops=total_stops,
             airline_code=first_segment.airline_code if first_segment else "",
-            airline_name=first_segment.airline_name if first_segment else "",
-            airlines=list(airlines),
+            pricing=pricing,
+            baggage=baggage,
+            fare_details=fare_details,
+            ancillary_services=ancillary_services,
             segments=all_segments,
-            checked_bags=0,  # Would need to parse from travelerPricings
-            cabin_bags=1,    # Default assumption
             seats_available=offer.get("numberOfBookableSeats"),
-            instant_ticketing=offer.get("instantTicketingRequired", False),
-            last_ticketing_date=offer.get("lastTicketingDate"),
+            instant_ticketing=offer.get("instantTicketingRequired", True),
+            last_ticketing_date=self._parse_datetime(offer.get("lastTicketingDate")) if offer.get("lastTicketingDate") else None, # type: ignore
             provider_data={"full_offer": offer}
         )
     
     def _process_amadeus_segment(self, segment: Dict, airline_dict: Dict, aircraft_dict: Dict) -> FlightSegment:
         """Process a single Amadeus segment"""
-        airline_code = segment.get("carrierCode")
+        airline_code = segment.get("carrierCode", "")
         aircraft_code = segment.get("aircraft", {}).get("code")
         duration_minutes = self._parse_duration_to_minutes(segment.get("duration"))
         
+        # Parse datetime strings
+        departure_time = self._parse_datetime(segment.get("departure", {}).get("at", ""))
+        arrival_time = self._parse_datetime(segment.get("arrival", {}).get("at", ""))
+        
         return FlightSegment(
-            airline_code=airline_code or "",
+            airline_code=airline_code,
             airline_name=airline_dict.get(airline_code, "Unknown"),
             flight_number=segment.get("number", ""),
             departure_iata=segment.get("departure", {}).get("iataCode", ""),
             arrival_iata=segment.get("arrival", {}).get("iataCode", ""),
-            departure_terminal=segment.get("departure", {}).get("terminal"),
-            arrival_terminal=segment.get("arrival", {}).get("terminal"),
-            departure_time=segment.get("departure", {}).get("at", ""),
-            arrival_time=segment.get("arrival", {}).get("at", ""),
-            duration=segment.get("duration", ""),
+            departure_time=departure_time,
+            arrival_time=arrival_time,
             duration_minutes=duration_minutes or 0,
             stops=segment.get("numberOfStops", 0),
+            cabin_class=CabinClass.ECONOMY,  # Default for now
+            departure_terminal=segment.get("departure", {}).get("terminal"),
+            arrival_terminal=segment.get("arrival", {}).get("terminal"),
             aircraft_code=aircraft_code,
             aircraft_name=aircraft_dict.get(aircraft_code, "Unknown") if aircraft_code else "Unknown",
             operating_carrier=segment.get("operating", {}).get("carrierCode", airline_code),
             segment_id=segment.get("id")
         )
     
-    def _create_model_offer(self, flight_offer: FlightOffer) -> ModelFlightOffer:
+    def _parse_datetime(self, datetime_str: str) -> datetime:
+        """Parse Amadeus datetime string to datetime object"""
+        if not datetime_str:
+            return datetime.now()
+        try:
+            # Amadeus format: "2024-09-21T06:00:00"
+            return datetime.fromisoformat(datetime_str.replace('Z', '+00:00'))
+        except:
+            return datetime.now()
+    
+    def _create_model_offer(self, flight_offer: FlightOffer) -> SimplifiedFlightOffer:
         """Create simplified model offer from full flight offer"""
-        # Format duration nicely
-        duration_str = self._format_duration(flight_offer.duration) # type: ignore
+        # Format duration from minutes
+        duration_str = self._format_duration_minutes(flight_offer.duration_minutes)
         
         # Format stops
         stops_text = "Direct" if flight_offer.stops == 0 else f"{flight_offer.stops} stop{'s' if flight_offer.stops > 1 else ''}"
         
-        # Extract time from datetime strings
-        departure_time = ""
-        arrival_time = ""
+        # Extract time from datetime objects
+        departure_time = flight_offer.departure_time.strftime("%H:%M")
+        arrival_time = flight_offer.arrival_time.strftime("%H:%M")
         
-        if flight_offer.departure_time:
-            try:
-                departure_time = flight_offer.departure_time.split('T')[1][:5] if 'T' in flight_offer.departure_time else flight_offer.departure_time[:5]
-            except:
-                departure_time = ""
+        # Get airline name from first segment
+        airline_name = flight_offer.segments[0].airline_name if flight_offer.segments else "Unknown"
         
-        if flight_offer.arrival_time:
-            try:
-                arrival_time = flight_offer.arrival_time.split('T')[1][:5] if 'T' in flight_offer.arrival_time else flight_offer.arrival_time[:5]
-            except:
-                arrival_time = ""
-        
-        return ModelFlightOffer(
-            id=flight_offer.flight_offer_id,
-            price=f"${flight_offer.price_total:.0f}",
-            airline=flight_offer.airline_name,
+        return SimplifiedFlightOffer(
+            id=flight_offer.offer_id,
+            price=f"${float(flight_offer.pricing.price_total):.0f}",
+            airline=airline_name,
             route=f"{flight_offer.origin} → {flight_offer.destination}",
             departure=departure_time,
             arrival=arrival_time,
@@ -441,6 +486,23 @@ class AmadeusProvider(FlightProvider):
         hours = int(match.group(1) or 0)
         minutes = int(match.group(2) or 0)
         return hours * 60 + minutes
+    
+    def _format_duration_minutes(self, duration_minutes: int) -> str:
+        """Format duration minutes to display string"""
+        if not duration_minutes:
+            return ""
+            
+        hours = duration_minutes // 60
+        minutes = duration_minutes % 60
+        
+        if hours and minutes:
+            return f"{hours}h {minutes}m"
+        elif hours:
+            return f"{hours}h"
+        elif minutes:
+            return f"{minutes}m"
+        else:
+            return ""
     
     def _format_duration(self, duration_str: str) -> str:
         """Format duration string for display"""

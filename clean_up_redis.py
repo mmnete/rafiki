@@ -1,4 +1,4 @@
-import redis
+import redis # type: ignore
 
 # Connect to your local Redis instance
 try:
