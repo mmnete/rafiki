@@ -5,19 +5,9 @@
             "economy": {"carry_on": "free", "checked_1": 35, "checked_2": 45},
             "business": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
         },
-        "cancellation_policies": {
-            "basic_economy": "no_changes",
-            "economy": "24h_free_cancel",
-            "business": "flexible_cancel"
-        },
-        "meal_policies": {
-            "economy": "purchase_onboard",
-            "business": "complimentary"
-        },
-        "seat_selection": {
-            "economy": "fee_based",
-            "business": "included"
-        }
+        "cancellation_policies": {"basic_economy": "no_changes", "economy": "24h_free_cancel", "business": "flexible_cancel"},
+        "meal_policies": {"economy": "purchase_onboard", "business": "complimentary"},
+        "seat_selection": {"economy": "fee_based", "business": "included"}
     },
     "DL": {
         "name": "Delta Air Lines",
@@ -26,21 +16,9 @@
             "main_cabin": {"carry_on": "free", "checked_1": 35, "checked_2": 45},
             "first_class": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
         },
-        "cancellation_policies": {
-            "basic_economy": "no_changes_or_refunds_unless_within_24h",
-            "main_cabin": "24h_free_cancel_then_credit",
-            "first_class": "flexible_cancel"
-        },
-        "meal_policies": {
-            "basic_economy": "purchase_onboard",
-            "main_cabin": "purchase_onboard",
-            "first_class": "complimentary"
-        },
-        "seat_selection": {
-            "basic_economy": "assigned_at_check-in",
-            "main_cabin": "fee_based",
-            "first_class": "included"
-        }
+        "cancellation_policies": {"basic_economy": "no_changes_or_refunds_unless_within_24h", "main_cabin": "24h_free_cancel_then_credit", "first_class": "flexible_cancel"},
+        "meal_policies": {"basic_economy": "purchase_onboard", "main_cabin": "purchase_onboard", "first_class": "complimentary"},
+        "seat_selection": {"basic_economy": "assigned_at_check-in", "main_cabin": "fee_based", "first_class": "included"}
     },
     "AA": {
         "name": "American Airlines",
@@ -49,39 +27,16 @@
             "main_cabin": {"carry_on": "free", "checked_1": 40, "checked_2": 45},
             "first_class": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
         },
-        "cancellation_policies": {
-            "basic_economy": "no_changes_or_refunds_unless_within_24h",
-            "main_cabin": "24h_free_cancel_then_fee",
-            "first_class": "flexible_cancel"
-        },
-        "meal_policies": {
-            "basic_economy": "purchase_onboard",
-            "main_cabin": "purchase_onboard",
-            "first_class": "complimentary"
-        },
-        "seat_selection": {
-            "basic_economy": "fee_based_or_assigned_at_check-in",
-            "main_cabin": "fee_based",
-            "first_class": "included"
-        }
+        "cancellation_policies": {"basic_economy": "no_changes_or_refunds_unless_within_24h", "main_cabin": "24h_free_cancel_then_fee", "first_class": "flexible_cancel"},
+        "meal_policies": {"basic_economy": "purchase_onboard", "main_cabin": "purchase_onboard", "first_class": "complimentary"},
+        "seat_selection": {"basic_economy": "fee_based_or_assigned_at_check-in", "main_cabin": "fee_based", "first_class": "included"}
     },
     "WN": {
         "name": "Southwest Airlines",
-        "baggage_policies": {
-            "all_fares": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
-        },
-        "cancellation_policies": {
-            "wanna_get_away": "credit_for_future_flight",
-            "wanna_get_away_plus": "transferable_credit",
-            "anytime": "refundable",
-            "business_select": "refundable"
-        },
-        "meal_policies": {
-            "all_fares": "complimentary_snacks_and_beverages"
-        },
-        "seat_selection": {
-            "all_fares": "open_seating_first_come_first_served"
-        }
+        "baggage_policies": {"all_fares": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}},
+        "cancellation_policies": {"wanna_get_away": "credit_for_future_flight", "wanna_get_away_plus": "transferable_credit", "anytime": "refundable", "business_select": "refundable"},
+        "meal_policies": {"all_fares": "complimentary_snacks_and_beverages"},
+        "seat_selection": {"all_fares": "open_seating_first_come_first_served"}
     },
     "B6": {
         "name": "JetBlue Airways",
@@ -90,22 +45,9 @@
             "blue_plus": {"carry_on": "free", "checked_1": "free", "checked_2": 60},
             "mint": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
         },
-        "cancellation_policies": {
-            "blue_basic": "fee_based",
-            "blue": "travel_credit",
-            "blue_plus": "travel_credit",
-            "mint": "travel_credit"
-        },
-        "meal_policies": {
-            "all_fares": "complimentary_snacks_and_beverages",
-            "mint": "complimentary_full_meal_service"
-        },
-        "seat_selection": {
-            "blue_basic": "fee_based_or_assigned_at_check-in",
-            "blue": "fee_based",
-            "blue_plus": "included",
-            "mint": "included"
-        }
+        "cancellation_policies": {"blue_basic": "fee_based", "blue": "travel_credit", "blue_plus": "travel_credit", "mint": "travel_credit"},
+        "meal_policies": {"all_fares": "complimentary_snacks_and_beverages", "mint": "complimentary_full_meal_service"},
+        "seat_selection": {"blue_basic": "fee_based_or_assigned_at_check-in", "blue": "fee_based", "blue_plus": "included", "mint": "included"}
     },
     "AS": {
         "name": "Alaska Airlines",
@@ -114,51 +56,23 @@
             "main_cabin": {"carry_on": "free", "checked_1": 35, "checked_2": 45},
             "first_class": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
         },
-        "cancellation_policies": {
-            "saver": "no_changes_or_refunds_unless_within_24h_or_14_days_before",
-            "main_cabin": "no_change_fee_fare_difference_applies",
-            "first_class": "flexible_cancel"
-        },
-        "meal_policies": {
-            "saver": "purchase_onboard",
-            "main_cabin": "complimentary_snacks_and_beverages",
-            "first_class": "complimentary"
-        },
-        "seat_selection": {
-            "saver": "assigned_at_check-in",
-            "main_cabin": "fee_based",
-            "first_class": "included"
-        }
+        "cancellation_policies": {"saver": "no_changes_or_refunds_unless_within_24h", "main_cabin": "no_change_fee_fare_difference_applies", "first_class": "flexible_cancel"},
+        "meal_policies": {"saver": "purchase_onboard", "main_cabin": "complimentary_snacks_and_beverages", "first_class": "complimentary"},
+        "seat_selection": {"saver": "assigned_at_check-in", "main_cabin": "fee_based", "first_class": "included"}
     },
     "F9": {
         "name": "Frontier Airlines",
-        "baggage_policies": {
-            "all_fares": {"carry_on": 55, "checked_1": 60, "checked_2": 70}
-        },
-        "cancellation_policies": {
-            "all_fares": "non-refundable_unless_24h_free_cancel"
-        },
-        "meal_policies": {
-            "all_fares": "purchase_onboard"
-        },
-        "seat_selection": {
-            "all_fares": "fee_based"
-        }
+        "baggage_policies": {"all_fares": {"personal_item": "free", "carry_on": 55, "checked_1": 60, "checked_2": 70}},
+        "cancellation_policies": {"all_fares": "non-refundable_unless_24h_free_cancel"},
+        "meal_policies": {"all_fares": "purchase_onboard"},
+        "seat_selection": {"all_fares": "fee_based"}
     },
     "NK": {
         "name": "Spirit Airlines",
-        "baggage_policies": {
-            "all_fares": {"carry_on": 35, "checked_1": 40, "checked_2": 60}
-        },
-        "cancellation_policies": {
-            "all_fares": "non-refundable_unless_24h_free_cancel"
-        },
-        "meal_policies": {
-            "all_fares": "purchase_onboard"
-        },
-        "seat_selection": {
-            "all_fares": "fee_based"
-        }
+        "baggage_policies": {"all_fares": {"personal_item": "free", "carry_on": 35, "checked_1": 40, "checked_2": 60}},
+        "cancellation_policies": {"all_fares": "non-refundable_unless_24h_free_cancel"},
+        "meal_policies": {"all_fares": "purchase_onboard"},
+        "seat_selection": {"all_fares": "fee_based"}
     },
     "HA": {
         "name": "Hawaiian Airlines",
@@ -166,32 +80,473 @@
             "main_cabin": {"carry_on": "free", "checked_1": 30, "checked_2": 40},
             "first_class": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
         },
-        "cancellation_policies": {
-            "main_cabin": "24h_free_cancel_then_fee",
-            "first_class": "flexible_cancel"
-        },
-        "meal_policies": {
-            "main_cabin": "complimentary_on_long_haul",
-            "first_class": "complimentary"
-        },
-        "seat_selection": {
-            "main_cabin": "fee_based",
-            "first_class": "included"
-        }
+        "cancellation_policies": {"main_cabin": "24h_free_cancel_then_fee", "first_class": "flexible_cancel"},
+        "meal_policies": {"main_cabin": "complimentary_on_long_haul", "first_class": "complimentary"},
+        "seat_selection": {"main_cabin": "fee_based", "first_class": "included"}
     },
     "SY": {
         "name": "Sun Country Airlines",
+        "baggage_policies": {"all_fares": {"personal_item": "free", "carry_on": 30, "checked_1": 35, "checked_2": 45}},
+        "cancellation_policies": {"all_fares": "non-refundable_unless_24h_free_cancel"},
+        "meal_policies": {"all_fares": "purchase_onboard"},
+        "seat_selection": {"all_fares": "fee_based"}
+    },
+    "LH": {
+        "name": "Lufthansa",
         "baggage_policies": {
-            "all_fares": {"carry_on": 30, "checked_1": 35, "checked_2": 45}
+            "economy_light": {"carry_on": "free", "checked_1": "fee_based"},
+            "economy_classic": {"carry_on": "free", "checked_1": "free"},
+            "business": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
         },
-        "cancellation_policies": {
-            "all_fares": "non-refundable_unless_24h_free_cancel"
+        "cancellation_policies": {"economy_light": "non-refundable", "economy_classic": "fee_based_change", "business": "flexible_cancel"},
+        "meal_policies": {"economy": "complimentary_on_long_haul", "business": "complimentary"},
+        "seat_selection": {"economy_light": "fee_based", "economy_classic": "free_at_checkin_fee_for_advance", "business": "included"}
+    },
+    "BA": {
+        "name": "British Airways",
+        "baggage_policies": {
+            "economy_basic": {"carry_on": "free", "checked_1": "fee_based"},
+            "economy_standard": {"carry_on": "free", "checked_1": "free"},
+            "club_world": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
         },
-        "meal_policies": {
-            "all_fares": "purchase_onboard"
+        "cancellation_policies": {"economy_basic": "non-refundable", "economy_standard": "fee_based_change", "club_world": "flexible_cancel"},
+        "meal_policies": {"economy": "complimentary_snacks_drinks_meals_on_long_haul", "business": "complimentary"},
+        "seat_selection": {"economy_basic": "assigned_or_fee_based", "economy_standard": "free_at_checkin_fee_for_advance", "business": "included"}
+    },
+    "AF": {
+        "name": "Air France",
+        "baggage_policies": {
+            "economy_light": {"carry_on": "free", "checked_1": "fee_based"},
+            "economy_standard": {"carry_on": "free", "checked_1": "free"},
+            "business": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
         },
-        "seat_selection": {
-            "all_fares": "fee_based"
-        }
+        "cancellation_policies": {"economy_light": "non-refundable", "economy_standard": "fee_based_change", "business": "flexible_cancel"},
+        "meal_policies": {"economy": "complimentary_on_long_haul", "business": "complimentary"},
+        "seat_selection": {"economy_light": "fee_based", "economy_standard": "free_at_checkin_fee_for_advance", "business": "included"}
+    },
+    "KL": {
+        "name": "KLM Royal Dutch Airlines",
+        "baggage_policies": {
+            "economy_light": {"carry_on": "free", "checked_1": "fee_based"},
+            "economy_standard": {"carry_on": "free", "checked_1": "free"},
+            "business": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {"economy_light": "non-refundable", "economy_standard": "fee_based_change", "business": "flexible_cancel"},
+        "meal_policies": {"economy": "complimentary_on_long_haul", "business": "complimentary"},
+        "seat_selection": {"economy_light": "fee_based", "economy_standard": "free_at_checkin_fee_for_advance", "business": "included"}
+    },
+    "FR": {
+        "name": "Ryanair",
+        "baggage_policies": {"all_fares": {"personal_item": "free", "carry_on": "fee_based", "checked_1": "fee_based"}},
+        "cancellation_policies": {"all_fares": "non-refundable_fee_for_changes"},
+        "meal_policies": {"all_fares": "purchase_onboard"},
+        "seat_selection": {"all_fares": "fee_based"}
+    },
+    "U2": {
+        "name": "easyJet",
+        "baggage_policies": {"all_fares": {"personal_item": "free", "carry_on": "fee_based", "checked_1": "fee_based"}},
+        "cancellation_policies": {"all_fares": "non-refundable_fee_for_changes"},
+        "meal_policies": {"all_fares": "purchase_onboard"},
+        "seat_selection": {"all_fares": "fee_based"}
+    },
+    "TK": {
+        "name": "Turkish Airlines",
+        "baggage_policies": {
+            "economy": {"carry_on": "free", "checked_1": "free"},
+            "business": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {"economy": "fee_based_change_or_credit", "business": "flexible_cancel"},
+        "meal_policies": {"all_classes": "complimentary"},
+        "seat_selection": {"economy": "free_at_checkin_fee_for_advance", "business": "included"}
+    },
+    "LX": {
+        "name": "SWISS",
+        "baggage_policies": {
+            "light": {"carry_on": "free", "checked_1": "fee_based"},
+            "classic": {"carry_on": "free", "checked_1": "free"},
+            "business": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {"light": "non-refundable", "classic": "fee_based_change", "business": "flexible_cancel"},
+        "meal_policies": {"economy": "complimentary_on_long_haul", "business": "complimentary"},
+        "seat_selection": {"light": "fee_based", "classic": "included", "business": "included"}
+    },
+    "OS": {
+        "name": "Austrian Airlines",
+        "baggage_policies": {
+            "economy_light": {"carry_on": "free", "checked_1": "fee_based"},
+            "economy_classic": {"carry_on": "free", "checked_1": "free"},
+            "business": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {"economy_light": "non-refundable", "economy_classic": "fee_based_change", "business": "flexible_cancel"},
+        "meal_policies": {"economy": "purchase_short_haul_free_long_haul", "business": "complimentary"},
+        "seat_selection": {"economy_light": "fee_based", "economy_classic": "included", "business": "included"}
+    },
+    "IB": {
+        "name": "Iberia",
+        "baggage_policies": {
+            "basic": {"carry_on": "free", "checked_1": "fee_based"},
+            "optimal": {"carry_on": "free", "checked_1": "free"},
+            "business": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {"basic": "non-refundable", "optimal": "fee_based_change", "business": "flexible_cancel"},
+        "meal_policies": {"economy": "purchase_short_haul_free_long_haul", "business": "complimentary"},
+        "seat_selection": {"basic": "fee_based", "optimal": "included", "business": "included"}
+    },
+    "EI": {
+        "name": "Aer Lingus",
+        "baggage_policies": {
+            "saver": {"personal_item": "free", "carry_on": "fee_based", "checked_1": "fee_based"},
+            "plus": {"personal_item": "free", "carry_on": "free", "checked_1": "free"},
+            "business": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {"saver": "fee_based_change", "plus": "no_change_fee_fare_difference", "business": "flexible_cancel"},
+        "meal_policies": {"economy_short_haul": "purchase_onboard", "economy_transatlantic": "complimentary", "business": "complimentary"},
+        "seat_selection": {"saver": "fee_based", "plus": "included", "business": "included"}
+    },
+    "SK": {
+        "name": "SAS Scandinavian Airlines",
+        "baggage_policies": {
+            "go_light": {"carry_on": "free", "checked_1": "fee_based"},
+            "go_smart": {"carry_on": "free", "checked_1": "free"},
+            "sas_plus": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {"go_light": "non-refundable", "go_smart": "credit_or_fee_based_change", "sas_plus": "refundable"},
+        "meal_policies": {"go": "complimentary_coffee_tea_long_haul_meals", "sas_plus": "complimentary"},
+        "seat_selection": {"go_light": "fee_based", "go_smart": "included", "sas_plus": "included"}
+    },
+    "AY": {
+        "name": "Finnair",
+        "baggage_policies": {
+            "light": {"carry_on": "free", "checked_1": "fee_based"},
+            "classic": {"carry_on": "free", "checked_1": "free"},
+            "business": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {"light": "non-refundable", "classic": "fee_based_change", "business": "flexible_cancel"},
+        "meal_policies": {"economy_short_haul": "purchase_onboard", "economy_long_haul": "complimentary", "business": "complimentary"},
+        "seat_selection": {"light": "fee_based", "classic": "included", "business": "included"}
+    },
+    "W6": {
+        "name": "Wizz Air",
+        "baggage_policies": {"all_fares": {"personal_item": "free", "carry_on": "fee_based", "checked_1": "fee_based"}},
+        "cancellation_policies": {"all_fares": "non-refundable_fee_for_changes"},
+        "meal_policies": {"all_fares": "purchase_onboard"},
+        "seat_selection": {"all_fares": "fee_based"}
+    },
+    "DY": {
+        "name": "Norwegian",
+        "baggage_policies": {
+            "lowfare": {"personal_item": "free", "carry_on": "fee_based", "checked_1": "fee_based"},
+            "lowfare_plus": {"personal_item": "free", "carry_on": "free", "checked_1": "free"},
+            "flex": {"personal_item": "free", "carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {"lowfare": "non-refundable", "lowfare_plus": "non-refundable_fee_change", "flex": "refundable"},
+        "meal_policies": {"all_fares": "purchase_onboard"},
+        "seat_selection": {"lowfare": "fee_based", "lowfare_plus": "included", "flex": "included"}
+    },
+    "TP": {
+        "name": "TAP Air Portugal",
+        "baggage_policies": {
+            "discount": {"carry_on": "free", "checked_1": "fee_based"},
+            "classic": {"carry_on": "free", "checked_1": "free"},
+            "executive": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {"discount": "non-refundable", "classic": "fee_based_change", "executive": "flexible_cancel"},
+        "meal_policies": {"economy": "complimentary", "executive": "complimentary_premium"},
+        "seat_selection": {"discount": "fee_based", "classic": "included", "executive": "included"}
+    },
+    "A3": {
+        "name": "Aegean Airlines",
+        "baggage_policies": {
+            "light": {"carry_on": "free", "checked_1": "fee_based"},
+            "flex": {"carry_on": "free", "checked_1": "free"},
+            "business": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {"light": "non-refundable", "flex": "no_change_fee_fare_difference", "business": "flexible_cancel"},
+        "meal_policies": {"economy": "complimentary_snack_drink", "business": "complimentary_meal"},
+        "seat_selection": {"light": "fee_based", "flex": "included", "business": "included"}
+    },
+    "VS": {
+        "name": "Virgin Atlantic",
+        "baggage_policies": {
+            "economy_light": {"carry_on": "free", "checked_1": "fee_based"},
+            "economy_classic": {"carry_on": "free", "checked_1": "free"},
+            "upper_class": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {"economy_light": "fee_based_change", "economy_classic": "fee_based_change", "upper_class": "flexible_cancel"},
+        "meal_policies": {"all_classes": "complimentary"},
+        "seat_selection": {"economy_light": "fee_based", "economy_classic": "included", "upper_class": "included"}
+    },
+    "EK": {
+        "name": "Emirates",
+        "baggage_policies": {
+            "economy": {"carry_on": "free", "checked_allowance_kg": "20-35kg"},
+            "business": {"carry_on": "free", "checked_allowance_kg": "40kg"},
+            "first": {"carry_on": "free", "checked_allowance_kg": "50kg"}
+        },
+        "cancellation_policies": {"saver": "fee_based_change", "flex": "more_flexible_change", "flex_plus": "flexible_cancel"},
+        "meal_policies": {"all_classes": "complimentary"},
+        "seat_selection": {"saver": "fee_based_for_advance", "flex": "free_standard_selection", "flex_plus": "included"}
+    },
+    "QR": {
+        "name": "Qatar Airways",
+        "baggage_policies": {
+            "economy": {"carry_on": "free", "checked_allowance_kg": "25-35kg"},
+            "business": {"carry_on": "free", "checked_allowance_kg": "40kg"},
+            "first": {"carry_on": "free", "checked_allowance_kg": "50kg"}
+        },
+        "cancellation_policies": {"lite": "fee_based_change", "classic": "more_flexible_change", "convenience": "flexible_cancel"},
+        "meal_policies": {"all_classes": "complimentary"},
+        "seat_selection": {"lite": "fee_based", "classic": "included", "convenience": "included"}
+    },
+    "EY": {
+        "name": "Etihad Airways",
+        "baggage_policies": {
+            "economy_sale": {"carry_on": "free", "checked_allowance_kg": "23kg"},
+            "economy_choice": {"carry_on": "free", "checked_allowance_kg": "30kg"},
+            "business": {"carry_on": "free", "checked_allowance_kg": "40kg"}
+        },
+        "cancellation_policies": {"economy_sale": "fee_based_change", "economy_choice": "more_flexible_change", "business": "flexible_cancel"},
+        "meal_policies": {"all_classes": "complimentary"},
+        "seat_selection": {"economy_sale": "fee_based", "economy_choice": "included", "business": "included"}
+    },
+    "SQ": {
+        "name": "Singapore Airlines",
+        "baggage_policies": {
+            "economy_lite": {"carry_on": "free", "checked_allowance_kg": "25kg"},
+            "economy_standard": {"carry_on": "free", "checked_allowance_kg": "30kg"},
+            "business": {"carry_on": "free", "checked_allowance_kg": "40kg"}
+        },
+        "cancellation_policies": {"lite": "fee_based_change", "standard": "more_flexible_change", "flexi": "flexible_cancel"},
+        "meal_policies": {"all_classes": "complimentary"},
+        "seat_selection": {"lite": "fee_based", "standard": "free_standard_selection", "flexi": "included"}
+    },
+    "CX": {
+        "name": "Cathay Pacific",
+        "baggage_policies": {
+            "economy_light": {"carry_on": "free", "checked_1": "fee_based"},
+            "economy_essential": {"carry_on": "free", "checked_1": "free"},
+            "business": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {"light": "fee_based_change", "essential": "more_flexible_change", "business": "flexible_cancel"},
+        "meal_policies": {"all_classes": "complimentary"},
+        "seat_selection": {"light": "fee_based", "essential": "included", "business": "included"}
+    },
+    "NH": {
+        "name": "All Nippon Airways (ANA)",
+        "baggage_policies": {
+            "economy": {"carry_on": "free", "checked_1": "free", "checked_2": "free"},
+            "business": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {"economy": "fee_based_change", "business": "flexible_cancel"},
+        "meal_policies": {"all_classes": "complimentary"},
+        "seat_selection": {"economy": "fee_for_preferred_free_for_standard", "business": "included"}
+    },
+    "JL": {
+        "name": "Japan Airlines",
+        "baggage_policies": {
+            "economy": {"carry_on": "free", "checked_1": "free", "checked_2": "free"},
+            "business": {"carry_on": "free", "checked_1": "free", "checked_2": "free", "checked_3": "free"}
+        },
+        "cancellation_policies": {"economy": "fee_based_change", "business": "flexible_cancel"},
+        "meal_policies": {"all_classes": "complimentary"},
+        "seat_selection": {"economy": "free_at_checkin_fee_for_advance", "business": "included"}
+    },
+    "KE": {
+        "name": "Korean Air",
+        "baggage_policies": {
+            "economy": {"carry_on": "free", "checked_1": "free"},
+            "prestige": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {"economy": "fee_based_change", "prestige": "flexible_cancel"},
+        "meal_policies": {"all_classes": "complimentary"},
+        "seat_selection": {"economy": "fee_for_preferred_free_for_standard", "prestige": "included"}
+    },
+    "QF": {
+        "name": "Qantas",
+        "baggage_policies": {
+            "economy": {"carry_on": "free", "checked_1": "free"},
+            "business": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {"economy_saver": "fee_based_change", "economy_flex": "no_change_fee_fare_difference", "business": "flexible_cancel"},
+        "meal_policies": {"all_classes": "complimentary"},
+        "seat_selection": {"economy": "fee_for_advance_standard_selection", "business": "included"}
+    },
+    "CA": {
+        "name": "Air China",
+        "baggage_policies": {
+            "economy": {"carry_on": "free", "checked_1": "free"},
+            "business": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {"economy": "fee_based_change", "business": "flexible_cancel"},
+        "meal_policies": {"all_classes": "complimentary"},
+        "seat_selection": {"economy": "free_at_checkin_fee_for_advance", "business": "included"}
+    },
+    "MU": {
+        "name": "China Eastern Airlines",
+        "baggage_policies": {
+            "economy": {"carry_on": "free", "checked_1": "free", "checked_2": "route_dependent"},
+            "business": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {"economy": "fee_based_change", "business": "flexible_cancel"},
+        "meal_policies": {"all_classes": "complimentary"},
+        "seat_selection": {"economy": "free_at_checkin_fee_for_advance", "business": "included"}
+    },
+    "CZ": {
+        "name": "China Southern Airlines",
+        "baggage_policies": {
+            "economy": {"carry_on": "free", "checked_1": "free", "checked_2": "route_dependent"},
+            "business": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {"economy": "fee_based_change", "business": "flexible_cancel"},
+        "meal_policies": {"all_classes": "complimentary"},
+        "seat_selection": {"economy": "fee_for_advance_selection", "business": "included"}
+    },
+    "GA": {
+        "name": "Garuda Indonesia",
+        "baggage_policies": {
+            "economy": {"carry_on": "free", "checked_allowance_kg": "30kg"},
+            "business": {"carry_on": "free", "checked_allowance_kg": "40kg"}
+        },
+        "cancellation_policies": {"economy": "fee_based_change", "business": "flexible_cancel"},
+        "meal_policies": {"all_classes": "complimentary"},
+        "seat_selection": {"economy": "included", "business": "included"}
+    },
+    "TG": {
+        "name": "Thai Airways",
+        "baggage_policies": {
+            "economy": {"carry_on": "free", "checked_allowance_kg": "20-30kg"},
+            "royal_silk": {"carry_on": "free", "checked_allowance_kg": "40kg"}
+        },
+        "cancellation_policies": {"economy": "fee_based_change", "royal_silk": "flexible_cancel"},
+        "meal_policies": {"all_classes": "complimentary"},
+        "seat_selection": {"economy": "free_at_checkin", "royal_silk": "included"}
+    },
+    "MH": {
+        "name": "Malaysia Airlines",
+        "baggage_policies": {
+            "economy_lite": {"carry_on": "free", "checked_1": "fee_based"},
+            "economy_flex": {"carry_on": "free", "checked_allowance_kg": "35kg"},
+            "business": {"carry_on": "free", "checked_allowance_kg": "40kg"}
+        },
+        "cancellation_policies": {"lite": "non-refundable", "flex": "refundable", "business": "flexible_cancel"},
+        "meal_policies": {"all_classes": "complimentary"},
+        "seat_selection": {"lite": "fee_based", "flex": "included", "business": "included"}
+    },
+    "AI": {
+        "name": "Air India",
+        "baggage_policies": {
+            "economy": {"carry_on": "free", "checked_allowance_kg": "25kg"},
+            "business": {"carry_on": "free", "checked_allowance_kg": "35kg"}
+        },
+        "cancellation_policies": {"economy": "fee_based_change", "business": "flexible_cancel"},
+        "meal_policies": {"all_classes": "complimentary"},
+        "seat_selection": {"economy": "free_at_checkin_fee_for_advance", "business": "included"}
+    },
+    "6E": {
+        "name": "IndiGo",
+        "baggage_policies": {
+            "saver": {"carry_on": "free", "checked_allowance_kg": "15kg"},
+            "flexi_plus": {"carry_on": "free", "checked_allowance_kg": "15kg"}
+        },
+        "cancellation_policies": {"saver": "fee_based_change", "flexi_plus": "no_change_fee"},
+        "meal_policies": {"saver": "purchase_onboard", "flexi_plus": "complimentary_snack"},
+        "seat_selection": {"saver": "fee_based", "flexi_plus": "included"}
+    },
+    "AK": {
+        "name": "AirAsia",
+        "baggage_policies": {"all_fares": {"carry_on": "free", "checked_1": "fee_based"}},
+        "cancellation_policies": {"all_fares": "non-refundable_credit_possible"},
+        "meal_policies": {"all_fares": "purchase_onboard_or_prebook"},
+        "seat_selection": {"all_fares": "fee_based"}
+    },
+    "ET": {
+        "name": "Ethiopian Airlines",
+        "baggage_policies": {
+            "economy": {"carry_on": "free", "checked_1": "free", "checked_2": "route_dependent"},
+            "cloud_nine": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {"economy": "fee_based_change_or_credit", "cloud_nine": "flexible_cancel"},
+        "meal_policies": {"all_classes": "complimentary"},
+        "seat_selection": {"economy": "free_at_checkin_fee_for_advance", "cloud_nine": "included"}
+    },
+    "MS": {
+        "name": "EgyptAir",
+        "baggage_policies": {
+            "economy": {"carry_on": "free", "checked_1": "free"},
+            "business": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {"economy": "fee_based_change", "business": "flexible_cancel"},
+        "meal_policies": {"all_classes": "complimentary"},
+        "seat_selection": {"economy": "free_at_checkin_fee_for_advance", "business": "included"}
+    },
+    "KQ": {
+        "name": "Kenya Airways",
+        "baggage_policies": {
+            "economy": {"carry_on": "free", "checked_1": "free", "checked_2": "route_dependent"},
+            "premier_world": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {"economy": "fee_based_change", "premier_world": "flexible_cancel"},
+        "meal_policies": {"all_classes": "complimentary"},
+        "seat_selection": {"economy": "free_at_checkin_fee_for_advance", "premier_world": "included"}
+    },
+    "SA": {
+        "name": "South African Airways",
+        "baggage_policies": {
+            "economy": {"carry_on": "free", "checked_1": "free"},
+            "business": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {"economy": "fee_based_change", "business": "flexible_cancel"},
+        "meal_policies": {"all_classes": "complimentary"},
+        "seat_selection": {"economy": "included", "business": "included"}
+    },
+    "AT": {
+        "name": "Royal Air Maroc",
+        "baggage_policies": {
+            "economy": {"carry_on": "free", "checked_1": "free"},
+            "business": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {"economy": "fee_based_change", "business": "flexible_cancel"},
+        "meal_policies": {"all_classes": "complimentary"},
+        "seat_selection": {"economy": "free_at_checkin_fee_for_advance", "business": "included"}
+    },
+    "AH": {
+        "name": "Air Algérie",
+        "baggage_policies": {
+            "economy": {"carry_on": "free", "checked_allowance_kg": "30kg"},
+            "business": {"carry_on": "free", "checked_allowance_kg": "40kg"}
+        },
+        "cancellation_policies": {"economy": "fee_based_change", "business": "flexible_cancel"},
+        "meal_policies": {"all_classes": "complimentary"},
+        "seat_selection": {"economy": "included", "business": "included"}
+    },
+    "TU": {
+        "name": "Tunisair",
+        "baggage_policies": {
+            "economy": {"carry_on": "free", "checked_1": "free"},
+            "business": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {"economy": "fee_based_change", "business": "flexible_cancel"},
+        "meal_policies": {"all_classes": "complimentary"},
+        "seat_selection": {"economy": "free_at_checkin", "business": "included"}
+    },
+    "MK": {
+        "name": "Air Mauritius",
+        "baggage_policies": {
+            "economy": {"carry_on": "free", "checked_1": "free"},
+            "business": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {"economy": "fee_based_change", "business": "flexible_cancel"},
+        "meal_policies": {"all_classes": "complimentary"},
+        "seat_selection": {"economy": "free_at_checkin", "business": "included"}
+    },
+    "WB": {
+        "name": "RwandAir",
+        "baggage_policies": {
+            "economy": {"carry_on": "free", "checked_1": "free", "checked_2": "free"},
+            "business": {"carry_on": "free", "checked_1": "free", "checked_2": "free", "checked_3": "free"}
+        },
+        "cancellation_policies": {"economy": "fee_based_change", "business": "flexible_cancel"},
+        "meal_policies": {"all_classes": "complimentary"},
+        "seat_selection": {"economy": "included", "business": "included"}
     }
 }
