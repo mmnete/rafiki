@@ -159,11 +159,12 @@ class DuffelProvider(FlightProvider):
             return PricingResponse(
                 success=True,
                 offer_id=offer["id"],
-                total_amount=float(offer["total_amount"]) / 100,  # Duffel uses cents
-                base_amount=float(offer["base_amount"]) / 100,
-                tax_amount=float(offer["tax_amount"]) / 100,
+                final_price=Decimal(offer["total_amount"]) / 100,  # Duffel uses cents
+                base_price=Decimal(offer["base_amount"]) / 100,
+                tax_amount=Decimal(offer["tax_amount"]) / 100,
                 currency=offer["total_currency"],
-                provider_data={"full_offer": offer}
+                provider_data={"full_offer": offer},
+                price_changed=False
             )
         except requests.exceptions.RequestException as e:
             return create_error_pricing_response(offer_id, f"Duffel pricing failed: {str(e)}")
@@ -209,14 +210,21 @@ class DuffelProvider(FlightProvider):
             if not order:
                 return create_error_booking_response("Order creation failed - no data returned")
             
+            pnr = ""
+            confirmation_number = ""
+            status = ""
+            
             return BookingResponse(
                 success=True,
                 booking_id=order["id"],
                 booking_reference=order.get("booking_reference", ""),
-                total_amount=float(order["total_amount"]) / 100,  # Duffel uses cents
+                total_amount=Decimal(order["total_amount"]) / 100,  # Duffel uses cents
                 currency=order["total_currency"],
                 created_at=order["created_at"],
-                provider_data={"order": order}
+                provider_data={"order": order},
+                pnr=pnr,
+                confirmation_number=confirmation_number,
+                status=status
             )
         except requests.exceptions.RequestException as e:
             return create_error_booking_response(f"Duffel booking failed: {str(e)}")

@@ -12,6 +12,7 @@ from app.storage.db_service import StorageService
 from app.storage.services.shared_storage import SharedStorageService
 from app.services.api.flights.response_models import Passenger, PassengerType
 from app.services.api.flights.flight_service import FlightService
+from app.storage.services.passenger_storage_service import PassengerProfile
 
 @dataclass
 class Booking:
@@ -853,14 +854,14 @@ class BookingStorageService:
                 return {"error": f"Failed to create provider booking: {booking_response.error_message}"}
             
             # Update booking with provider response
-            final_amount = pricing_response.total_amount
+            final_amount = pricing_response.final_price
             update_data = {
                 'provider_booking_id': booking_response.booking_id,
                 'provider_pnr': booking_response.booking_reference,
                 'provider_response': booking_response.provider_data,
                 'booking_status': 'confirmed_pending_payment',
                 'total_amount': final_amount,
-                'base_price': pricing_response.base_amount,
+                'base_price': pricing_response.base_price,
                 'taxes_and_fees': pricing_response.tax_amount,
                 'currency': pricing_response.currency
             }
@@ -1202,3 +1203,518 @@ class BookingStorageService:
             
         else:
             return f"<call>booking_operation(action='{operation}', booking_id='{booking_id}')</call>"
+    
+    def handle_passenger_lookup(self, user_id: int, **kwargs) -> Dict[str, Any]:
+        """
+        Look up passenger details from user's booking history and connections
+        
+        Args:
+            user_id: The user performing the lookup
+            booking_id: Optional - limit search to specific booking
+            first_name: Optional - search by first name (partial match supported)
+            last_name: Optional - search by last name (partial match supported)
+            partial_match: Bool - whether to allow partial name matching (default True)
+            include_connections: Bool - whether to include connected passengers (default True)
+            limit: Int - maximum number of results to return (default 20)
+        
+        Returns:
+            Dict with success status and passenger list or error message
+        """
+        try:
+            if not self.storage.conn:
+                return {"error": "Database connection not available"}
+            
+            booking_id = kwargs.get("booking_id")
+            first_name = kwargs.get("first_name", "").strip()
+            last_name = kwargs.get("last_name", "").strip()
+            partial_match = kwargs.get("partial_match", True)
+            include_connections = kwargs.get("include_connections", True)
+            limit = kwargs.get("limit", 20)
+            
+            passengers = []
+            
+            with self.storage.conn.cursor() as cur:
+                # Build the main query to search through passenger profiles
+                base_query = """
+                    SELECT DISTINCT
+                        pp.id,
+                        pp.first_name,
+                        pp.middle_name,
+                        pp.last_name,
+                        pp.date_of_birth,
+                        pp.gender,
+                        pp.title,
+                        pp.email,
+                        pp.phone_number,
+                        pp.primary_document_type,
+                        pp.primary_document_number,
+                        pp.primary_document_expiry,
+                        pp.primary_document_country,
+                        pp.nationality,
+                        pp.seat_preference,
+                        pp.meal_preference,
+                        pp.special_assistance,
+                        pp.medical_conditions,
+                        pp.dietary_restrictions,
+                        pp.airline_loyalties,
+                        pp.tsa_precheck_number,
+                        pp.global_entry_number,
+                        pp.created_by_user_id,
+                        pp.is_verified,
+                        pp.verification_method,
+                        pp.created_at,
+                        pp.updated_at,
+                        pp.last_traveled_at,
+                        upc.relationship,
+                        upc.connection_type,
+                        upc.trust_level,
+                        upc.can_book_for_passenger,
+                        upc.can_modify_passenger_details,
+                        upc.can_view_passenger_history,
+                        COUNT(bp.id) as booking_count,
+                        MAX(b.created_at) as last_booking_date
+                    FROM passenger_profiles pp
+                    LEFT JOIN user_passenger_connections upc ON pp.id = upc.passenger_id AND upc.user_id = %s
+                    LEFT JOIN booking_passengers bp ON pp.id = bp.passenger_profile_id
+                    LEFT JOIN bookings b ON bp.booking_id = b.id AND b.primary_user_id = %s
+                    WHERE (
+                        pp.created_by_user_id = %s
+                        OR upc.user_id = %s
+                    )
+                """
+                
+                query_params = [user_id, user_id, user_id, user_id]
+                conditions = []
+                
+                # Add booking ID filter if specified
+                if booking_id:
+                    conditions.append("b.id = %s")
+                    query_params.append(booking_id)
+                
+                # Add name filters
+                if first_name:
+                    if partial_match:
+                        conditions.append("pp.first_name ILIKE %s")
+                        query_params.append(f"%{first_name}%") # type: ignore
+                    else:
+                        conditions.append("pp.first_name ILIKE %s")
+                        query_params.append(first_name)
+                
+                if last_name:
+                    if partial_match:
+                        conditions.append("pp.last_name ILIKE %s")
+                        query_params.append(f"%{last_name}%") # type: ignore
+                    else:
+                        conditions.append("pp.last_name ILIKE %s")
+                        query_params.append(last_name)
+                
+                # If we don't want connections, only include profiles created by this user
+                if not include_connections:
+                    conditions.append("pp.created_by_user_id = %s")
+                    query_params.append(user_id)
+                
+                # Add conditions to query
+                if conditions:
+                    base_query += " AND " + " AND ".join(conditions)
+                
+                # Add grouping, ordering and limit
+                base_query += """
+                    GROUP BY pp.id, upc.relationship, upc.connection_type, upc.trust_level,
+                            upc.can_book_for_passenger, upc.can_modify_passenger_details, 
+                            upc.can_view_passenger_history
+                    ORDER BY 
+                        CASE 
+                            WHEN pp.created_by_user_id = %s THEN 1  -- Own profiles first
+                            WHEN upc.relationship = 'self' THEN 2  -- Self connections next
+                            WHEN upc.relationship IN ('spouse', 'partner', 'child', 'parent') THEN 3  -- Family next
+                            WHEN upc.trust_level = 'high' THEN 4  -- High trust connections
+                            ELSE 5
+                        END,
+                        booking_count DESC NULLS LAST,  -- Most frequently booked
+                        pp.last_traveled_at DESC NULLS LAST,  -- Most recently traveled
+                        last_booking_date DESC NULLS LAST  -- Most recent booking
+                    LIMIT %s
+                """
+                query_params.extend([user_id, limit])
+                
+                # Execute the query
+                cur.execute(base_query, query_params)
+                rows = cur.fetchall()
+                
+                # Convert rows to PassengerProfile objects
+                for row in rows:
+                    # Parse airline_loyalties JSON
+                    airline_loyalties = {}
+                    if row[19]:  # airline_loyalties field
+                        try:
+                            airline_loyalties = json.loads(row[19]) if isinstance(row[19], str) else row[19]
+                        except (json.JSONDecodeError, TypeError):
+                            airline_loyalties = {}
+                    
+                    # Create PassengerProfile object
+                    profile = PassengerProfile(
+                        id=row[0],
+                        first_name=row[1] or "",
+                        middle_name=row[2],
+                        last_name=row[3] or "",
+                        date_of_birth=row[4],
+                        gender=row[5],
+                        title=row[6],
+                        email=row[7],
+                        phone_number=row[8],
+                        primary_document_type=row[9],
+                        primary_document_number=row[10],
+                        primary_document_expiry=row[11],
+                        primary_document_country=row[12],
+                        nationality=row[13],
+                        seat_preference=row[14] or "any",
+                        meal_preference=row[15],
+                        special_assistance=row[16],
+                        medical_conditions=row[17],
+                        dietary_restrictions=row[18],
+                        airline_loyalties=airline_loyalties,
+                        tsa_precheck_number=row[20],
+                        global_entry_number=row[21],
+                        created_by_user_id=row[22],
+                        is_verified=bool(row[23]),
+                        verification_method=row[24],
+                        created_at=row[25],
+                        updated_at=row[26],
+                        last_traveled_at=row[27]
+                    )
+                    
+                    # Add connection metadata
+                    connection_info = {
+                        "relationship": row[28],
+                        "connection_type": row[29],
+                        "trust_level": row[30],
+                        "can_book_for_passenger": bool(row[31]) if row[31] is not None else False,
+                        "can_modify_passenger_details": bool(row[32]) if row[32] is not None else False,
+                        "can_view_passenger_history": bool(row[33]) if row[33] is not None else False,
+                        "booking_count": row[34] or 0,
+                        "last_booking_date": row[35].isoformat() if row[35] else None
+                    }
+                    
+                    # Calculate completeness score
+                    required_fields = [
+                        profile.first_name, profile.last_name, profile.date_of_birth, 
+                        profile.nationality, profile.primary_document_number
+                    ]
+                    optional_fields = [
+                        profile.seat_preference and profile.seat_preference != "any",
+                        profile.meal_preference,
+                        profile.primary_document_expiry,
+                        profile.email,
+                        profile.phone_number
+                    ]
+                    
+                    completeness_score = sum(2 for field in required_fields if field) + \
+                                    sum(1 for field in optional_fields if field)
+                    
+                    passenger_data = {
+                        "profile": profile,
+                        "connection_info": connection_info,
+                        "completeness_score": completeness_score,
+                        "is_complete": completeness_score >= 8  # At least required fields + some optional
+                    }
+                    
+                    passengers.append(passenger_data)
+            
+            # Prepare response with PassengerProfile objects
+            response = {
+                "success": True,
+                "passengers": passengers,
+                "total_found": len(passengers),
+                "search_criteria": {
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "booking_id": booking_id,
+                    "partial_match": partial_match,
+                    "include_connections": include_connections
+                }
+            }
+            
+            # Add helpful context if no results
+            if not passengers:
+                if first_name or last_name:
+                    response["message"] = f"No passengers found matching '{first_name} {last_name}' in your connections"
+                elif booking_id:
+                    response["message"] = f"No passengers found for booking {booking_id}"
+                else:
+                    response["message"] = "No passenger profiles found in your connections"
+            else:
+                # Add summary message
+                complete_count = sum(1 for p in passengers if p["is_complete"])
+                response["message"] = f"Found {len(passengers)} passenger(s), {complete_count} with complete details"
+            
+            return response
+            
+        except Exception as e:
+            print(f"Error in handle_passenger_lookup: {e}")
+            import traceback
+            traceback.print_exc()
+            return {"error": f"Passenger lookup failed: {str(e)}"}
+
+
+    def get_passenger_autocomplete_suggestions(self, user_id: int, partial_name: str, limit: int = 5) -> Dict[str, Any]:
+        """
+        Get passenger name suggestions for autocomplete based on partial input
+        
+        Args:
+            user_id: The user requesting suggestions
+            partial_name: Partial name to match against
+            limit: Maximum number of suggestions to return
+        
+        Returns:
+            Dict with success status and suggestion list containing PassengerProfile objects
+        """
+        try:
+            if not self.storage.conn:
+                return {"error": "Database connection not available"}
+            
+            if not partial_name or len(partial_name) < 2:
+                return {"success": True, "suggestions": [], "message": "Need at least 2 characters"}
+            
+            suggestions = []
+            
+            with self.storage.conn.cursor() as cur:
+                # Search for passengers in user's connections
+                cur.execute("""
+                    SELECT 
+                        pp.id,
+                        pp.first_name,
+                        pp.middle_name,
+                        pp.last_name,
+                        pp.date_of_birth,
+                        pp.gender,
+                        pp.title,
+                        pp.email,
+                        pp.phone_number,
+                        pp.primary_document_type,
+                        pp.primary_document_number,
+                        pp.primary_document_expiry,
+                        pp.primary_document_country,
+                        pp.nationality,
+                        pp.seat_preference,
+                        pp.meal_preference,
+                        pp.special_assistance,
+                        pp.medical_conditions,
+                        pp.dietary_restrictions,
+                        pp.airline_loyalties,
+                        pp.tsa_precheck_number,
+                        pp.global_entry_number,
+                        pp.created_by_user_id,
+                        pp.is_verified,
+                        pp.verification_method,
+                        pp.created_at,
+                        pp.updated_at,
+                        pp.last_traveled_at,
+                        upc.relationship,
+                        COUNT(b.id) as booking_count,
+                        MAX(b.created_at) as last_booking
+                    FROM passenger_profiles pp
+                    LEFT JOIN user_passenger_connections upc ON pp.id = upc.passenger_id AND upc.user_id = %s
+                    LEFT JOIN booking_passengers bp ON pp.id = bp.passenger_profile_id
+                    LEFT JOIN bookings b ON bp.booking_id = b.id AND b.primary_user_id = %s
+                    WHERE (
+                        pp.created_by_user_id = %s 
+                        OR upc.user_id = %s
+                    ) AND (
+                        pp.first_name ILIKE %s
+                        OR pp.last_name ILIKE %s
+                        OR CONCAT(pp.first_name, ' ', pp.last_name) ILIKE %s
+                    )
+                    GROUP BY pp.id, upc.relationship
+                    ORDER BY booking_count DESC, last_booking DESC
+                    LIMIT %s
+                """, (
+                    user_id, user_id, user_id, user_id,
+                    f"%{partial_name}%", f"%{partial_name}%", f"%{partial_name}%",
+                    limit
+                ))
+                
+                for row in cur.fetchall():
+                    # Parse airline_loyalties JSON
+                    airline_loyalties = {}
+                    if row[19]:  # airline_loyalties field
+                        try:
+                            airline_loyalties = json.loads(row[19]) if isinstance(row[19], str) else row[19]
+                        except (json.JSONDecodeError, TypeError):
+                            airline_loyalties = {}
+                    
+                    # Create PassengerProfile object
+                    profile = PassengerProfile(
+                        id=row[0],
+                        first_name=row[1] or "",
+                        middle_name=row[2],
+                        last_name=row[3] or "",
+                        date_of_birth=row[4],
+                        gender=row[5],
+                        title=row[6],
+                        email=row[7],
+                        phone_number=row[8],
+                        primary_document_type=row[9],
+                        primary_document_number=row[10],
+                        primary_document_expiry=row[11],
+                        primary_document_country=row[12],
+                        nationality=row[13],
+                        seat_preference=row[14] or "any",
+                        meal_preference=row[15],
+                        special_assistance=row[16],
+                        medical_conditions=row[17],
+                        dietary_restrictions=row[18],
+                        airline_loyalties=airline_loyalties,
+                        tsa_precheck_number=row[20],
+                        global_entry_number=row[21],
+                        created_by_user_id=row[22],
+                        is_verified=bool(row[23]),
+                        verification_method=row[24],
+                        created_at=row[25],
+                        updated_at=row[26],
+                        last_traveled_at=row[27]
+                    )
+                    
+                    suggestion = {
+                        "profile": profile,
+                        "display_name": f"{profile.first_name} {profile.last_name}",
+                        "relationship": row[28] or "previous passenger",
+                        "booking_count": row[29] or 0,
+                        "last_used": row[30].isoformat() if row[30] else None
+                    }
+                    
+                    suggestions.append(suggestion)
+            
+            return {
+                "success": True,
+                "suggestions": suggestions,
+                "query": partial_name,
+                "total_found": len(suggestions)
+            }
+            
+        except Exception as e:
+            print(f"Error in get_passenger_autocomplete_suggestions: {e}")
+            return {"error": f"Autocomplete suggestions failed: {str(e)}"}
+
+
+    def get_passenger_usage_stats(self, user_id: int, passenger_id: str) -> Dict[str, Any]:
+        """
+        Get usage statistics for a specific passenger profile
+        
+        Args:
+            user_id: The user requesting stats
+            passenger_id: The passenger profile ID to analyze
+        
+        Returns:
+            Dict with usage statistics and PassengerProfile object
+        """
+        try:
+            if not self.storage.conn:
+                return {"error": "Database connection not available"}
+            
+            with self.storage.conn.cursor() as cur:
+                # First verify user has access to this passenger
+                cur.execute("""
+                    SELECT pp.*, upc.relationship, upc.connection_type, upc.trust_level
+                    FROM passenger_profiles pp
+                    LEFT JOIN user_passenger_connections upc ON pp.id = upc.passenger_id AND upc.user_id = %s
+                    WHERE pp.id = %s AND (
+                        pp.created_by_user_id = %s 
+                        OR upc.user_id = %s
+                    )
+                """, (user_id, passenger_id, user_id, user_id))
+                
+                passenger_row = cur.fetchone()
+                if not passenger_row:
+                    return {"error": "Passenger not found or access denied"}
+                
+                # Get booking history for this passenger
+                cur.execute("""
+                    SELECT 
+                        COUNT(DISTINCT b.id) as total_bookings,
+                        MIN(b.created_at) as first_booking,
+                        MAX(b.created_at) as last_booking,
+                        AVG(b.total_amount) as avg_booking_value,
+                        COUNT(DISTINCT b.origin_airport) as unique_origins,
+                        COUNT(DISTINCT b.destination_airport) as unique_destinations,
+                        STRING_AGG(DISTINCT b.origin_airport || '-' || b.destination_airport, ', ') as common_routes
+                    FROM passenger_profiles pp
+                    JOIN booking_passengers bp ON pp.id = bp.passenger_profile_id
+                    JOIN bookings b ON bp.booking_id = b.id
+                    WHERE pp.id = %s AND b.primary_user_id = %s
+                """, (passenger_id, user_id))
+                
+                stats_row = cur.fetchone()
+                
+                # Parse airline_loyalties JSON
+                airline_loyalties = {}
+                if passenger_row[19]:  # airline_loyalties field
+                    try:
+                        airline_loyalties = json.loads(passenger_row[19]) if isinstance(passenger_row[19], str) else passenger_row[19]
+                    except (json.JSONDecodeError, TypeError):
+                        airline_loyalties = {}
+                
+                # Create PassengerProfile object
+                profile = PassengerProfile(
+                    id=passenger_row[0],
+                    first_name=passenger_row[1] or "",
+                    middle_name=passenger_row[2],
+                    last_name=passenger_row[3] or "",
+                    date_of_birth=passenger_row[4],
+                    gender=passenger_row[5],
+                    title=passenger_row[6],
+                    email=passenger_row[7],
+                    phone_number=passenger_row[8],
+                    primary_document_type=passenger_row[9],
+                    primary_document_number=passenger_row[10],
+                    primary_document_expiry=passenger_row[11],
+                    primary_document_country=passenger_row[12],
+                    nationality=passenger_row[13],
+                    seat_preference=passenger_row[14] or "any",
+                    meal_preference=passenger_row[15],
+                    special_assistance=passenger_row[16],
+                    medical_conditions=passenger_row[17],
+                    dietary_restrictions=passenger_row[18],
+                    airline_loyalties=airline_loyalties,
+                    tsa_precheck_number=passenger_row[20],
+                    global_entry_number=passenger_row[21],
+                    created_by_user_id=passenger_row[22],
+                    is_verified=bool(passenger_row[23]),
+                    verification_method=passenger_row[24],
+                    created_at=passenger_row[25],
+                    updated_at=passenger_row[26],
+                    last_traveled_at=passenger_row[27]
+                )
+                
+                if not stats_row or not stats_row[0]:
+                    stats = {
+                        "total_bookings": 0,
+                        "message": "No booking history found for this passenger"
+                    }
+                else:
+                    stats = {
+                        "total_bookings": stats_row[0],
+                        "first_booking": stats_row[1].isoformat() if stats_row[1] else None,
+                        "last_booking": stats_row[2].isoformat() if stats_row[2] else None,
+                        "average_booking_value": float(stats_row[3]) if stats_row[3] else 0,
+                        "unique_origins": stats_row[4] or 0,
+                        "unique_destinations": stats_row[5] or 0,
+                        "common_routes": stats_row[6] or ""
+                    }
+                
+                # Add connection info
+                connection_info = {
+                    "relationship": passenger_row[28],
+                    "connection_type": passenger_row[29],
+                    "trust_level": passenger_row[30]
+                }
+                
+                return {
+                    "success": True,
+                    "passenger_profile": profile,
+                    "connection_info": connection_info,
+                    "stats": stats
+                }
+                
+        except Exception as e:
+            print(f"Error in get_passenger_usage_stats: {e}")
+            return {"error": f"Stats retrieval failed: {str(e)}"}

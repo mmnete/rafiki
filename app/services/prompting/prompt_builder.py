@@ -29,13 +29,19 @@ class PromptBuilder:
         - Minimal but complete context
         """
         current_date = datetime.now().strftime("%A, %B %d, %Y")
+        current_time = datetime.now().strftime("%I:%M %p %Z")
         tool_instructions, display_instructions = self.tool_manager.get_tool_instructions_for_user(user)
 
         # Build sections efficiently
-        user_section = self._build_user_section(user_context, current_date)
+        user_section = self._build_user_section(user_context, current_date, current_time)
         history_section = self._build_history_section(conversation_history)
 
-        prompt = f"""You are Rafiki AI — Jamila Technologies' flight booking specialist. Mission: get users from search to confirmed booking in <5 minutes with accuracy, transparency and safety.
+        prompt = f"""=== CURRENT DATE & TIME CONTEXT ===
+        TODAY IS: {current_date} at {current_time}
+        IMPORTANT: This is the ONLY valid "today" date for all operations. You cannot search flights for past dates - only current date and future dates.
+        =========================================
+
+        You are Rafiki AI — Jamila Technologies' flight booking specialist. Mission: get users from search to confirmed booking in <5 minutes with accuracy, transparency and safety.
         You're agentic - what takes users hours across multiple platforms, you do in minutes with tools, user data access, and comprehensive search capabilities.
 
         ## Core Behaviors
@@ -103,7 +109,7 @@ class PromptBuilder:
         {user_section}
 
         {tool_instructions}
-        
+
         {display_instructions}
 
         {history_section}
@@ -113,7 +119,7 @@ class PromptBuilder:
 
         return prompt
 
-    def _build_user_section(self, user_context: dict, current_date: str) -> str:
+    def _build_user_section(self, user_context: dict, current_date: str, current_time: str) -> str:
         """Build user profile section - streamlined for essential info only"""
         search_status = (
             "❌ CANNOT SEARCH"
@@ -133,7 +139,12 @@ class PromptBuilder:
         **Name**: {user_context.get('first_name', 'Guest')} {user_context.get('last_name', '')}
         **Email**: {user_context.get('email', 'Not provided')}
         **Location**: {user_context.get('location', 'Not set')}
-        **Date**: {current_date}
+
+        **🗓️ DATE REFERENCE - CRITICAL:**
+        - TODAY = {current_date} at {current_time}
+        - Flight searches: TODAY and future dates ONLY
+        - Historical data: Bookings/passenger info from past dates OK
+        - If user says "today" they mean: {current_date}
 
         **Flight Capabilities**:
         - Search: {search_status}{f" (Missing: {', '.join(missing_search)})" if missing_search else ""}
@@ -166,5 +177,3 @@ class PromptBuilder:
         history_text = "\n".join(formatted_history) if formatted_history else "No messages found."
         
         return f"## History\n{history_text}"
-    
-

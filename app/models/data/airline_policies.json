@@ -1,0 +1,197 @@
+{
+    "UA": {
+        "name": "United Airlines",
+        "baggage_policies": {
+            "economy": {"carry_on": "free", "checked_1": 35, "checked_2": 45},
+            "business": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {
+            "basic_economy": "no_changes",
+            "economy": "24h_free_cancel",
+            "business": "flexible_cancel"
+        },
+        "meal_policies": {
+            "economy": "purchase_onboard",
+            "business": "complimentary"
+        },
+        "seat_selection": {
+            "economy": "fee_based",
+            "business": "included"
+        }
+    },
+    "DL": {
+        "name": "Delta Air Lines",
+        "baggage_policies": {
+            "basic_economy": {"carry_on": "free", "checked_1": 35},
+            "main_cabin": {"carry_on": "free", "checked_1": 35, "checked_2": 45},
+            "first_class": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {
+            "basic_economy": "no_changes_or_refunds_unless_within_24h",
+            "main_cabin": "24h_free_cancel_then_credit",
+            "first_class": "flexible_cancel"
+        },
+        "meal_policies": {
+            "basic_economy": "purchase_onboard",
+            "main_cabin": "purchase_onboard",
+            "first_class": "complimentary"
+        },
+        "seat_selection": {
+            "basic_economy": "assigned_at_check-in",
+            "main_cabin": "fee_based",
+            "first_class": "included"
+        }
+    },
+    "AA": {
+        "name": "American Airlines",
+        "baggage_policies": {
+            "basic_economy": {"carry_on": "free", "checked_1": 40},
+            "main_cabin": {"carry_on": "free", "checked_1": 40, "checked_2": 45},
+            "first_class": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {
+            "basic_economy": "no_changes_or_refunds_unless_within_24h",
+            "main_cabin": "24h_free_cancel_then_fee",
+            "first_class": "flexible_cancel"
+        },
+        "meal_policies": {
+            "basic_economy": "purchase_onboard",
+            "main_cabin": "purchase_onboard",
+            "first_class": "complimentary"
+        },
+        "seat_selection": {
+            "basic_economy": "fee_based_or_assigned_at_check-in",
+            "main_cabin": "fee_based",
+            "first_class": "included"
+        }
+    },
+    "WN": {
+        "name": "Southwest Airlines",
+        "baggage_policies": {
+            "all_fares": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {
+            "wanna_get_away": "credit_for_future_flight",
+            "wanna_get_away_plus": "transferable_credit",
+            "anytime": "refundable",
+            "business_select": "refundable"
+        },
+        "meal_policies": {
+            "all_fares": "complimentary_snacks_and_beverages"
+        },
+        "seat_selection": {
+            "all_fares": "open_seating_first_come_first_served"
+        }
+    },
+    "B6": {
+        "name": "JetBlue Airways",
+        "baggage_policies": {
+            "blue_basic": {"carry_on": "free", "checked_1": 40},
+            "blue_plus": {"carry_on": "free", "checked_1": "free", "checked_2": 60},
+            "mint": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {
+            "blue_basic": "fee_based",
+            "blue": "travel_credit",
+            "blue_plus": "travel_credit",
+            "mint": "travel_credit"
+        },
+        "meal_policies": {
+            "all_fares": "complimentary_snacks_and_beverages",
+            "mint": "complimentary_full_meal_service"
+        },
+        "seat_selection": {
+            "blue_basic": "fee_based_or_assigned_at_check-in",
+            "blue": "fee_based",
+            "blue_plus": "included",
+            "mint": "included"
+        }
+    },
+    "AS": {
+        "name": "Alaska Airlines",
+        "baggage_policies": {
+            "saver": {"carry_on": "free", "checked_1": 35, "checked_2": 45},
+            "main_cabin": {"carry_on": "free", "checked_1": 35, "checked_2": 45},
+            "first_class": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {
+            "saver": "no_changes_or_refunds_unless_within_24h_or_14_days_before",
+            "main_cabin": "no_change_fee_fare_difference_applies",
+            "first_class": "flexible_cancel"
+        },
+        "meal_policies": {
+            "saver": "purchase_onboard",
+            "main_cabin": "complimentary_snacks_and_beverages",
+            "first_class": "complimentary"
+        },
+        "seat_selection": {
+            "saver": "assigned_at_check-in",
+            "main_cabin": "fee_based",
+            "first_class": "included"
+        }
+    },
+    "F9": {
+        "name": "Frontier Airlines",
+        "baggage_policies": {
+            "all_fares": {"carry_on": 55, "checked_1": 60, "checked_2": 70}
+        },
+        "cancellation_policies": {
+            "all_fares": "non-refundable_unless_24h_free_cancel"
+        },
+        "meal_policies": {
+            "all_fares": "purchase_onboard"
+        },
+        "seat_selection": {
+            "all_fares": "fee_based"
+        }
+    },
+    "NK": {
+        "name": "Spirit Airlines",
+        "baggage_policies": {
+            "all_fares": {"carry_on": 35, "checked_1": 40, "checked_2": 60}
+        },
+        "cancellation_policies": {
+            "all_fares": "non-refundable_unless_24h_free_cancel"
+        },
+        "meal_policies": {
+            "all_fares": "purchase_onboard"
+        },
+        "seat_selection": {
+            "all_fares": "fee_based"
+        }
+    },
+    "HA": {
+        "name": "Hawaiian Airlines",
+        "baggage_policies": {
+            "main_cabin": {"carry_on": "free", "checked_1": 30, "checked_2": 40},
+            "first_class": {"carry_on": "free", "checked_1": "free", "checked_2": "free"}
+        },
+        "cancellation_policies": {
+            "main_cabin": "24h_free_cancel_then_fee",
+            "first_class": "flexible_cancel"
+        },
+        "meal_policies": {
+            "main_cabin": "complimentary_on_long_haul",
+            "first_class": "complimentary"
+        },
+        "seat_selection": {
+            "main_cabin": "fee_based",
+            "first_class": "included"
+        }
+    },
+    "SY": {
+        "name": "Sun Country Airlines",
+        "baggage_policies": {
+            "all_fares": {"carry_on": 30, "checked_1": 35, "checked_2": 45}
+        },
+        "cancellation_policies": {
+            "all_fares": "non-refundable_unless_24h_free_cancel"
+        },
+        "meal_policies": {
+            "all_fares": "purchase_onboard"
+        },
+        "seat_selection": {
+            "all_fares": "fee_based"
+        }
+    }
+}

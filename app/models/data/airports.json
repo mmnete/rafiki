@@ -1,0 +1,411 @@
+{
+  "ATL": {
+    "name": "Hartsfield-Jackson Atlanta International",
+    "city": "Atlanta",
+    "country": "US",
+    "coordinates": { "lat": 33.6407, "lng": -84.4277 },
+    "nearby_airports": [],
+    "reachable_hubs": [
+      { "code": "JFK", "flight_cost_typical": 180, "flight_time_min": 120 },
+      { "code": "LAX", "flight_cost_typical": 220, "flight_time_min": 240 },
+      { "code": "ORD", "flight_cost_typical": 150, "flight_time_min": 105 },
+      { "code": "MIA", "flight_cost_typical": 150, "flight_time_min": 120 }
+    ]
+  },
+  "LAX": {
+    "name": "Los Angeles International",
+    "city": "Los Angeles",
+    "country": "US",
+    "coordinates": { "lat": 33.942791, "lng": -118.410042 },
+    "nearby_airports": [
+      {
+        "code": "BUR",
+        "distance_km": 30,
+        "transport_options": {
+          "uber": { "cost_usd": 40, "time_min": 45 },
+          "shuttle": { "cost_usd": 15, "time_min": 60 }
+        }
+      }
+    ],
+    "reachable_hubs": [
+      { "code": "SFO", "flight_cost_typical": 120, "flight_time_min": 90 },
+      { "code": "ORD", "flight_cost_typical": 200, "flight_time_min": 240 },
+      { "code": "ATL", "flight_cost_typical": 220, "flight_time_min": 240 },
+      { "code": "JFK", "flight_cost_typical": 220, "flight_time_min": 300 }
+    ]
+  },
+  "ORD": {
+    "name": "Chicago O’Hare International",
+    "city": "Chicago",
+    "country": "US",
+    "coordinates": { "lat": 41.9742, "lng": -87.9073 },
+    "nearby_airports": [
+      {
+        "code": "MDW",
+        "distance_km": 25,
+        "transport_options": {
+          "uber": { "cost_usd": 40, "time_min": 45 },
+          "train": { "cost_usd": 5, "time_min": 90 }
+        }
+      }
+    ],
+    "reachable_hubs": [
+      { "code": "ATL", "flight_cost_typical": 150, "flight_time_min": 105 },
+      { "code": "LAX", "flight_cost_typical": 200, "flight_time_min": 240 },
+      { "code": "JFK", "flight_cost_typical": 170, "flight_time_min": 120 },
+      { "code": "SFO", "flight_cost_typical": 200, "flight_time_min": 270 }
+    ]
+  },
+  "DFW": {
+    "name": "Dallas/Fort Worth International",
+    "city": "Dallas/Fort Worth",
+    "country": "US",
+    "coordinates": { "lat": 32.8998, "lng": -97.0403 },
+    "nearby_airports": [
+      {
+        "code": "DAL",
+        "distance_km": 27,
+        "transport_options": {
+          "uber": { "cost_usd": 35, "time_min": 40 },
+          "bus": { "cost_usd": 6, "time_min": 60 }
+        }
+      }
+    ],
+    "reachable_hubs": [
+      { "code": "LAX", "flight_cost_typical": 180, "flight_time_min": 180 },
+      { "code": "ATL", "flight_cost_typical": 160, "flight_time_min": 120 },
+      { "code": "ORD", "flight_cost_typical": 140, "flight_time_min": 130 }
+    ]
+  },
+  "DEN": {
+    "name": "Denver International",
+    "city": "Denver",
+    "country": "US",
+    "coordinates": { "lat": 39.8561, "lng": -104.6737 },
+    "nearby_airports": [],
+    "reachable_hubs": [
+      { "code": "LAX", "flight_cost_typical": 180, "flight_time_min": 150 },
+      { "code": "SFO", "flight_cost_typical": 180, "flight_time_min": 150 },
+      { "code": "ORD", "flight_cost_typical": 200, "flight_time_min": 150 }
+    ]
+  },
+  "SEA": {
+    "name": "Seattle-Tacoma International",
+    "city": "Seattle",
+    "country": "US",
+    "coordinates": { "lat": 47.4502, "lng": -122.3088 },
+    "nearby_airports": [
+      {
+        "code": "PAE",
+        "distance_km": 60,
+        "transport_options": {
+          "uber": { "cost_usd": 70, "time_min": 50 },
+          "bus": { "cost_usd": 15, "time_min": 90 }
+        }
+      }
+    ],
+    "reachable_hubs": [
+      { "code": "SFO", "flight_cost_typical": 160, "flight_time_min": 120 },
+      { "code": "LAX", "flight_cost_typical": 170, "flight_time_min": 150 },
+      { "code": "DEN", "flight_cost_typical": 200, "flight_time_min": 150 }
+    ]
+  },
+  "MCO": {
+    "name": "Orlando International",
+    "city": "Orlando",
+    "country": "US",
+    "coordinates": { "lat": 28.4312, "lng": -81.3081 },
+    "nearby_airports": [],
+    "reachable_hubs": [
+      { "code": "ATL", "flight_cost_typical": 120, "flight_time_min": 90 },
+      { "code": "JFK", "flight_cost_typical": 150, "flight_time_min": 120 },
+      { "code": "LAX", "flight_cost_typical": 220, "flight_time_min": 240 }
+    ]
+  },
+  "LAS": {
+    "name": "Harry Reid International",
+    "city": "Las Vegas",
+    "country": "US",
+    "coordinates": { "lat": 36.0840, "lng": -115.1537 },
+    "nearby_airports": [],
+    "reachable_hubs": [
+      { "code": "LAX", "flight_cost_typical": 100, "flight_time_min": 60 },
+      { "code": "DEN", "flight_cost_typical": 140, "flight_time_min": 120 },
+      { "code": "ATL", "flight_cost_typical": 180, "flight_time_min": 180 }
+    ]
+  },
+  "IAH": {
+    "name": "George Bush Intercontinental",
+    "city": "Houston",
+    "country": "US",
+    "coordinates": { "lat": 29.9902, "lng": -95.3368 },
+    "nearby_airports": [],
+    "reachable_hubs": [
+      { "code": "DFW", "flight_cost_typical": 90, "flight_time_min": 60 },
+      { "code": "ATL", "flight_cost_typical": 140, "flight_time_min": 120 },
+      { "code": "LAX", "flight_cost_typical": 170, "flight_time_min": 180 }
+    ]
+  },
+  "EWR": {
+    "name": "Newark Liberty International",
+    "city": "Newark / New York",
+    "country": "US",
+    "coordinates": { "lat": 40.6895, "lng": -74.1745 },
+    "nearby_airports": [
+      {
+        "code": "JFK",
+        "distance_km": 40,
+        "transport_options": {
+          "uber": { "cost_usd": 70, "time_min": 60 },
+          "train": { "cost_usd": 15, "time_min": 50 }
+        }
+      },
+      {
+        "code": "LGA",
+        "distance_km": 25,
+        "transport_options": {
+          "uber": { "cost_usd": 45, "time_min": 35 },
+          "bus": { "cost_usd": 10, "time_min": 60 }
+        }
+      }
+    ],
+    "reachable_hubs": [
+      { "code": "ATL", "flight_cost_typical": 180, "flight_time_min": 120 },
+      { "code": "ORD", "flight_cost_typical": 200, "flight_time_min": 150 },
+      { "code": "LAX", "flight_cost_typical": 220, "flight_time_min": 240 }
+    ]
+  },
+  "BOS": {
+    "name": "Logan International",
+    "city": "Boston",
+    "country": "US",
+    "coordinates": { "lat": 42.3656, "lng": -71.0096 },
+    "nearby_airports": [],
+    "reachable_hubs": [
+      { "code": "JFK", "flight_cost_typical": 80, "flight_time_min": 60 },
+      { "code": "ATL", "flight_cost_typical": 160, "flight_time_min": 120 },
+      { "code": "ORD", "flight_cost_typical": 180, "flight_time_min": 150 }
+    ]
+  },
+  "MSP": {
+    "name": "Minneapolis–Saint Paul International",
+    "city": "Minneapolis / St. Paul",
+    "country": "US",
+    "coordinates": { "lat": 44.8830, "lng": -93.2268 },
+    "nearby_airports": [],
+    "reachable_hubs": [
+      { "code": "ORD", "flight_cost_typical": 120, "flight_time_min": 90 },
+      { "code": "DEN", "flight_cost_typical": 140, "flight_time_min": 120 },
+      { "code": "ATL", "flight_cost_typical": 160, "flight_time_min": 150 }
+    ]
+  },
+  "CLT": {
+    "name": "Charlotte Douglas International",
+    "city": "Charlotte",
+    "country": "US",
+    "coordinates": { "lat": 35.2140, "lng": -80.9431 },
+    "nearby_airports": [],
+    "reachable_hubs": [
+      { "code": "ATL", "flight_cost_typical": 100, "flight_time_min": 60 },
+      { "code": "JFK", "flight_cost_typical": 120, "flight_time_min": 90 },
+      { "code": "ORD", "flight_cost_typical": 140, "flight_time_min": 120 }
+    ]
+  },
+  "PHX": {
+    "name": "Phoenix Sky Harbor International",
+    "city": "Phoenix",
+    "country": "US",
+    "coordinates": { "lat": 33.4353, "lng": -112.0078 },
+    "nearby_airports": [],
+    "reachable_hubs": [
+      { "code": "LAX", "flight_cost_typical": 80, "flight_time_min": 60 },
+      { "code": "DEN", "flight_cost_typical": 120, "flight_time_min": 90 },
+      { "code": "ORD", "flight_cost_typical": 160, "flight_time_min": 150 }
+    ]
+  },
+  "PHL": {
+    "name": "Philadelphia International",
+    "city": "Philadelphia",
+    "country": "US",
+    "coordinates": { "lat": 39.87294, "lng": -75.243988 },
+    "nearby_airports": [],
+    "reachable_hubs": [
+      { "code": "JFK", "flight_cost_typical": 80, "flight_time_min": 60 },
+      { "code": "ATL", "flight_cost_typical": 140, "flight_time_min": 120 },
+      { "code": "ORD", "flight_cost_typical": 170, "flight_time_min": 150 }
+    ]
+  },
+  "DTW": {
+    "name": "Detroit Metropolitan Wayne County",
+    "city": "Detroit",
+    "country": "US",
+    "coordinates": { "lat": 42.213249, "lng": -83.352859 },
+    "nearby_airports": [],
+    "reachable_hubs": [
+      { "code": "ORD", "flight_cost_typical": 100, "flight_time_min": 60 },
+      { "code": "ATL", "flight_cost_typical": 140, "flight_time_min": 120 },
+      { "code": "JFK", "flight_cost_typical": 160, "flight_time_min": 120 }
+    ]
+  },
+  "LGA": {
+    "name": "LaGuardia Airport",
+    "city": "New York",
+    "country": "US",
+    "coordinates": { "lat": 40.776863, "lng": -73.874069 },
+    "nearby_airports": [
+      {
+        "code": "JFK",
+        "distance_km": 19,
+        "transport_options": {
+          "uber": { "cost_usd": 50, "time_min": 40 },
+          "shuttle": { "cost_usd": 20, "time_min": 60 }
+        }
+      },
+      {
+        "code": "EWR",
+        "distance_km": 40,
+        "transport_options": {
+          "uber": { "cost_usd": 80, "time_min": 70 },
+          "train": { "cost_usd": 25, "time_min": 90 }
+        }
+      }
+    ],
+    "reachable_hubs": [
+      { "code": "JFK", "flight_cost_typical": 60, "flight_time_min": 30 },
+      { "code": "ATL", "flight_cost_typical": 160, "flight_time_min": 120 },
+      { "code": "ORD", "flight_cost_typical": 180, "flight_time_min": 150 }
+    ]
+  },
+  "JFK": {
+    "name": "John F. Kennedy International",
+    "city": "New York",
+    "country": "US",
+    "coordinates": { "lat": 40.6413, "lng": -73.7781 },
+    "nearby_airports": [
+      {
+        "code": "LGA",
+        "distance_km": 19,
+        "transport_options": {
+          "uber": { "cost_usd": 50, "time_min": 40 },
+          "shuttle": { "cost_usd": 20, "time_min": 60 }
+        }
+      },
+      {
+        "code": "EWR",
+        "distance_km": 40,
+        "transport_options": {
+          "uber": { "cost_usd": 70, "time_min": 60 },
+          "train": { "cost_usd": 15, "time_min": 50 }
+        }
+      }
+    ],
+    "reachable_hubs": [
+      { "code": "LAX", "flight_cost_typical": 220, "flight_time_min": 300 },
+      { "code": "ORD", "flight_cost_typical": 170, "flight_time_min": 150 },
+      { "code": "ATL", "flight_cost_typical": 180, "flight_time_min": 120 },
+      { "code": "MIA", "flight_cost_typical": 150, "flight_time_min": 180 }
+    ]
+  },
+  "SFO": {
+    "name": "San Francisco International",
+    "city": "San Francisco",
+    "country": "US",
+    "coordinates": { "lat": 37.6213, "lng": -122.3790 },
+    "nearby_airports": [
+      {
+        "code": "OAK",
+        "distance_km": 25,
+        "transport_options": {
+          "uber": { "cost_usd": 35, "time_min": 30 },
+          "shuttle": { "cost_usd": 15, "time_min": 45 }
+        }
+      },
+      {
+        "code": "SJC",
+        "distance_km": 50,
+        "transport_options": {
+          "uber": { "cost_usd": 60, "time_min": 50 },
+          "train": { "cost_usd": 12, "time_min": 75 }
+        }
+      }
+    ],
+    "reachable_hubs": [
+      { "code": "LAX", "flight_cost_typical": 120, "flight_time_min": 90 },
+      { "code": "SEA", "flight_cost_typical": 160, "flight_time_min": 120 },
+      { "code": "DEN", "flight_cost_typical": 180, "flight_time_min": 150 },
+      { "code": "ORD", "flight_cost_typical": 200, "flight_time_min": 270 }
+    ]
+  },
+  "MIA": {
+    "name": "Miami International",
+    "city": "Miami",
+    "country": "US",
+    "coordinates": { "lat": 25.7959, "lng": -80.2871 },
+    "nearby_airports": [
+      {
+        "code": "FLL",
+        "distance_km": 35,
+        "transport_options": {
+          "uber": { "cost_usd": 40, "time_min": 40 },
+          "train": { "cost_usd": 8, "time_min": 60 }
+        }
+      }
+    ],
+    "reachable_hubs": [
+      { "code": "ATL", "flight_cost_typical": 150, "flight_time_min": 120 },
+      { "code": "JFK", "flight_cost_typical": 150, "flight_time_min": 180 },
+      { "code": "ORD", "flight_cost_typical": 180, "flight_time_min": 210 },
+      { "code": "LAX", "flight_cost_typical": 220, "flight_time_min": 300 }
+    ]
+  },
+  "FLL": {
+    "name": "Fort Lauderdale-Hollywood International",
+    "city": "Fort Lauderdale",
+    "country": "US",
+    "coordinates": { "lat": 26.0742, "lng": -80.1506 },
+    "nearby_airports": [
+      {
+        "code": "MIA",
+        "distance_km": 35,
+        "transport_options": {
+          "uber": { "cost_usd": 40, "time_min": 40 },
+          "train": { "cost_usd": 8, "time_min": 60 }
+        }
+      }
+    ],
+    "reachable_hubs": [
+      { "code": "ATL", "flight_cost_typical": 120, "flight_time_min": 100 },
+      { "code": "JFK", "flight_cost_typical": 150, "flight_time_min": 180 },
+      { "code": "ORD", "flight_cost_typical": 180, "flight_time_min": 210 }
+    ]
+  },
+  "BWI": {
+    "name": "Baltimore/Washington International Thurgood Marshall",
+    "city": "Baltimore",
+    "country": "US",
+    "coordinates": { "lat": 39.1764, "lng": -76.6685 },
+    "nearby_airports": [
+      {
+        "code": "DCA",
+        "distance_km": 50,
+        "transport_options": {
+          "uber": { "cost_usd": 60, "time_min": 45 },
+          "train": { "cost_usd": 15, "time_min": 60 }
+        }
+      },
+      {
+        "code": "IAD",
+        "distance_km": 60,
+        "transport_options": {
+          "uber": { "cost_usd": 70, "time_min": 50 },
+          "shuttle": { "cost_usd": 25, "time_min": 75 }
+        }
+      }
+    ],
+    "reachable_hubs": [
+      { "code": "ORD", "flight_cost_typical": 150, "flight_time_min": 120 },
+      { "code": "ATL", "flight_cost_typical": 160, "flight_time_min": 120 },
+      { "code": "BOS", "flight_cost_typical": 100, "flight_time_min": 90 }
+    ]
+  }
+}

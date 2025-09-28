@@ -81,6 +81,7 @@ class ToolCallManager:
         self.register_tool(self._create_flight_booking_config())
         self.register_tool(self._manage_booking_passengers_config())
         self.register_tool(self._finalize_booking_config())
+        self.register_tool(self._get_passenger_details_config())
 
         # Phase 5: Booking Display UI Functions
         self.register_tool(self._display_booking_summary_config())
@@ -293,7 +294,16 @@ class ToolCallManager:
                 ToolParameter("children", "integer", False, "Children (2-11 years)", 0),
                 ToolParameter("infants", "integer", False, "Infants (under 2)", 0),
             ],
-            instructions="""INTELLIGENT SEARCH POLICY - Adapt search depth based on user certainty:
+            instructions="""This is a flight searching tool. CRITICAL: Use ONLY these exact parameters:
+            - origin (required): 3-letter airport code
+            - destination (required): 3-letter airport code  
+            - departure_date (required): YYYY-MM-DD format
+            - return_date (optional): YYYY-MM-DD format for round trips
+            - adults (optional): number of adult passengers (default: 1)
+            - children (optional): number of children (default: 0)
+            - infants (optional): number of infants (default: 0)
+            
+            INTELLIGENT SEARCH POLICY - Adapt search depth based on user certainty:
 
             **For Decisive Users (specific dates/airports):**
             Minimum 3-4 strategic searches:
@@ -323,11 +333,21 @@ class ToolCallManager:
             - Focus searches for decisive users to speed booking
             - Follow with display functions showing curated best options
             - Never show raw search data
+            
+           NOTE: When the advice here mentions doing multiple searches it LITERALLY MEANS calling search_flights() multiple times in 1 go with different arguments to try to achieve your goal.
 
             Your goal: Find the absolute best deals through intelligent, adaptive searching.""",
             examples=[
-                "Decisive: <call>search_flights(origin='SFO', destination='LAX', departure_date='2025-09-21')</call>",
-                "Flexible: <call>search_flights(origin='SFO', destination='LHR', departure_date='2025-09-22')</call>\n<call>search_flights(origin='OAK', destination='LHR', departure_date='2025-09-22')</call>\n<call>search_flights(origin='SFO', destination='LHR', departure_date='2025-09-24')</call>"
+                """User: "SFO to NYC tomorrow" (Decisive)
+                <call>search_flights(origin='SFO', destination='JFK', departure_date='2025-09-21')</call>
+                <call>search_flights(origin='OAK', destination='JFK', departure_date='2025-09-21')</call>
+                <call>search_flights(origin='SFO', destination='LGA', departure_date='2025-09-21')</call>""",
+                
+                """User: "London sometime next week, flexible" (Flexible)
+                <call>search_flights(origin='SFO', destination='LHR', departure_date='2025-09-22')</call>
+                <call>search_flights(origin='SFO', destination='LHR', departure_date='2025-09-24')</call>
+                <call>search_flights(origin='OAK', destination='LHR', departure_date='2025-09-22')</call>
+                <call>search_flights(origin='SFO', destination='LGW', departure_date='2025-09-23')</call>"""
             ],
             execute_function=self._delegate_to_flight_service,
             extract_context=self._extract_flight_search_context,
@@ -489,7 +509,7 @@ class ToolCallManager:
             name="manage_booking_passengers",
             description="Add passenger details to booking",
             tool_type=ToolType.TOOL,
-            access_level="active",
+            access_level="onboarded",
             parameters=[
                 ToolParameter("booking_id", "string", True, "Booking identifier"),
                 ToolParameter("action", "string", True, "'add', 'update', 'get'"),
@@ -511,7 +531,7 @@ class ToolCallManager:
             name="finalize_booking",
             description="Create airline reservation and get final pricing",
             tool_type=ToolType.TOOL,
-            access_level="active",
+            access_level="onboarded",
             parameters=[
                 ToolParameter("booking_id", "string", True, "Complete booking ID"),
             ],
@@ -519,6 +539,43 @@ class ToolCallManager:
             examples=["<call>finalize_booking(booking_id='BK123')</call>"],
             execute_function=lambda user_id, **kwargs: self._delegate_to_booking_service(user_id, _tool_name="finalize_booking", **kwargs),
             extract_context=self._extract_finalize_booking_context,
+        )
+
+    def _get_passenger_details_config(self) -> ToolConfig:
+        return ToolConfig(
+            name="get_passenger_details",
+            description="Retrieve passenger details from user's booking history for auto-fill",
+            tool_type=ToolType.TOOL,
+            access_level="onboarded",
+            parameters=[
+                ToolParameter("booking_id", "string", False, "Specific booking ID to get passengers from"),
+                ToolParameter("first_name", "string", False, "Passenger first name to search for"),
+                ToolParameter("last_name", "string", False, "Passenger last name to search for"),
+                ToolParameter("partial_match", "boolean", False, "Allow partial name matching", True),
+            ],
+            instructions="""Retrieve passenger details from user's booking history for auto-filling new bookings. This can be the user's own passenger details or passenger details the user booked for before.
+            
+            USAGE SCENARIOS:
+            - User says "book for John again" → search by first_name='John' or last_name='John' or do multiple get_passenger_details calls to see which one matches
+            - User mentions "same passengers as last booking" → search by most recent booking_id
+            - User says "book for the Smith family" → search by last_name='Smith'
+            
+            SEARCH LOGIC:
+            - If booking_id provided: get all passengers from that specific booking
+            - If name provided: search across all user's bookings for matching passengers
+            - Returns passenger details for auto-fill: name, DOB, nationality, passport, preferences
+            
+            USE THIS TOOL TO:
+            - Reduce user typing by pre-filling known passenger info
+            - Confirm existing passenger details before booking
+            - Suggest passenger info when user mentions familiar names""",
+            examples=[
+                "<call>get_passenger_details(first_name='John')</call>",
+                "<call>get_passenger_details(booking_id='BK123')</call>",
+                "<call>get_passenger_details(last_name='Smith', partial_match=True)</call>"
+            ],
+            execute_function=lambda user_id, **kwargs: self._delegate_to_passenger_lookup(user_id, **kwargs),
+            extract_context=self._extract_passenger_lookup_context,
         )
 
     # =============================================================================
@@ -625,6 +682,17 @@ class ToolCallManager:
         except Exception as e:
             return {"error": f"Booking operation failed: {str(e)}"}
 
+    def _delegate_to_passenger_lookup(self, user_id: int, **kwargs) -> Dict[str, Any]:
+        """Delegate passenger lookup to booking service"""
+        try:
+            # Add action and user context
+            kwargs["action"] = "get_passengers"
+            kwargs["user_id"] = user_id
+            
+            return self.services["booking_storage_service"].handle_passenger_lookup(user_id, **kwargs)
+        except Exception as e:
+            return {"error": f"Passenger lookup failed: {str(e)}"}
+
     # =============================================================================
     # DISPLAY UI RENDERERS
     # =============================================================================
@@ -680,6 +748,95 @@ class ToolCallManager:
 
     def _extract_finalize_booking_context(self, result: Dict[str, Any], user_id: str) -> str:
         return self.services["booking_storage_service"].extract_booking_operation_context(result, "finalize")
+
+    def _extract_passenger_lookup_context(self, result: Dict[str, Any], user_id: str) -> str:
+        """Extract context for passenger lookup with PassengerProfile objects"""
+        # Build search parameters from the search criteria in the result
+        search_criteria = result.get("search_criteria", {})
+        search_params = []
+        
+        if search_criteria.get("booking_id"):
+            search_params.append(f"booking_id='{search_criteria['booking_id']}'")
+        if search_criteria.get("first_name"):
+            search_params.append(f"first_name='{search_criteria['first_name']}'")
+        if search_criteria.get("last_name"):
+            search_params.append(f"last_name='{search_criteria['last_name']}'")
+        
+        # Add other search parameters if present
+        if search_criteria.get("partial_match", True):
+            search_params.append("partial_match=True")
+        if not search_criteria.get("include_connections", True):
+            search_params.append("include_connections=False")
+        
+        call_str = f"<call>get_passenger_details({', '.join(search_params)})</call>"
+        
+        if "error" in result:
+            return f"{call_str}\nError: {result['error']}"
+        
+        passengers = result.get("passengers", [])
+        if not passengers:
+            message = result.get("message", "No matching passengers found")
+            return f"{call_str}\n{message}"
+        
+        # Extract passenger summaries from the new structure
+        passenger_summaries = []
+        complete_count = 0
+        
+        for passenger_data in passengers[:5]:  # Show first 5
+            # Get the PassengerProfile object
+            profile = passenger_data.get("profile")
+            if not profile:
+                continue
+                
+            # Extract connection info
+            connection_info = passenger_data.get("connection_info", {})
+            completeness = passenger_data.get("is_complete", False)
+            
+            if completeness:
+                complete_count += 1
+            
+            # Build passenger summary
+            name = f"{profile.first_name} {profile.last_name}".strip()
+            if not name:
+                name = "Unknown Name"
+                
+            # Add key details
+            details = []
+            if profile.nationality:
+                details.append(profile.nationality)
+            if connection_info.get("relationship"):
+                details.append(connection_info["relationship"])
+            if profile.is_verified:
+                details.append("verified")
+            if not completeness:
+                details.append("incomplete")
+                
+            detail_str = f" ({', '.join(details)})" if details else ""
+            passenger_summaries.append(f"{name}{detail_str}")
+        
+        # Build response summary
+        total_found = result.get("total_found", len(passengers))
+        context_lines = [call_str]
+        
+        if passenger_summaries:
+            context_lines.append(f"Found {total_found} passenger(s):")
+            for i, summary in enumerate(passenger_summaries, 1):
+                context_lines.append(f"  {i}. {summary}")
+            
+            if total_found > len(passenger_summaries):
+                context_lines.append(f"  ... and {total_found - len(passenger_summaries)} more")
+            
+            # Add completeness summary
+            if complete_count > 0:
+                context_lines.append(f"Complete profiles: {complete_count}/{total_found}")
+        else:
+            context_lines.append("No passengers found matching criteria")
+        
+        # Add any message from the result
+        if result.get("message") and "No" not in result["message"]:
+            context_lines.append(f"Note: {result['message']}")
+        
+        return "\n".join(context_lines)
 
     def _extract_booking_details_context(self, result: Dict[str, Any], user_id: str) -> str:
         if "error" in result:

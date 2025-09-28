@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 from .response_models import (
     FlightSearchResponse, SimplifiedSearchResponse, PricingResponse, 
     BookingResponse, CancellationResponse, Passenger
@@ -74,3 +74,28 @@ class FlightProvider(ABC):
     def get_provider_name(self) -> str:
         """Return provider name identifier"""
         pass
+    
+    def _create_contact_info(self) -> List[Dict]:
+        """Create agency contact information for booking"""
+        contact = {
+            "addresseeName": {
+                "firstName": "Travel",
+                "lastName": "Agent"
+            },
+            "companyName": "YOUR_TRAVEL_AGENCY_NAME",
+            "purpose": "STANDARD",
+            "phones": [{
+                "deviceType": "LANDLINE",  # or "MOBILE" 
+                "countryCallingCode": "1",
+                "number": "5551234567"  # Your agency phone
+            }],
+            "emailAddress": "bookings@youragency.com",  # Your agency email
+            "address": {
+                "lines": ["123 Travel Agency Street", "Suite 100"],
+                "postalCode": "12345",
+                "cityName": "Your City", 
+                "countryCode": "US"
+            }
+        }
+        
+        return [contact]

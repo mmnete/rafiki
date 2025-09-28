@@ -186,24 +186,48 @@ class SimplifiedSearchResponse:
     error_message: Optional[str] = None
     flights: List[SimplifiedFlightOffer] = field(default_factory=list)
 
+@dataclass
+class SeatSelection:
+    segment_id: str
+    seat_number: str
 
 @dataclass
+class BaggageOption:
+    segment_id: str
+    type: str  # e.g. "EXTRA_BAG", "CHECKED_BAG"
+    pieces: int
+    weight: Optional[int] = None
+
+@dataclass
+class MealOption:
+    segment_id: str
+    meal_code: str
+    
+@dataclass
+class EmergencyContact:
+    name: str
+    relationship: str  # e.g., "MOTHER", "SPOUSE", "BROTHER"
+    phone: str
+    email: Optional[str] = None
+    address: Optional[str] = None
+
+# Extend Passenger or separate
+@dataclass
 class Passenger:
-    """Passenger information for bookings"""
-    # Required fields (no defaults)
     passenger_type: PassengerType
     first_name: str
     last_name: str
     date_of_birth: datetime
     gender: str
+    nationality: str
     email: str
     phone: str
-    nationality: str
-    
-    # Optional fields (with defaults)
     passport_number: Optional[str] = None
     passport_expiry: Optional[datetime] = None
     age: Optional[int] = None
+    seat_selection: Optional[SeatSelection] = None
+    baggage_options: Optional[List[BaggageOption]] = None
+    meal_option: Optional[MealOption] = None
 
 
 @dataclass
@@ -222,10 +246,15 @@ class PricingResponse:
     """Response for final pricing requests"""
     success: bool
     offer_id: str
-    total_amount: float
-    base_amount: float
-    tax_amount: float
+    final_price: Decimal  # Changed from total_amount and float to Decimal
+    base_price: Decimal   # Changed from base_amount and float to Decimal
+    tax_amount: Decimal   # Changed from float to Decimal
     currency: str
+    price_changed: bool   # New field to indicate if price changed from original
+    price_change_info: Optional[str] = None  # New field for price change details
+    is_available: bool = True  # New field to indicate if still bookable
+    seats_available: int = 0   # New field for available seats
+    priced_offer: Optional[Dict] = None  # New field to store the priced offer for booking
     provider_data: Dict[str, Any] = field(default_factory=dict)
     error_message: Optional[str] = None
 
@@ -234,11 +263,14 @@ class PricingResponse:
 class BookingResponse:
     """Response for booking creation"""
     success: bool
-    booking_id: str
     booking_reference: str
-    total_amount: float
+    pnr: str
+    booking_id: str
+    confirmation_number: str
+    status: str
+    total_amount: Decimal  # Changed from float to Decimal to match
     currency: str
-    created_at: str
+    created_at: datetime  # Changed from str to datetime to match
     provider_data: Dict[str, Any] = field(default_factory=dict)
     error_message: Optional[str] = None
 
@@ -286,10 +318,15 @@ def create_error_pricing_response(offer_id: str, error_message: str) -> PricingR
     return PricingResponse(
         success=False,
         offer_id=offer_id,
-        total_amount=0.0,
-        base_amount=0.0,
-        tax_amount=0.0,
+        final_price=Decimal("0"),  # Changed to Decimal
+        base_price=Decimal("0"),   # Changed to Decimal
+        tax_amount=Decimal("0"),   # Changed to Decimal
         currency="USD",
+        price_changed=False,
+        price_change_info=None,
+        is_available=False,
+        seats_available=0,
+        priced_offer=None,
         error_message=error_message
     )
 
@@ -298,11 +335,14 @@ def create_error_booking_response(error_message: str) -> BookingResponse:
     """Create an error booking response"""
     return BookingResponse(
         success=False,
-        booking_id="",
         booking_reference="",
-        total_amount=0.0,
+        pnr="",
+        booking_id="",
+        confirmation_number="",
+        status="ERROR",
+        total_amount=Decimal("0"),  # Changed to Decimal
         currency="USD",
-        created_at="",
+        created_at=datetime.now(),  # Changed to datetime
         error_message=error_message
     )
 
