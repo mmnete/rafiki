@@ -94,7 +94,7 @@ class AmadeusProvider(FlightProvider):
                 "infants": infants,
                 "travelClass": travel_class,
                 "currencyCode": "USD",
-                "max": 5,
+                "max": 20,
             }
 
             if return_date:

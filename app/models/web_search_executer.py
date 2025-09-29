@@ -67,7 +67,7 @@ def execute_flight_searches(
     
     search_results = []
 
-    with ThreadPoolExecutor(max_workers=2) as executor:
+    with ThreadPoolExecutor(max_workers=3) as executor:
         future_to_strategy = {}
         for strategy in strategies:
             future = executor.submit(_execute_single_search, strategy, search_request)
@@ -286,8 +286,6 @@ def _search_hub_connection(
             logger.debug(f"⚠️ No flights found for first leg: {origin} → {hub}")
             return []
     
-        first_leg_flights = first_leg_response.flights[:10]
-
     except Exception as e:
         logger.error(f"💥 First leg API call failed: {str(e)}")
         return []
@@ -309,16 +307,14 @@ def _search_hub_connection(
             logger.debug(f"⚠️ No flights found for second leg: {hub} → {destination}")
             return []
     
-        second_leg_flights = second_leg_response.flights[:10]
-
     except Exception as e:
         logger.error(f"💥 Second leg API call failed: {str(e)}")
         return []
 
     # Find compatible connections
     compatible_connections = _find_compatible_connections(
-        first_leg_flights,
-        second_leg_flights,
+        first_leg_response.flights,
+        second_leg_response.flights,
         min_layover_minutes=60,  # Minimum 1 hour layover
         max_layover_minutes=480,  # Maximum 8 hour layover
     )
@@ -342,7 +338,7 @@ def _find_compatible_connections(
     first_leg_flights,
     second_leg_flights,
     min_layover_minutes=60,
-    max_layover_minutes=480,
+    max_layover_minutes=720,
 ):
     """Find first and second leg flights that have compatible timing"""
     compatible_pairs = []
@@ -630,8 +626,8 @@ def _search_roundtrip_strategy(
 
         # Combine outbound and return flights (simplified - you may want more sophisticated pairing)
         combined_roundtrips = []
-        for outbound in outbound_flights[:3]:  # Limit combinations
-            for return_flight in return_flights[:3]:
+        for outbound in outbound_flights[:4]:  # Limit combinations
+            for return_flight in return_flights[:4]:
                 # Calculate total price for round trip
                 outbound_price = 0
                 return_price = 0
