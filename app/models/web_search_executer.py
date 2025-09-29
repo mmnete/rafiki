@@ -58,7 +58,7 @@ def execute_flight_searches(
 
     search_results = []
 
-    with ThreadPoolExecutor(max_workers=3) as executor:
+    with ThreadPoolExecutor(max_workers=2) as executor:
         future_to_strategy = {}
         for strategy in strategies:
             future = executor.submit(_execute_single_search, strategy, search_request)
@@ -248,6 +248,8 @@ def _search_hub_connection(
         if not first_leg_response.success or not first_leg_response.flights:
             logger.debug(f"⚠️ No flights found for first leg: {origin} → {hub}")
             return []
+    
+        first_leg_flights = first_leg_response.flights[:10]
 
     except Exception as e:
         logger.error(f"💥 First leg API call failed: {str(e)}")
@@ -269,6 +271,8 @@ def _search_hub_connection(
         if not second_leg_response.success or not second_leg_response.flights:
             logger.debug(f"⚠️ No flights found for second leg: {hub} → {destination}")
             return []
+    
+        second_leg_flights = second_leg_response.flights[:10]
 
     except Exception as e:
         logger.error(f"💥 Second leg API call failed: {str(e)}")
@@ -276,8 +280,8 @@ def _search_hub_connection(
 
     # Find compatible connections
     compatible_connections = _find_compatible_connections(
-        first_leg_response.flights,
-        second_leg_response.flights,
+        first_leg_flights,
+        second_leg_flights,
         min_layover_minutes=60,  # Minimum 1 hour layover
         max_layover_minutes=480,  # Maximum 8 hour layover
     )
@@ -730,7 +734,7 @@ def _process_search_results(
             "search_request": search_request.__dict__,
         },
         "results": {
-            "best_deals": all_flights[:5],
+            # "best_deals": all_flights[:5],
             "direct_flights": [
                 f for f in all_flights if f["search_strategy"] == "direct"
             ][:3],
