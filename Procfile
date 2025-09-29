@@ -1,1 +1,1 @@
-web: gunicorn run:app
+web: gunicorn app:app --timeout 120 --graceful-timeout 120 --workers 1 --threads 2 --worker-class sync --log-level info --access-logfile - --error-logfile -
