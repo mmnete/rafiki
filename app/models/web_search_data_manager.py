@@ -2,14 +2,39 @@ import json
 import logging
 from typing import Dict, List, Optional
 from pathlib import Path
+import threading
 
 class DataManager:
+    _instance = None
+    _lock = threading.Lock()
+    _initialized = False
+    
+    def __new__(cls):
+        """Ensure only one instance exists (thread-safe singleton)"""
+        if cls._instance is None:
+            with cls._lock:
+                # Double-check locking pattern
+                if cls._instance is None:
+                    cls._instance = super(DataManager, cls).__new__(cls)
+        return cls._instance
+    
     def __init__(self, data_directory: str = "data"):
-        module_dir = Path(__file__).parent
-        self.data_dir = module_dir / data_directory
-        self.airports = {}
-        self.airline_policies = {}
-        self.load_all_data()
+        """Initialize only once, even if __init__ is called multiple times"""
+        # Skip initialization if already done
+        if self._initialized:
+            return
+            
+        with self._lock:
+            if self._initialized:
+                return
+                
+            module_dir = Path(__file__).parent
+            self.data_dir = module_dir / data_directory
+            self.airports = {}
+            self.airline_policies = {}
+            self.load_all_data()
+            self._initialized = True
+    
     
     def load_all_data(self):
         """Load all data files into memory for fast lookups"""
