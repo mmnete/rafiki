@@ -11,6 +11,9 @@ from app.models.web_search_data_manager import data_manager
 from app.services.api.flights.response_models import Passenger, PassengerType
 from app.services.api.flights.amadeus_provider import AmadeusProvider
 import logging
+import psutil
+import os
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -52,10 +55,16 @@ def execute_flight_searches(
     strategies: List[SearchStrategy], search_request: SearchRequest
 ) -> Dict:
     """Execute all search strategies in parallel with rate limiting"""
-    logger.info(
-        f"🚀 Starting flight search with {len(strategies)} strategies (rate limited to 2 req/sec)"
-    )
-
+    
+    # === ADD TIMING AND MEMORY LOGGING HERE ===
+    request_start = datetime.now()
+    process = psutil.Process(os.getpid())
+    mem_start = process.memory_info().rss / 1024 / 1024  # MB
+    
+    logger.info(f"🚀 Starting flight search at {request_start}")
+    logger.info(f"💾 Memory at start: {mem_start:.2f} MB")
+    logger.info(f"📊 Processing {len(strategies)} strategies (rate limited to 2 req/sec)")
+    
     search_results = []
 
     with ThreadPoolExecutor(max_workers=2) as executor:
@@ -67,9 +76,17 @@ def execute_flight_searches(
         for future in future_to_strategy:
             strategy = future_to_strategy[future]
             try:
+                # === ADD TIMING PER STRATEGY ===
+                strategy_start = datetime.now()
+                logger.debug(f"⏳ Waiting for strategy '{strategy.strategy_type}': {strategy.explanation}")
+                
                 flights = future.result(
                     timeout=60
                 )  # Increased for multi-segment searches
+                
+                strategy_duration = (datetime.now() - strategy_start).total_seconds()
+                logger.debug(f"⏱️ Strategy '{strategy.strategy_type}' completed in {strategy_duration:.2f}s")
+                
                 enriched_flights = _enrich_flight_results(
                     flights, strategy, search_request
                 )
@@ -77,11 +94,31 @@ def execute_flight_searches(
                 logger.debug(
                     f"✅ Strategy '{strategy.strategy_type}' returned {len(enriched_flights)} flights"
                 )
+                
+                # === LOG MEMORY AFTER EACH STRATEGY ===
+                mem_current = process.memory_info().rss / 1024 / 1024
+                mem_delta = mem_current - mem_start
+                logger.debug(f"💾 Memory now: {mem_current:.2f} MB (Δ +{mem_delta:.2f} MB)")
+                
             except Exception as e:
+                strategy_duration = (datetime.now() - strategy_start).total_seconds()
                 logger.warning(
-                    f"❌ Strategy '{strategy.strategy_type}' failed: {str(e)}"
+                    f"❌ Strategy '{strategy.strategy_type}' failed after {strategy_duration:.2f}s: {str(e)}"
                 )
                 search_results.append(SearchResult(strategy, [], False, str(e)))
+
+    # === ADD FINAL TIMING AND MEMORY LOGGING ===
+    total_duration = (datetime.now() - request_start).total_seconds()
+    mem_end = process.memory_info().rss / 1024 / 1024
+    mem_total_delta = mem_end - mem_start
+    
+    logger.info(f"⏱️ Total search duration: {total_duration:.2f}s")
+    logger.info(f"💾 Memory at end: {mem_end:.2f} MB (Δ +{mem_total_delta:.2f} MB)")
+    logger.info(f"✅ Completed {len([r for r in search_results if r.success])}/{len(search_results)} strategies successfully")
+    
+    # Warn if approaching timeout
+    if total_duration > 25:
+        logger.warning(f"⚠️ Search took {total_duration:.2f}s - approaching timeout threshold!")
 
     return _process_search_results(search_results, search_request)
 
