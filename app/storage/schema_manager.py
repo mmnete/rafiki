@@ -21,6 +21,9 @@ class SchemaManager:
     def __init__(self, storage: StorageService):
         self.storage = storage
         
+        self.schema_dependencies = {}
+        self.dependencies = {}
+        
         # Define schemas with their dependencies (what they reference)
         # IMPORTANT: PassengerSchema should NOT contain booking_passengers table anymore
         # booking_passengers is now in BookingSchema to fix dependency issues
