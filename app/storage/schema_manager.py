@@ -24,28 +24,28 @@ class SchemaManager:
         # Define schemas with their dependencies (what they reference)
         # IMPORTANT: PassengerSchema should NOT contain booking_passengers table anymore
         # booking_passengers is now in BookingSchema to fix dependency issues
-        self.schema_dependencies = {
-            'users': UserSchema(),                    # Base user authentication tables
-            'passenger_profiles': PassengerSchema(),  # Contains passenger_profiles, user_sessions, user_frequent_passengers (NOT booking_passengers)
-            'flight_searches': FlightSchema(),        # References users 
-            'bookings': BookingSchema(),              # References users, passenger_profiles, contains booking_passengers
-            'stored_files': DocumentSchema(),         # References users, bookings, passenger_profiles
-            'conversations': ConversationSchema(),    # References users, bookings, flight_searches, stored_files
-            'payments': PaymentSchema(),              # References users, bookings
-            'personalization': PersonalizationSchema() # References users, passenger_profiles
-        }
+        # self.schema_dependencies = {
+        #     'users': UserSchema(),                    # Base user authentication tables
+        #     'passenger_profiles': PassengerSchema(),  # Contains passenger_profiles, user_sessions, user_frequent_passengers (NOT booking_passengers)
+        #     'flight_searches': FlightSchema(),        # References users 
+        #     'bookings': BookingSchema(),              # References users, passenger_profiles, contains booking_passengers
+        #     'stored_files': DocumentSchema(),         # References users, bookings, passenger_profiles
+        #     'conversations': ConversationSchema(),    # References users, bookings, flight_searches, stored_files
+        #     'payments': PaymentSchema(),              # References users, bookings
+        #     'personalization': PersonalizationSchema() # References users, passenger_profiles
+        # }
         
-        # Define the dependency graph (schema -> list of schemas it depends on)
-        self.dependencies = {
-            'users': [],                              # Base tables, no dependencies
-            'passenger_profiles': ['users'],          # References users
-            'flight_searches': ['users'],             # References users
-            'bookings': ['users', 'passenger_profiles'], # References users, passenger_profiles, AND contains booking_passengers
-            'stored_files': ['users', 'bookings', 'passenger_profiles'], # References users, bookings, passenger_profiles
-            'conversations': ['users', 'bookings', 'flight_searches', 'stored_files'],
-            'payments': ['users', 'bookings'],        # References users, bookings
-            'personalization': ['users', 'passenger_profiles'] # References users, passenger_profiles
-        }
+        # # Define the dependency graph (schema -> list of schemas it depends on)
+        # self.dependencies = {
+        #     'users': [],                              # Base tables, no dependencies
+        #     'passenger_profiles': ['users'],          # References users
+        #     'flight_searches': ['users'],             # References users
+        #     'bookings': ['users', 'passenger_profiles'], # References users, passenger_profiles, AND contains booking_passengers
+        #     'stored_files': ['users', 'bookings', 'passenger_profiles'], # References users, bookings, passenger_profiles
+        #     'conversations': ['users', 'bookings', 'flight_searches', 'stored_files'],
+        #     'payments': ['users', 'bookings'],        # References users, bookings
+        #     'personalization': ['users', 'passenger_profiles'] # References users, passenger_profiles
+        # }
     
     def _get_creation_order(self) -> List[str]:
         """
