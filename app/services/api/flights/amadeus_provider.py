@@ -676,7 +676,7 @@ class AmadeusProvider(FlightProvider):
             )
     
     def _process_amadeus_offer_enhanced(self, offer: Dict, offer_idx: int, 
-                                      airline_dict: Dict, aircraft_dict: Dict) -> FlightOffer:
+                                  airline_dict: Dict, aircraft_dict: Dict) -> FlightOffer:
         """Process a single Amadeus offer with comprehensive detail extraction"""
         
         # Generate offer ID
@@ -690,11 +690,6 @@ class AmadeusProvider(FlightProvider):
         
         # Extract tax information
         tax_amount = total_amount - base_amount
-        
-        # Extract fees
-        # fees = price_info.get("fees", [])
-        # change_fee = None
-        # cancellation_fee = None
         
         # Check for additional services (like baggage fees)
         additional_services = price_info.get("additionalServices", [])
@@ -721,39 +716,45 @@ class AmadeusProvider(FlightProvider):
         # Enhanced ancillary services extraction
         ancillary_services = self._extract_ancillary_services(offer)
         
-        # Process itineraries and segments with enhanced details
+        # Get the main itinerary (first one for one-way, multiple for round-trip)
+        itineraries = offer.get("itineraries", [])
+        main_itinerary = itineraries[0] if itineraries else {}
+        
+        # Get overall departure and arrival times from the main itinerary
+        departure_time, arrival_time = self._get_itinerary_times(main_itinerary)
+        
+        # Process all segments across all itineraries
         all_segments = []
         airlines = set()
         total_stops = 0
         
-        for itinerary in offer.get("itineraries", []):
+        for itinerary in itineraries:
             for segment in itinerary.get("segments", []):
                 flight_segment = self._process_amadeus_segment_enhanced(segment, airline_dict, aircraft_dict, offer)
                 all_segments.append(flight_segment)
                 airlines.add(flight_segment.airline_code)
                 total_stops += segment.get("numberOfStops", 0)
         
-        # Get route info
-        first_segment = all_segments[0] if all_segments else None
-        last_segment = all_segments[-1] if all_segments else None
+        # Get main itinerary segments (processed FlightSegment objects)
+        main_segment_ids = [s.get("id") for s in main_itinerary.get("segments", [])]
+        main_segments = [seg for seg in all_segments if seg.segment_id in main_segment_ids]
+        
+        # Get route info from processed segments
+        first_segment = main_segments[0] if main_segments else None
+        last_segment = main_segments[-1] if main_segments else None
         
         # Determine trip type
-        num_itineraries = len(offer.get("itineraries", []))
+        num_itineraries = len(itineraries)
         if num_itineraries > 1:
             trip_type = TripType.ROUND_TRIP
-        elif total_stops == 0:
-            trip_type = TripType.ONE_WAY_DIRECT
-        else:
+        elif len(main_segments) > 1:
             trip_type = TripType.ONE_WAY_CONNECTING
+        else:
+            trip_type = TripType.ONE_WAY_DIRECT
         
-        # Calculate duration
-        first_itinerary = offer.get("itineraries", [{}])[0]
-        duration = first_itinerary.get("duration", "")
+        # Calculate duration from the main itinerary
+        duration = main_itinerary.get("duration", "")
         duration_minutes = self._parse_duration_to_minutes(duration)
-        
-        # Parse datetime strings
-        departure_time = self._parse_datetime(first_segment.departure_time) if first_segment else datetime.now()
-        arrival_time = self._parse_datetime(last_segment.arrival_time) if last_segment else datetime.now()
         
         return FlightOffer(
             offer_id=f"amadeus_{offer_id}",
@@ -764,8 +765,8 @@ class AmadeusProvider(FlightProvider):
             arrival_time=arrival_time,
             duration_minutes=duration_minutes or 0,
             trip_type=trip_type,
-            total_segments=len(all_segments),
-            stops=total_stops,
+            total_segments=len(main_segments),
+            stops=len(main_segments) - 1 if main_segments else 0,
             airline_code=first_segment.airline_code if first_segment else "",
             pricing=pricing,
             baggage=baggage,
@@ -1023,10 +1024,31 @@ class AmadeusProvider(FlightProvider):
         if not datetime_str:
             return datetime.now()
         try:
-            # Amadeus format: "2024-09-21T06:00:00"
+            # Amadeus format: "2025-10-18T20:29:00" (already in correct ISO format)
             return datetime.fromisoformat(datetime_str.replace('Z', '+00:00'))
-        except:
+        except Exception as e:
+            logger.warning(f"Failed to parse datetime '{datetime_str}': {e}")
             return datetime.now()
+    
+    def _get_itinerary_times(self, itinerary: Dict) -> Tuple[datetime, datetime]:
+        """Get the actual departure and arrival times for an itinerary"""
+        segments = itinerary.get("segments", [])
+        if not segments:
+            return datetime.now(), datetime.now()
+        
+        # First segment departure time
+        first_segment = segments[0]
+        departure_time = self._parse_datetime(
+            first_segment.get("departure", {}).get("at", "")
+        )
+        
+        # Last segment arrival time  
+        last_segment = segments[-1]
+        arrival_time = self._parse_datetime(
+            last_segment.get("arrival", {}).get("at", "")
+        )
+        
+        return departure_time, arrival_time
     
     def _create_model_offer(self, flight_offer: FlightOffer) -> SimplifiedFlightOffer:
         """Create simplified model offer from full flight offer with enhanced info"""
@@ -1039,16 +1061,21 @@ class AmadeusProvider(FlightProvider):
         else:
             stops_text = f"{flight_offer.stops} stop{'s' if flight_offer.stops > 1 else ''}"
             # Add connection airports if available
-            if len(flight_offer.segments) > 1:
+            main_segments = [seg for seg in flight_offer.segments if seg.segment_id in [s.get("id") for s in flight_offer.provider_data["full_offer"].get("itineraries", [{}])[0].get("segments", [])]]
+            if len(main_segments) > 1:
                 connection_airports = []
-                for i in range(len(flight_offer.segments) - 1):
-                    connection_airports.append(flight_offer.segments[i].arrival_iata)
+                for i in range(len(main_segments) - 1):
+                    connection_airports.append(main_segments[i].arrival_iata)
                 if connection_airports:
                     stops_text += f" ({', '.join(connection_airports)})"
         
-        # Extract time from datetime objects
+        # Extract time from datetime objects - format in local time
         departure_time = flight_offer.departure_time.strftime("%H:%M")
         arrival_time = flight_offer.arrival_time.strftime("%H:%M")
+        
+        # Add date if arrival is next day
+        if flight_offer.arrival_time.date() > flight_offer.departure_time.date():
+            arrival_time += "+1"
         
         # Get airline name from first segment
         airline_name = flight_offer.segments[0].airline_name if flight_offer.segments else "Unknown"
@@ -1063,7 +1090,7 @@ class AmadeusProvider(FlightProvider):
             duration=duration_str,
             stops=stops_text
         )
-    
+        
     def _parse_duration_to_minutes(self, duration_str: Optional[str]) -> Optional[int]:
         """Parse ISO 8601 duration to minutes (PT1H55M -> 115)"""
         if not duration_str:
