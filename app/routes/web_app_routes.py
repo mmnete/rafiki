@@ -12,6 +12,7 @@ import geoip2.errors
 import geoip2.webservice
 import os
 import logging
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -171,6 +172,13 @@ def get_search_status(task_id):
     try:
         # Get current status
         status_data = storage.get_data(f"search_status:{task_id}")
+        
+        max_retries = 5
+        
+        while (not status_data) and max_retries > 0:
+            status_data = storage.get_data(f"search_status:{task_id}")
+            time.sleep(0.05) # sleep for 50ms before retrying
+            max_retries -= 1
         
         if not status_data:
             return jsonify({
