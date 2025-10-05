@@ -12,6 +12,10 @@ export default defineConfig({
   },
   preview: {
     host: '0.0.0.0',
-    port: 4173
+    port: 4173,
+    allowedHosts: [
+      'rafiki-ai-web-e1a437f6a9aa.herokuapp.com',
+      '.herokuapp.com'  // This allows any Heroku subdomain
+    ]
   }
 })
