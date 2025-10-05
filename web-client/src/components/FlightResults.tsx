@@ -52,7 +52,7 @@ const groupConfig = {
     title: 'Hub Connections',
     icon: Hub,
     color: '#8b5cf6',
-    description: 'Popular connecting routes'
+    description: 'Creative routes using popular hubs'
   }
 };
 
