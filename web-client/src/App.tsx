@@ -6,13 +6,11 @@ import {
   CssBaseline,
   ThemeProvider,
   createTheme,
+  Chip,
 } from "@mui/material";
 import { SearchForm } from "./components/SearchForm";
 import { LoadingDisplay } from "./components/LoadingDisplay";
-import {
-  SearchRequest,
-  SearchResponse,
-} from "./types/flight";
+import { SearchRequest, SearchResponse } from "./types/flight";
 import { FlightResults } from "./components/FlightResults";
 
 const theme = createTheme({
@@ -56,11 +54,10 @@ const theme = createTheme({
 });
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-const POLL_INTERVAL = 1500; // Poll every 1.5 seconds
-const PROGRESS_UPDATE_INTERVAL = 4000; // Update progress animation every 4 seconds
-const MAX_POLL_DURATION = 120000; // Stop polling after 2 minutes (120 seconds)
+const POLL_INTERVAL = 1500;
+const PROGRESS_UPDATE_INTERVAL = 4000;
+const MAX_POLL_DURATION = 120000;
 
-// Simulated progress steps for better UX
 const PROGRESS_STEPS = [
   {
     percentage: 10,
@@ -88,6 +85,17 @@ const PROGRESS_STEPS = [
   { percentage: 95, message: "Finalizing results...", duration: 1000 },
 ];
 
+// Feature highlights that rotate
+const FEATURES = [
+  "🔍 The search that takes you hours, done in minutes.",
+  "🎯 Never wonder if you found the best price",
+  "💰 All fees visible upfront",
+  "🗺️ Routes others miss, our cheapest is the ACTUAL CHEAPEST",
+  "📋 Clear cancellation rules",
+  "🔔 Price drop alerts",
+  "⚡ Faster than checking 5 sites",
+];
+
 function App() {
   const [searchResults, setSearchResults] = useState<SearchResponse | null>(
     null
@@ -100,6 +108,7 @@ function App() {
     currentStep: "init",
     resultsFound: 0,
   });
+  const [currentFeature, setCurrentFeature] = useState(0);
 
   const [hasSearched, setHasSearched] = useState(false);
   const searchIdRef = useRef<string | null>(null);
@@ -108,9 +117,17 @@ function App() {
   const searchStartTimeRef = useRef<number>(0);
   const currentStepRef = useRef(0);
   const pollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [lastSearchParams, setLastSearchParams] = useState<SearchRequest | null>(null);
+  const [lastSearchParams, setLastSearchParams] =
+    useState<SearchRequest | null>(null);
 
-  // Simulate progress updates for better UX
+  // Rotate features every 3 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentFeature((prev) => (prev + 1) % FEATURES.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
   const simulateProgress = () => {
     const elapsed = Date.now() - searchStartTimeRef.current;
     const currentStepIndex = currentStepRef.current;
@@ -119,7 +136,6 @@ function App() {
       const currentStep = PROGRESS_STEPS[currentStepIndex];
       const nextStep = PROGRESS_STEPS[currentStepIndex + 1];
 
-      // Check if we should move to next step
       const stepDuration = PROGRESS_STEPS.slice(0, currentStepIndex + 1).reduce(
         (sum, step) => sum + step.duration,
         0
@@ -134,7 +150,6 @@ function App() {
           resultsFound: 0,
         });
       } else {
-        // Smoothly interpolate within current step
         const stepStart = PROGRESS_STEPS.slice(0, currentStepIndex).reduce(
           (sum, step) => sum + step.duration,
           0
@@ -151,7 +166,7 @@ function App() {
           startPercentage + (targetPercentage - startPercentage) * stepProgress;
 
         setProgress({
-          percentage: Math.min(interpolatedPercentage, 95), // Cap at 95% until real results
+          percentage: Math.min(interpolatedPercentage, 95),
           message: currentStep.message,
           currentStep: "searching",
           resultsFound: 0,
@@ -162,7 +177,6 @@ function App() {
 
   const pollSearchStatus = async (searchId: string) => {
     try {
-      // Check if we've exceeded max poll duration
       const elapsed = Date.now() - searchStartTimeRef.current;
       if (elapsed > MAX_POLL_DURATION) {
         setError("Search is taking longer than expected. Please try again.");
@@ -188,9 +202,7 @@ function App() {
 
       const data = await response.json();
 
-      // Check if search is completed (backend returns 'results' key when done)
       if (data.results) {
-        // Calculate total flights from all three groups
         const directFlights = data.results.results?.direct_flights || [];
         const nearbyAirports =
           data.results.results?.nearby_airport_options || [];
@@ -198,7 +210,6 @@ function App() {
         const totalFlights =
           directFlights.length + nearbyAirports.length + hubConnections.length;
 
-        // Jump to 100% and show completion
         setProgress({
           percentage: 100,
           message: "Search complete!",
@@ -206,15 +217,14 @@ function App() {
           resultsFound: totalFlights,
         });
 
-        // Small delay to show 100% before showing results
         setTimeout(() => {
-          // Sort and prepare results for display
-          const sortedResults: SearchResponse = sortFlightGroups(data.results.results);
+          const sortedResults: SearchResponse = sortFlightGroups(
+            data.results.results
+          );
           setSearchResults(sortedResults);
           setLoading(false);
         }, 500);
 
-        // Clear all intervals and timeout
         if (pollIntervalRef.current) {
           clearInterval(pollIntervalRef.current);
         }
@@ -240,15 +250,11 @@ function App() {
           clearTimeout(pollTimeoutRef.current);
         }
       }
-      // If status is 'processing', continue polling and simulating progress
     } catch (err) {
       console.error("Polling error:", err);
-      // Continue polling on errors (network might be temporarily down)
     }
   };
 
-  // Sort flight groups: Direct first, then Nearby Airports, then Hub Connections
-  // Within each group, sort by price (lowest first)
   const sortFlightGroups = (results: any) => {
     const sortByPrice = (flights: any[]) => {
       return [...flights].sort((a, b) => {
@@ -262,10 +268,8 @@ function App() {
       direct_flights: sortByPrice(results.direct_flights || []),
       nearby_airport_options: sortByPrice(results.nearby_airport_options || []),
       hub_connections: sortByPrice(results.hub_connections || []),
-      // Assuming search_summary is part of the results object from the API
       search_summary: results.search_summary,
       debug_info: results.debug_info,
-      // grouped_results is not directly present here, it's implied by the structure
     };
   };
 
@@ -274,8 +278,8 @@ function App() {
       setLoading(true);
       setError(null);
       setSearchResults(null);
-      setLastSearchParams(searchData); // Store search params
-      setHasSearched(true); // Mark that user has performed a search
+      setLastSearchParams(searchData);
+      setHasSearched(true);
       setProgress({
         percentage: 0,
         message: "Initializing search...",
@@ -283,11 +287,9 @@ function App() {
         resultsFound: 0,
       });
 
-      // Reset progress tracking
       searchStartTimeRef.current = Date.now();
       currentStepRef.current = 0;
 
-      // Clear any existing intervals
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current);
       }
@@ -295,7 +297,6 @@ function App() {
         clearInterval(progressIntervalRef.current);
       }
 
-      // Initiate search
       const response = await fetch(`${API_URL}/search`, {
         method: "POST",
         headers: {
@@ -311,7 +312,6 @@ function App() {
       const initData = await response.json();
       searchIdRef.current = initData.task_id;
 
-      // Set a maximum timeout for polling
       pollTimeoutRef.current = setTimeout(() => {
         if (loading) {
           setError("Search is taking longer than expected. Please try again.");
@@ -326,20 +326,17 @@ function App() {
         }
       }, MAX_POLL_DURATION);
 
-      // Start simulating progress updates
       progressIntervalRef.current = setInterval(
         simulateProgress,
         PROGRESS_UPDATE_INTERVAL
       );
 
-      // Start polling for actual status updates
       pollIntervalRef.current = setInterval(() => {
         if (searchIdRef.current) {
           pollSearchStatus(searchIdRef.current);
         }
       }, POLL_INTERVAL);
 
-      // Poll immediately as well
       pollSearchStatus(initData.task_id);
     } catch (err) {
       console.error("Search error:", err);
@@ -373,7 +370,6 @@ function App() {
     }
   };
 
-  // Cleanup polling on unmount
   useEffect(() => {
     return () => {
       if (pollIntervalRef.current) {
@@ -404,12 +400,11 @@ function App() {
             <Box
               sx={{
                 display: "flex",
-                justifyContent: "center",
+                flexDirection: "column",
                 alignItems: "center",
                 mb: { xs: 4, md: 6 },
               }}
             >
-              {/* Logo/Title - centered */}
               <Box sx={{ textAlign: "center" }}>
                 <Box
                   component="h1"
@@ -423,23 +418,90 @@ function App() {
                     color: "transparent",
                     mb: 1,
                     letterSpacing: "-0.02em",
+                    marginTop: "0"
                   }}
                 >
-                  Rafiki
+                  Rafiki AI
                 </Box>
                 <Box
                   sx={{
                     fontSize: { xs: "0.875rem", md: "1rem" },
                     color: "text.secondary",
                     fontWeight: 500,
+                    mb: 2,
                   }}
                 >
-                  AI-Powered Flight Search
+                  A smarter way to search for flights.
                 </Box>
+
+                {/* Rotating Feature Highlight */}
+                {!searchResults && (<Box
+                  sx={{
+                    minHeight: "32px",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      px: 3, // Changed from 2 (more horizontal padding)
+                      py: 1.5, // Changed from 1 (more vertical padding)
+                      borderRadius: 2,
+                      backgroundColor: "rgba(37, 99, 235, 0.08)",
+                      border: "1px solid rgba(37, 99, 235, 0.2)",
+                      animation: "fadeIn 0.5s ease-in-out",
+                      "@keyframes fadeIn": {
+                        from: { opacity: 0, transform: "translateY(-4px)" },
+                        to: { opacity: 1, transform: "translateY(0)" },
+                      },
+                    }}
+                    key={currentFeature}
+                  >
+                    <Box
+                      sx={{
+                        fontSize: "1.1rem", // Larger
+                        color: "#2563eb",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {FEATURES[currentFeature]}
+                    </Box>
+                  </Box>
+                </Box>)}
               </Box>
+
+              {/* Test Data Disclaimer */}
+              {!loading && !searchResults && (
+                <Box
+                  sx={{
+                    mt: 3,
+                    px: 2.5,
+                    py: 1.5,
+                    borderRadius: 2,
+                    backgroundColor: "rgba(245, 158, 11, 0.08)",
+                    border: "1px solid rgba(245, 158, 11, 0.2)",
+                    maxWidth: 500,
+                    textAlign: "center",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      fontSize: "0.75rem",
+                      color: "#92400e",
+                      fontWeight: 500,
+                    }}
+                  >
+                    <strong>Test Mode:</strong> Working with partners for live
+                    pricing
+                  </Box>
+                </Box>
+              )}
             </Box>
 
-            {/* Search Form - Only show when not loading and no results */}
+            {/* Search Form */}
             {!loading && !searchResults && (
               <SearchForm onSearch={handleSearch} />
             )}
@@ -476,43 +538,42 @@ function App() {
 
             {/* Results */}
             {searchResults && !loading && (
-              <FlightResults 
+              <FlightResults
                 results={searchResults}
                 onNewSearch={handleNewSearch}
-                searchParams={lastSearchParams ? {
-                  origin: lastSearchParams.origin,
-                  destination: lastSearchParams.destination,
-                  departureDate: lastSearchParams.departure_date,
-                  returnDate: lastSearchParams.return_date || undefined,
-                  adults: lastSearchParams.passengers.adults,
-                  children: lastSearchParams.passengers.children,
-                  infants: lastSearchParams.passengers.infants,
-                  travelClass: lastSearchParams.travel_class
-                } : undefined}
+                searchParams={
+                  lastSearchParams
+                    ? {
+                        origin: lastSearchParams.origin,
+                        destination: lastSearchParams.destination,
+                        departureDate: lastSearchParams.departure_date,
+                        returnDate: lastSearchParams.return_date || undefined,
+                        adults: lastSearchParams.passengers.adults,
+                        children: lastSearchParams.passengers.children,
+                        infants: lastSearchParams.passengers.infants,
+                        travelClass: lastSearchParams.travel_class,
+                      }
+                    : undefined
+                }
               />
             )}
           </Box>
         </Container>
 
-        {/* Fixed Feedback Button at Bottom Center - Only show after first search */}
+        {/* Fixed Feedback Button */}
         {hasSearched && (
           <Box
             sx={{
               position: "fixed",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              display: "flex",
-              justifyContent: "center",
-              p: 2,
-              backgroundColor: "rgba(248, 250, 252, 0.95)",
-              backdropFilter: "blur(8px)",
-              borderTop: "1px solid rgba(203, 213, 225, 0.3)",
+              bottom: 20,
+              left: "50%",
+              transform: "translateX(-50%)",
               zIndex: 1000,
+              width: "300px"
             }}
           >
             <a
-              href="YOUR_GOOGLE_FORM_URL_HERE"
+              href="https://docs.google.com/forms/d/e/1FAIpQLSfBEX8al_vlEGRITko1x6GFh-6-4aUXcdTva5YzMuOwK9bvWQ/viewform?usp=dialog"
               target="_blank"
               rel="noopener noreferrer"
               style={{
@@ -520,13 +581,13 @@ function App() {
                 alignItems: "center",
                 justifyContent: "center",
                 gap: "8px",
-                padding: "12px 24px",
+                padding: "10px 20px",
                 borderRadius: "12px",
                 backgroundColor: "#2563eb",
                 border: "none",
                 color: "#ffffff",
                 textDecoration: "none",
-                fontSize: "0.875rem",
+                fontSize: "0.8rem",
                 fontWeight: 600,
                 transition: "all 0.2s",
                 boxShadow: "0 4px 12px rgba(37, 99, 235, 0.3)",
@@ -534,17 +595,19 @@ function App() {
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = "#1d4ed8";
-                e.currentTarget.style.boxShadow = "0 6px 16px rgba(37, 99, 235, 0.4)";
+                e.currentTarget.style.boxShadow =
+                  "0 6px 16px rgba(37, 99, 235, 0.4)";
                 e.currentTarget.style.transform = "translateY(-2px)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = "#2563eb";
-                e.currentTarget.style.boxShadow = "0 4px 12px rgba(37, 99, 235, 0.3)";
+                e.currentTarget.style.boxShadow =
+                  "0 4px 12px rgba(37, 99, 235, 0.3)";
                 e.currentTarget.style.transform = "translateY(0)";
               }}
             >
-              <span style={{ fontSize: "1.2rem" }}>😊</span>
-              <span>Rafiki is a Trial Product - Please Share Feedback</span>
+              <span>🙏</span>
+              <span>Experimental - Please share feedback</span>
             </a>
           </Box>
         )}

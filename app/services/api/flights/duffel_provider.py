@@ -14,6 +14,9 @@ from .response_models import (
     create_error_pricing_response, create_error_booking_response,
     create_error_cancellation_response
 )
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class DuffelProvider(FlightProvider):
@@ -29,7 +32,8 @@ class DuffelProvider(FlightProvider):
             self.headers = {
                 "Authorization": f"Bearer {self.access_token}",
                 "Content-Type": "application/json",
-                "Accept": "application/json"
+                "Accept": "application/json",
+                "Duffel-Version": "v2"
             }
         except Exception as e:
             raise ValueError(f"Failed to initialize Duffel client: {e}")
@@ -53,7 +57,8 @@ class DuffelProvider(FlightProvider):
                     gender="",
                     email="",
                     phone="",
-                    nationality=""
+                    nationality="",
+                    age=None
                 )]
             
             # Build slices for the journey
@@ -74,13 +79,20 @@ class DuffelProvider(FlightProvider):
                 })
             
             # Transform passengers to Duffel format (minimal for search)
+            # FIXED: Proper age handling for children and infants
             duffel_passengers = []
             for passenger in passengers:
-                p_data = {"type": passenger.passenger_type.value}
-                
-                # Add age if specified (for children/infants)
-                if passenger.age:
-                    p_data["age"] = int(passenger.age) # type: ignore
+                if passenger.passenger_type == PassengerType.CHILD:
+                    # For children under 18, provide age
+                    age = passenger.age if passenger.age else 10
+                    p_data = {"age": int(age)}
+                elif passenger.passenger_type == PassengerType.INFANT:
+                    # For infants under 2, provide age
+                    age = passenger.age if passenger.age else 1
+                    p_data = {"age": int(age)}
+                else:  # ADULT
+                    # For adults, use type
+                    p_data = {"type": "adult"}
                 
                 duffel_passengers.append(p_data)
             
@@ -95,10 +107,11 @@ class DuffelProvider(FlightProvider):
             
             # Update headers to include Duffel-Version
             headers = self.headers.copy()
-            headers["Duffel-Version"] = "v2"
             headers["Accept-Encoding"] = "gzip"
             
-            # Make API request - KEY FIX: Use return_offers=false and then fetch offers separately
+            logger.debug(f"Duffel search request: {json.dumps(offer_request_data, indent=2)}")
+            
+            # Make API request - Use return_offers=false and then fetch offers separately
             response = requests.post(
                 f"{self.base_url}/air/offer_requests",
                 headers=headers,
@@ -113,6 +126,8 @@ class DuffelProvider(FlightProvider):
             if not offer_request_id:
                 raise Exception("No offer request ID returned")
             
+            logger.debug(f"Duffel offer request ID: {offer_request_id}")
+            
             # Now fetch the offers separately (this is the correct Duffel pattern)
             offers_response = requests.get(
                 f"{self.base_url}/air/offers",
@@ -122,18 +137,27 @@ class DuffelProvider(FlightProvider):
             offers_response.raise_for_status()
             
             offers_data = offers_response.json()
+            logger.debug(f"Duffel returned {len(offers_data.get('data', []))} offers")
             
             # Transform response to our standard format
             return self._transform_duffel_response(offers_data)
             
         except requests.exceptions.RequestException as e:
             error_msg = f"Duffel search failed: {str(e)}"
+            if hasattr(e, 'response') and e.response is not None:
+                try:
+                    error_detail = e.response.json()
+                    error_msg += f" - {json.dumps(error_detail)}"
+                except:
+                    error_msg += f" - Status: {e.response.status_code}"
+            logger.error(error_msg)
             return (
                 create_error_model_response(error_msg),
                 create_error_search_response(error_msg, "duffel")
             )
         except Exception as e:
             error_msg = f"Duffel search error: {str(e)}"
+            logger.exception(error_msg)
             return (
                 create_error_model_response(error_msg),
                 create_error_search_response(error_msg, "duffel")
@@ -142,10 +166,13 @@ class DuffelProvider(FlightProvider):
     def get_final_price(self, offer_id: str) -> PricingResponse:
         """Get final confirmed pricing using Duffel's Get single offer endpoint"""
         try:
+            # FIXED: Add Duffel-Version header
+            headers = self.headers.copy()
+            
             # Get fresh pricing from Duffel
             response = requests.get(
                 f"{self.base_url}/air/offers/{offer_id}",
-                headers=self.headers,
+                headers=headers,
                 params={"return_available_services": "true"}
             )
             response.raise_for_status()
@@ -204,27 +231,26 @@ class DuffelProvider(FlightProvider):
             )
             response.raise_for_status()
             
-            order_data = response.json()
-            order = order_data.get("data")
+            order_response = response.json()
+            order = order_response.get("data")
             
             if not order:
                 return create_error_booking_response("Order creation failed - no data returned")
             
-            pnr = ""
-            confirmation_number = ""
-            status = ""
+            # Extract booking reference from order
+            pnr = order.get("booking_reference", "")
             
             return BookingResponse(
                 success=True,
                 booking_id=order["id"],
-                booking_reference=order.get("booking_reference", ""),
+                booking_reference=pnr,
                 total_amount=Decimal(order["total_amount"]) / 100,  # Duffel uses cents
                 currency=order["total_currency"],
-                created_at=order["created_at"],
+                created_at=order.get("created_at", datetime.now()),
                 provider_data={"order": order},
                 pnr=pnr,
-                confirmation_number=confirmation_number,
-                status=status
+                confirmation_number=pnr,
+                status="confirmed"
             )
         except requests.exceptions.RequestException as e:
             return create_error_booking_response(f"Duffel booking failed: {str(e)}")
@@ -377,7 +403,7 @@ class DuffelProvider(FlightProvider):
                     flight_offers.append(flight_offer)
                     model_offers.append(model_offer)
                 except Exception as e:
-                    print(f"Error processing offer: {e}")
+                    logger.error(f"Error processing offer: {e}", exc_info=True)
                     continue
             
             # Create summary
@@ -425,6 +451,7 @@ class DuffelProvider(FlightProvider):
             
         except Exception as e:
             error_msg = f"Response transformation error: {str(e)}"
+            logger.exception(error_msg)
             return (
                 create_error_model_response(error_msg),
                 create_error_search_response(error_msg, "duffel")
@@ -464,35 +491,36 @@ class DuffelProvider(FlightProvider):
         # Process slices to get segments
         all_segments = []
         airlines = set()
-        total_stops = 0
+        num_slices = len(offer.get("slices", []))
         
         for slice_data in offer.get("slices", []):
             for segment in slice_data.get("segments", []):
                 flight_segment = self._process_duffel_segment(segment)
                 all_segments.append(flight_segment)
                 airlines.add(flight_segment.airline_code)
-                total_stops += flight_segment.stops
         
         # Get first and last segments for route info
         first_segment = all_segments[0] if all_segments else None
         last_segment = all_segments[-1] if all_segments else None
         
-        # Determine trip type
-        num_slices = len(offer.get("slices", []))
+        # FIXED: Determine trip type based on slices, not segments
         if num_slices > 1:
             trip_type = TripType.ROUND_TRIP
-        elif total_stops == 0:
+        elif len(all_segments) == 1:
             trip_type = TripType.ONE_WAY_DIRECT
         else:
             trip_type = TripType.ONE_WAY_CONNECTING
+        
+        # FIXED: Calculate stops correctly (segments - 1 for one-way)
+        total_stops = len(all_segments) - 1 if num_slices == 1 else 0
         
         # Calculate duration
         total_duration = offer.get("total_duration", "")
         duration_minutes = self._parse_duration_to_minutes(total_duration)
         
-        # Parse datetime strings
-        departure_time = self._parse_datetime(first_segment.departure_time) if first_segment else datetime.now()
-        arrival_time = self._parse_datetime(last_segment.arrival_time) if last_segment else datetime.now()
+        # FIXED: Parse datetime - handle both string and datetime objects
+        departure_time = self._parse_datetime(first_segment.departure_time if first_segment else None)
+        arrival_time = self._parse_datetime(last_segment.arrival_time if last_segment else None)
         
         return FlightOffer(
             offer_id=f"duffel_{offer_id}",
@@ -521,20 +549,20 @@ class DuffelProvider(FlightProvider):
         
         duration_minutes = self._parse_duration_to_minutes(segment.get("duration", ""))
         
-        # Parse datetime strings
-        departure_time = self._parse_datetime(segment.get("departing_at", ""))
-        arrival_time = self._parse_datetime(segment.get("arriving_at", ""))
+        # FIXED: Parse datetime - handle both string and datetime objects
+        departure_time = self._parse_datetime(segment.get("departing_at"))
+        arrival_time = self._parse_datetime(segment.get("arriving_at"))
         
         return FlightSegment(
             airline_code=operating_carrier.get("iata_code", ""),
             airline_name=operating_carrier.get("name", ""),
-            flight_number=segment.get("flight_number", ""),
+            flight_number=segment.get("marketing_carrier_flight_number", ""),
             departure_iata=segment.get("origin", {}).get("iata_code", ""),
             arrival_iata=segment.get("destination", {}).get("iata_code", ""),
             departure_time=departure_time,
             arrival_time=arrival_time,
             duration_minutes=duration_minutes or 0,
-            stops=0,  # Duffel segments are individual flights, stops are between segments
+            stops=0,  # Duffel segments are individual flights
             cabin_class=CabinClass.ECONOMY,  # Default for now
             departure_terminal=segment.get("origin", {}).get("terminal"),
             arrival_terminal=segment.get("destination", {}).get("terminal"),
@@ -544,14 +572,20 @@ class DuffelProvider(FlightProvider):
             segment_id=segment.get("id")
         )
     
-    def _parse_datetime(self, datetime_str: str) -> datetime:
-        """Parse Duffel datetime string to datetime object"""
-        if not datetime_str:
+    def _parse_datetime(self, datetime_input) -> datetime:
+        """Parse Duffel datetime string or object to datetime object"""
+        if not datetime_input:
             return datetime.now()
+        
+        # FIXED: Handle both datetime objects and strings
+        if isinstance(datetime_input, datetime):
+            return datetime_input
+        
         try:
-            # Duffel format: "2024-09-21T06:00:00"
-            return datetime.fromisoformat(datetime_str.replace('Z', '+00:00'))
-        except:
+            # Duffel format: "2024-09-21T06:00:00" or "2024-09-21T06:00:00Z"
+            return datetime.fromisoformat(str(datetime_input).replace('Z', '+00:00'))
+        except Exception as e:
+            logger.warning(f"Failed to parse datetime '{datetime_input}': {e}")
             return datetime.now()
     
     def _create_model_offer(self, flight_offer: FlightOffer) -> SimplifiedFlightOffer:
@@ -611,27 +645,3 @@ class DuffelProvider(FlightProvider):
             return f"{minutes}m"
         else:
             return ""
-    
-    def _format_duration(self, duration_str: str) -> str:
-        """Format duration string for display"""
-        if not duration_str:
-            return ""
-            
-        # Parse PT1H55M format
-        pattern = r'PT(?:(\d+)H)?(?:(\d+)M)?'
-        match = re.match(pattern, duration_str)
-        if not match:
-            return duration_str
-            
-        hours = int(match.group(1) or 0)
-        minutes = int(match.group(2) or 0)
-        
-        if hours and minutes:
-            return f"{hours}h {minutes}m"
-        elif hours:
-            return f"{hours}h"
-        elif minutes:
-            return f"{minutes}m"
-        else:
-            return ""
-        
