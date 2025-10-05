@@ -169,9 +169,15 @@ pip install -r requirements.txt
    ```
 
 3. **Deploy to production:**
-   ```bash
-   git push heroku main
-   ```
+   #### Add the web-client Heroku remote with a custom name
+   heroku git:remote -a rafiki-ai-web -r heroku-web
+
+   #### Now you have two remotes:
+   #### - heroku (for your Flutter app)
+   #### - heroku-web (for your React app)
+
+   #### To deploy web-client:
+   git subtree push --prefix web-client heroku-web main
 
 4. **Monitor deployment:**
    ```bash
