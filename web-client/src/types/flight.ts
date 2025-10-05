@@ -36,16 +36,11 @@ export interface SearchStatusResponse {
 }
 
 export interface SearchResponse {
-  search_summary: {
-    origin: string;
-    destination: string;
-    departure_date: string;
-    return_date?: string;
-    passengers: number;
-    class: string;
-    total_flights_found: number;
-  };
-  grouped_results: FlightGroup[];
+  direct_flights?: Flight[];
+  nearby_airport_options?: Flight[];
+  hub_connections?: Flight[];
+  search_summary?: any;
+  debug_info?: any;
 }
 
 export interface FlightGroup {

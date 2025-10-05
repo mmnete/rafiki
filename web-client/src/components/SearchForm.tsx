@@ -65,29 +65,6 @@ export const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
     };
   };
 
-  // Function to search airports
-  const searchAirports = async (query: string): Promise<Airport[]> => {
-    if (query.length < 2) return [];
-
-    try {
-      // Replace with your actual API endpoint
-      // Examples: RapidAPI Aviation Stack, AviationStack, or your own backend
-      const response = await fetch(
-        `https://your-api-endpoint.com/airports?search=${encodeURIComponent(
-          query
-        )}`
-      );
-      const data = await response.json();
-
-      // Map the response to your Airport interface
-      // Adjust based on your API's response structure
-      return data.airports || [];
-    } catch (error) {
-      console.error("Error fetching airports:", error);
-      return [];
-    }
-  };
-
   // Alternative: Use a static airport list (for demo/offline use)
   const searchAirportsStatic = (query: string): Airport[] => {
     const airports: Airport[] = [
@@ -1504,10 +1481,10 @@ export const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
                         ? option
                         : `${option.code} - ${option.name}, ${option.city}`
                     }
-                    onInputChange={(event, value) => {
+                    onInputChange={(_, value) => {
                       handleOriginSearch(value);
                     }}
-                    onChange={(event, value) => {
+                    onChange={(_, value) => {
                       if (value && typeof value !== "string") {
                         handleChange("origin", value.code);
                       }
@@ -1566,10 +1543,10 @@ export const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
                         ? option
                         : `${option.code} - ${option.name}, ${option.city}`
                     }
-                    onInputChange={(event, value) => {
+                    onInputChange={(_, value) => {
                       handleDestinationSearch(value);
                     }}
-                    onChange={(event, value) => {
+                    onChange={(_, value) => {
                       if (value && typeof value !== "string") {
                         handleChange("destination", value.code);
                       }

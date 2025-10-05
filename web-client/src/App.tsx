@@ -11,7 +11,6 @@ import { SearchForm } from "./components/SearchForm";
 import { LoadingDisplay } from "./components/LoadingDisplay";
 import {
   SearchRequest,
-  SearchStatusResponse,
   SearchResponse,
 } from "./types/flight";
 import { FlightResults } from "./components/FlightResults";
@@ -210,7 +209,7 @@ function App() {
         // Small delay to show 100% before showing results
         setTimeout(() => {
           // Sort and prepare results for display
-          const sortedResults = sortFlightGroups(data.results.results);
+          const sortedResults: SearchResponse = sortFlightGroups(data.results.results);
           setSearchResults(sortedResults);
           setLoading(false);
         }, 500);
@@ -263,7 +262,10 @@ function App() {
       direct_flights: sortByPrice(results.direct_flights || []),
       nearby_airport_options: sortByPrice(results.nearby_airport_options || []),
       hub_connections: sortByPrice(results.hub_connections || []),
+      // Assuming search_summary is part of the results object from the API
+      search_summary: results.search_summary,
       debug_info: results.debug_info,
+      // grouped_results is not directly present here, it's implied by the structure
     };
   };
 
@@ -482,9 +484,9 @@ function App() {
                   destination: lastSearchParams.destination,
                   departureDate: lastSearchParams.departure_date,
                   returnDate: lastSearchParams.return_date || undefined,
-                  adults: lastSearchParams.adults,
-                  children: lastSearchParams.children,
-                  infants: lastSearchParams.infants,
+                  adults: lastSearchParams.passengers.adults,
+                  children: lastSearchParams.passengers.children,
+                  infants: lastSearchParams.passengers.infants,
                   travelClass: lastSearchParams.travel_class
                 } : undefined}
               />
