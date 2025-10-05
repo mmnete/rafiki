@@ -1424,13 +1424,24 @@ export const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
 
   const handleChange = (field: string, value: any) => {
     if (field === "departure_date" || field === "return_date") {
+      console.log("=== DATE CHANGE DEBUG ===");
+      console.log("Field:", field);
+      console.log("Raw value received:", value);
+      console.log("Value type:", typeof value);
+      console.log("Value toString:", value?.toString());
+
       const formattedDate = value ? formatDate(value) : "";
+
+      console.log("Formatted date string:", formattedDate);
+      console.log("========================");
+
       setFormData((prev) => ({
         ...prev,
         [field]: formattedDate,
       }));
     } else if (field.includes(".")) {
       const [parent, child] = field.split(".");
+      console.log(`Setting ${parent}.${child} to:`, Number(value));
       setFormData((prev) => ({
         ...prev,
         [parent]: {
@@ -1439,6 +1450,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
         },
       }));
     } else {
+      console.log(`Setting ${field} to:`, value);
       setFormData((prev) => ({
         ...prev,
         [field]: value,
@@ -1524,7 +1536,10 @@ export const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
                             <Typography variant="body1" fontWeight={500}>
                               {option.code} - {option.city}
                             </Typography>
-                            <Typography variant="caption" color="text.secondary">
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
                               {option.name}
                             </Typography>
                           </Box>
@@ -1586,7 +1601,10 @@ export const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
                             <Typography variant="body1" fontWeight={500}>
                               {option.code} - {option.city}
                             </Typography>
-                            <Typography variant="caption" color="text.secondary">
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
                               {option.name}
                             </Typography>
                           </Box>
@@ -1600,7 +1618,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
                     label="Departure Date"
                     value={
                       formData.departure_date
-                        ? new Date(formData.departure_date)
+                        ? new Date(formData.departure_date + 'T12:00:00')
                         : null
                     }
                     onChange={(date) => handleChange("departure_date", date)}
@@ -1618,7 +1636,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
                     label="Return Date (Optional)"
                     value={
                       formData.return_date
-                        ? new Date(formData.return_date)
+                        ? new Date(formData.return_date + 'T12:00:00')
                         : null
                     }
                     onChange={(date) => handleChange("return_date", date)}
