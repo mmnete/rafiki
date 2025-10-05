@@ -493,8 +493,7 @@ function App() {
                       fontWeight: 500,
                     }}
                   >
-                    <strong>Test Mode:</strong> Working with partners for live
-                    pricing
+                    <strong>Test Mode:</strong> Live pricing coming soon as we finalize approvals.
                   </Box>
                 </Box>
               )}
