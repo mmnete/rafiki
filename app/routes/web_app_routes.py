@@ -303,3 +303,115 @@ def get_analytics_data():
         return jsonify(analytics_data)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@web_search_bp.route("/price-alert", methods=["POST"])
+def create_price_alert():
+    """Create a price alert for a route"""
+    try:
+        data = request.get_json(silent=True) or {}
+        session_id = get_or_create_session_id()
+        user_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', ''))
+        location = get_user_location(user_ip)
+
+        # Validate required fields
+        if not data.get('email'):
+            return jsonify({'error': 'Email is required'}), 400
+        if not data.get('origin') or not data.get('destination'):
+            return jsonify({'error': 'Origin and destination are required'}), 400
+        if not data.get('departure_date'):
+            return jsonify({'error': 'Departure date is required'}), 400
+
+        from app.models.analytics import create_price_alert
+
+        alert_data = {
+            'email': data['email'],
+            'origin': data['origin'],
+            'destination': data['destination'],
+            'departure_date': data['departure_date'],
+            'return_date': data.get('return_date'),
+            'passengers': data.get('passengers', {
+                'adults': 1,
+                'children': 0,
+                'infants': 0
+            }),
+            'travel_class': data.get('travel_class', 'economy'),
+            'session_id': session_id,
+            'user_ip': user_ip,
+            'location': location
+        }
+
+        create_price_alert(alert_data)
+
+        logger.info(f"Price alert created for {data['email']}: {data['origin']} -> {data['destination']}")
+
+        return jsonify({
+            'success': True,
+            'message': 'Price alert created! We\'ll notify you when prices drop.'
+        })
+
+    except Exception as e:
+        logger.error(f"Error creating price alert: {str(e)}", exc_info=True)
+        return jsonify({'error': 'Failed to create price alert'}), 500
+
+
+@web_search_bp.route("/price-alert/<alert_id>", methods=["DELETE"])
+def delete_price_alert(alert_id):
+    """Delete/deactivate a price alert"""
+    try:
+        user_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', ''))
+        
+        from app.models.analytics import deactivate_price_alert
+        
+        deactivate_price_alert(alert_id, user_ip)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Price alert cancelled'
+        })
+    except Exception as e:
+        logger.error(f"Error deleting price alert: {str(e)}", exc_info=True)
+        return jsonify({'error': 'Failed to cancel price alert'}), 500
+
+@web_search_bp.route("/booking-click", methods=["POST"])
+def track_booking_click():
+    """Track when a user clicks a booking button"""
+    try:
+        data = request.get_json(silent=True) or {}
+        session_id = get_or_create_session_id()
+        user_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', ''))
+        location = get_user_location(user_ip)
+
+        # Validate required fields
+        if not data.get('origin') or not data.get('destination'):
+            return jsonify({'error': 'Origin and destination are required'}), 400
+        if not data.get('departure_date'):
+            return jsonify({'error': 'Departure date is required'}), 400
+
+        from app.models.analytics import track_booking_click as track_click
+
+        click_data = {
+            'session_id': session_id,
+            'flight_offer_id': data.get('flight_offer_id'),
+            'origin': data['origin'],
+            'destination': data['destination'],
+            'departure_date': data['departure_date'],
+            'return_date': data.get('return_date'),
+            'price': data.get('price'),
+            'booking_site': data.get('booking_site', 'skyscanner'),
+            'user_ip': user_ip,
+            'location': location
+        }
+
+        track_click(click_data)
+
+        logger.info(f"Booking click tracked: {user_ip} -> {data['origin']} to {data['destination']}")
+
+        return jsonify({
+            'success': True,
+            'message': 'Booking click tracked'
+        })
+
+    except Exception as e:
+        logger.error(f"Error tracking booking click: {str(e)}", exc_info=True)
+        # Don't fail the request if tracking fails - just log it
+        return jsonify({'success': False, 'error': str(e)}), 200

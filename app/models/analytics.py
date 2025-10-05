@@ -29,7 +29,44 @@ def init_analytics_db():
         )
     ''')
     
-    # Interested users table - only fields you're actually using
+    # Price alerts table - NEW
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS price_alerts (
+            id SERIAL PRIMARY KEY,
+            email TEXT NOT NULL,
+            origin TEXT NOT NULL,
+            destination TEXT NOT NULL,
+            departure_date TEXT NOT NULL,
+            return_date TEXT,
+            passengers TEXT,
+            travel_class TEXT,
+            session_id TEXT,
+            user_ip TEXT,
+            location TEXT,
+            created_at TEXT NOT NULL,
+            is_active BOOLEAN DEFAULT TRUE
+        )
+    ''')
+    
+    # Booking clicks table - NEW
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS booking_clicks (
+            id SERIAL PRIMARY KEY,
+            session_id TEXT,
+            flight_offer_id TEXT,
+            origin TEXT,
+            destination TEXT,
+            departure_date TEXT,
+            return_date TEXT,
+            price DECIMAL(10,2),
+            booking_site TEXT,
+            user_ip TEXT NOT NULL,
+            location TEXT,
+            timestamp TEXT NOT NULL
+        )
+    ''')
+    
+    # Interested users table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS interested_users (
             id SERIAL PRIMARY KEY,
@@ -43,7 +80,7 @@ def init_analytics_db():
         )
     ''')
     
-    # Not interested users table - only fields you're actually using
+    # Not interested users table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS not_interested_users (
             id SERIAL PRIMARY KEY,
@@ -83,6 +120,90 @@ def track_search(search_data: Dict[str, Any]):
     ))
     
     storage_service.conn.commit() # type: ignore
+
+def create_price_alert(alert_data: Dict[str, Any]):
+    """Create a price alert for a user"""
+    init_analytics_db()
+    cursor = storage_service.conn.cursor() # type: ignore
+    
+    cursor.execute('''
+        INSERT INTO price_alerts (
+            email, origin, destination, departure_date, return_date,
+            passengers, travel_class, session_id, user_ip, location, created_at
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    ''', (
+        alert_data['email'],
+        alert_data['origin'],
+        alert_data['destination'],
+        alert_data['departure_date'],
+        alert_data.get('return_date'),
+        json.dumps(alert_data.get('passengers', {})),
+        alert_data.get('travel_class', 'economy'),
+        alert_data.get('session_id'),
+        alert_data['user_ip'],
+        json.dumps(alert_data.get('location', {})),
+        datetime.utcnow().isoformat()
+    ))
+    
+    storage_service.conn.commit() # type: ignore
+
+def deactivate_price_alert(alert_id: int, user_ip: str):
+    """Deactivate a price alert"""
+    init_analytics_db()
+    cursor = storage_service.conn.cursor() # type: ignore
+    
+    cursor.execute('''
+        UPDATE price_alerts 
+        SET is_active = FALSE 
+        WHERE id = %s AND user_ip = %s
+    ''', (alert_id, user_ip))
+    
+    storage_service.conn.commit() # type: ignore
+
+def track_booking_click(click_data: Dict[str, Any]):
+    """Track when a user clicks a booking button"""
+    init_analytics_db()
+    cursor = storage_service.conn.cursor() # type: ignore
+    
+    cursor.execute('''
+        INSERT INTO booking_clicks (
+            session_id, flight_offer_id, origin, destination,
+            departure_date, return_date, price, booking_site,
+            user_ip, location, timestamp
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    ''', (
+        click_data.get('session_id'),
+        click_data.get('flight_offer_id'),
+        click_data['origin'],
+        click_data['destination'],
+        click_data['departure_date'],
+        click_data.get('return_date'),
+        click_data.get('price'),
+        click_data.get('booking_site', 'skyscanner'),
+        click_data['user_ip'],
+        json.dumps(click_data.get('location', {})),
+        datetime.utcnow().isoformat()
+    ))
+    
+    storage_service.conn.commit() # type: ignore
+
+def get_price_alerts(active_only: bool = True) -> List[Dict[str, Any]]:
+    """Get all price alerts, optionally filtered by active status"""
+    init_analytics_db()
+    cursor = storage_service.conn.cursor() # type: ignore
+    
+    if active_only:
+        cursor.execute('SELECT * FROM price_alerts WHERE is_active = TRUE ORDER BY created_at DESC')
+    else:
+        cursor.execute('SELECT * FROM price_alerts ORDER BY created_at DESC')
+    
+    columns = [desc[0] for desc in cursor.description] # type: ignore
+    alerts = []
+    for row in cursor.fetchall():
+        alert = dict(zip(columns, row))
+        alerts.append(alert)
+    
+    return alerts
 
 def track_interest(interest_data: Dict[str, Any]):
     """Track interested user"""
@@ -141,7 +262,7 @@ def get_analytics() -> Dict[str, Any]:
     
     # Searches in last 24 hours
     yesterday = (datetime.utcnow() - timedelta(days=1)).isoformat()
-    cursor.execute('SELECT COUNT(*) FROM searches WHERE timestamp > ?', (yesterday,))
+    cursor.execute('SELECT COUNT(*) FROM searches WHERE timestamp > %s', (yesterday,))
     searches_24h = cursor.fetchone()[0] # type: ignore
     
     # Top routes
@@ -155,7 +276,7 @@ def get_analytics() -> Dict[str, Any]:
     top_routes = [{'route': f"{row[0]} → {row[1]}", 'count': row[2]} for row in cursor.fetchall()]
     
     # Countries
-    cursor.execute('SELECT location FROM searches WHERE location != "null"')
+    cursor.execute('SELECT location FROM searches WHERE location != \'null\'')
     locations = []
     for row in cursor.fetchall():
         try:
@@ -176,10 +297,19 @@ def get_analytics() -> Dict[str, Any]:
     cursor.execute('SELECT COUNT(*) FROM not_interested_users')
     not_interested_count = cursor.fetchone()[0] # type: ignore
     
+    # Price alerts count
+    cursor.execute('SELECT COUNT(*) FROM price_alerts WHERE is_active = TRUE')
+    active_alerts_count = cursor.fetchone()[0] # type: ignore
+    
+    # Booking clicks count
+    cursor.execute('SELECT COUNT(*) FROM booking_clicks')
+    booking_clicks_count = cursor.fetchone()[0] # type: ignore
+    
     # Conversion rate
     conversion_rate = (interested_count / unique_users * 100) if unique_users > 0 else 0
     
-    storage_service.conn.close() # type: ignore
+    # Booking click rate
+    booking_rate = (booking_clicks_count / unique_users * 100) if unique_users > 0 else 0
     
     return {
         'total_searches': total_searches,
@@ -187,7 +317,10 @@ def get_analytics() -> Dict[str, Any]:
         'searches_last_24h': searches_24h,
         'interested_users': interested_count,
         'not_interested_users': not_interested_count,
+        'active_price_alerts': active_alerts_count,
+        'booking_clicks': booking_clicks_count,
         'conversion_rate': round(conversion_rate, 2),
+        'booking_click_rate': round(booking_rate, 2),
         'top_routes': top_routes,
         'top_countries': [{'country': country, 'count': count} for country, count in country_counts],
     }

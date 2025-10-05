@@ -1,5 +1,6 @@
 # docker-compose.yml
 version: '3.8'
+
 services:
   postgres:
     image: postgres:13
@@ -9,11 +10,15 @@ services:
       POSTGRES_DB: rafiki_ai
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   redis:
     image: redis:6.2
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
 
   your-flask-app:
     build:
@@ -29,9 +34,32 @@ services:
     depends_on:
       - postgres
       - redis
+    volumes:
+      - ./app:/app/app
+      - ./run.py:/app/run.py
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
 
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.react
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: "http://localhost:5000"
+    depends_on:
+      - your-flask-app
+    volumes:
+      - ./web-client/src:/app/src
+      - ./web-client/public:/app/public
+      - ./web-client/index.html:/app/index.html
+    stdin_open: true
+    tty: true
+
+volumes:
+  postgres_data:
+  redis_data:

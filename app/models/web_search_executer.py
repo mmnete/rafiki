@@ -535,6 +535,126 @@ def _create_combined_flight_offer(first_flight, second_flight, hub_code):
 
     return combined_flight
 
+def _split_roundtrip_offer(offer, origin, destination):
+    """Split an Amadeus round-trip FlightOffer into outbound and return flights"""
+    offer_dict = offer.__dict__
+    
+    # Amadeus returns segments in order: outbound segments first, then return segments
+    # We need to identify where outbound ends and return begins
+    segments = offer_dict.get("segments", [])
+    
+    if not segments:
+        logger.warning(f"No segments found in offer {offer_dict.get('offer_id')}")
+        return _create_empty_roundtrip_structure(offer_dict)
+    
+    # Find the split point: where we arrive at destination (end of outbound)
+    # and then depart from destination (start of return)
+    split_index = None
+    for i, segment in enumerate(segments):
+        # Check if this segment arrives at the destination
+        arrival_iata = getattr(segment, "arrival_iata", None)
+        if arrival_iata == destination:
+            # Next segment should be the start of return journey
+            split_index = i + 1
+            break
+    
+    if split_index is None or split_index >= len(segments):
+        # Fallback: split in half if we can't determine
+        split_index = len(segments) // 2
+        logger.warning(f"Could not determine segment split point, using midpoint: {split_index}")
+    
+    outbound_segments = segments[:split_index]
+    return_segments = segments[split_index:]
+    
+    logger.debug(f"Split offer into {len(outbound_segments)} outbound + {len(return_segments)} return segments")
+    
+    # Calculate prices (split proportionally or use full price for each if not specified)
+    total_price = 0
+    if hasattr(offer_dict.get("pricing"), "price_total"):
+        total_price = float(offer_dict["pricing"].price_total)
+    elif isinstance(offer_dict.get("pricing"), dict):
+        total_price = float(offer_dict["pricing"]["price_total"])
+    
+    # For simplicity, assign half the price to each direction
+    # (Amadeus doesn't split pricing, so this is an approximation)
+    half_price = total_price / 2
+    
+    # Create outbound flight object
+    outbound_flight = {
+        "offer_id": f"{offer_dict.get('offer_id', offer_dict.get('id'))}_outbound",
+        "id": f"{offer_dict.get('offer_id', offer_dict.get('id'))}_outbound",
+        "origin": origin,
+        "destination": destination,
+        "departure_time": outbound_segments[0].departure_time if outbound_segments else None,
+        "arrival_time": outbound_segments[-1].arrival_time if outbound_segments else None,
+        "duration_minutes": offer_dict.get("duration_minutes", 0) // 2,  # Approximate
+        "trip_type": "ONE_WAY" if len(outbound_segments) == 1 else "ONE_WAY_CONNECTING",
+        "total_segments": len(outbound_segments),
+        "stops": len(outbound_segments) - 1,
+        "airline_code": getattr(outbound_segments[0], "airline_code", "MULTI") if outbound_segments else "MULTI",
+        "segments": outbound_segments,
+        "pricing": {
+            "price_total": str(half_price),
+            "currency": offer_dict.get("pricing", {}).get("currency", "USD") if isinstance(offer_dict.get("pricing"), dict) else getattr(offer_dict.get("pricing"), "currency", "USD"),
+            "base_price": str(half_price * 0.8),
+            "tax_amount": str(half_price * 0.2),
+        },
+        "baggage": offer_dict.get("baggage"),
+        "fare_details": offer_dict.get("fare_details"),
+        "ancillary_services": offer_dict.get("ancillary_services"),
+    }
+    
+    # Create return flight object
+    return_flight = {
+        "offer_id": f"{offer_dict.get('offer_id', offer_dict.get('id'))}_return",
+        "id": f"{offer_dict.get('offer_id', offer_dict.get('id'))}_return",
+        "origin": destination,
+        "destination": origin,
+        "departure_time": return_segments[0].departure_time if return_segments else None,
+        "arrival_time": return_segments[-1].arrival_time if return_segments else None,
+        "duration_minutes": offer_dict.get("duration_minutes", 0) // 2,  # Approximate
+        "trip_type": "ONE_WAY" if len(return_segments) == 1 else "ONE_WAY_CONNECTING",
+        "total_segments": len(return_segments),
+        "stops": len(return_segments) - 1,
+        "airline_code": getattr(return_segments[0], "airline_code", "MULTI") if return_segments else "MULTI",
+        "segments": return_segments,
+        "pricing": {
+            "price_total": str(half_price),
+            "currency": offer_dict.get("pricing", {}).get("currency", "USD") if isinstance(offer_dict.get("pricing"), dict) else getattr(offer_dict.get("pricing"), "currency", "USD"),
+            "base_price": str(half_price * 0.8),
+            "tax_amount": str(half_price * 0.2),
+        },
+        "baggage": offer_dict.get("baggage"),
+        "fare_details": offer_dict.get("fare_details"),
+        "ancillary_services": offer_dict.get("ancillary_services"),
+    }
+    
+    # Create the combined structure
+    return {
+        "offer_id": offer_dict.get("offer_id", offer_dict.get("id")),
+        "id": offer_dict.get("offer_id", offer_dict.get("id")),
+        "outbound_flight": outbound_flight,
+        "return_flight": return_flight,
+        "is_hub_roundtrip": False,
+        "pricing": {
+            "price_total": str(total_price),
+            "currency": offer_dict.get("pricing", {}).get("currency", "USD") if isinstance(offer_dict.get("pricing"), dict) else getattr(offer_dict.get("pricing"), "currency", "USD"),
+        },
+        "total_price": total_price,
+    }
+
+
+def _create_empty_roundtrip_structure(offer_dict):
+    """Create an empty roundtrip structure when segments are missing"""
+    return {
+        "offer_id": offer_dict.get("offer_id", offer_dict.get("id")),
+        "id": offer_dict.get("offer_id", offer_dict.get("id")),
+        "outbound_flight": None,
+        "return_flight": None,
+        "is_hub_roundtrip": False,
+        "pricing": offer_dict.get("pricing"),
+        "total_price": 0,
+    }
 
 def _search_roundtrip_strategy(
     amadeus_service: AmadeusProvider,
@@ -549,7 +669,7 @@ def _search_roundtrip_strategy(
         and strategy.return_route
         and len(strategy.return_route) == 2
     ):
-        # Simple round-trip
+        # Simple round-trip - get Amadeus data and split it
         rate_limiter.wait_if_needed()
         try:
             origin, destination = strategy.outbound_route
@@ -568,7 +688,14 @@ def _search_roundtrip_strategy(
                 logger.debug(
                     f"✅ Round-trip success: {len(full_response.flights)} flights found"
                 )
-                return [offer.__dict__ for offer in full_response.flights]
+                
+                # Split Amadeus round-trip offers into outbound/return structure
+                split_roundtrips = []
+                for offer in full_response.flights:
+                    split_offer = _split_roundtrip_offer(offer, origin, destination)
+                    split_roundtrips.append(split_offer)
+                
+                return split_roundtrips
             else:
                 logger.debug(f"⚠️ Round-trip: no results")
                 return []
@@ -626,8 +753,8 @@ def _search_roundtrip_strategy(
 
         # Combine outbound and return flights (simplified - you may want more sophisticated pairing)
         combined_roundtrips = []
-        for outbound in outbound_flights[:4]:  # Limit combinations
-            for return_flight in return_flights[:4]:
+        for outbound in outbound_flights[:10]:  # ✅ Increase from 4 to 10
+            for return_flight in return_flights[:10]:  # ✅ Increase from 4 to 10
                 # Calculate total price for round trip
                 outbound_price = 0
                 return_price = 0
