@@ -11,7 +11,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "start": "vite preview --port $PORT --host"
+    "start": "vite preview --port $PORT --host",
+    "heroku-postbuild": "npm run build"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
@@ -21,6 +22,7 @@
     "@mui/x-date-pickers": "^8.12.0",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
+    "@vitejs/plugin-react": "^4.0.3",
     "axios": "^1.5.1",
     "date-fns": "^4.1.0",
     "react": "^18.2.0",
@@ -29,7 +31,6 @@
     "vite": "^4.4.5"
   },
   "devDependencies": {
-    "@types/node": "^24.6.2",
-    "@vitejs/plugin-react": "^4.0.3"
+    "@types/node": "^24.6.2"
   }
 }
