@@ -6,7 +6,6 @@ import {
   CssBaseline,
   ThemeProvider,
   createTheme,
-  Chip,
 } from "@mui/material";
 import { SearchForm } from "./components/SearchForm";
 import { LoadingDisplay } from "./components/LoadingDisplay";
