@@ -1,8 +1,8 @@
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 import time
 import threading
 from app.models.web_search_strategy import SearchStrategy
@@ -10,11 +10,14 @@ from app.models.web_search_data import SearchRequest
 from app.models.web_search_data_manager import data_manager
 from app.services.api.flights.response_models import Passenger, PassengerType
 from app.services.api.flights.amadeus_provider import AmadeusProvider
+from app.services.api.flights.serpapi_provider import SerpApiProvider
 import logging
 import psutil
 import os
 
 logger = logging.getLogger(__name__)
+
+USE_SERPAPI = os.getenv("USE_SERPAPI", "false").lower() == "true"
 
 
 # Rate limiting configuration
@@ -39,7 +42,8 @@ class RateLimiter:
 
 
 # Global rate limiter instance
-rate_limiter = RateLimiter(max_requests_per_second=2)
+RATE_LIMIT = 5 if USE_SERPAPI else 2  # SerpAPI allows more requests
+rate_limiter = RateLimiter(max_requests_per_second=RATE_LIMIT)
 
 
 @dataclass
@@ -48,22 +52,26 @@ class SearchResult:
     flights: List[Dict]
     success: bool
     error_message: Optional[str] = None
+    budget_alternatives: List[Dict] = field(default_factory=list)
 
 
 def execute_flight_searches(
     strategies: List[SearchStrategy], search_request: SearchRequest
 ) -> Dict:
     """Execute all search strategies in parallel with rate limiting"""
-    
+
     request_start = datetime.now()
     process = psutil.Process(os.getpid())
     mem_start = process.memory_info().rss / 1024 / 1024  # MB
-    
+
     logger.info(f"Starting flight search at {request_start}")
     logger.info(f"Memory at start: {mem_start:.2f} MB")
-    logger.info(f"Processing {len(strategies)} strategies (rate limited to 2 req/sec)")
-    
+    logger.info(
+        f"Processing {len(strategies)} strategies (rate limited to {RATE_LIMIT} req/sec)"
+    )
+
     search_results = []
+    all_budget_alternatives = []
 
     with ThreadPoolExecutor(max_workers=3) as executor:
         future_to_strategy = {}
@@ -75,25 +83,42 @@ def execute_flight_searches(
             strategy = future_to_strategy[future]
             try:
                 strategy_start = datetime.now()
-                logger.debug(f"Waiting for strategy '{strategy.strategy_type}': {strategy.explanation}")
-                
-                flights = future.result(timeout=60)
-                
+                logger.debug(
+                    f"Waiting for strategy '{strategy.strategy_type}': {strategy.explanation}"
+                )
+
+                flights, budget_alternatives = future.result(timeout=60)
+
+                # Collect budget alternatives
+                if budget_alternatives:
+                    all_budget_alternatives.extend(budget_alternatives)
+
                 strategy_duration = (datetime.now() - strategy_start).total_seconds()
-                logger.debug(f"Strategy '{strategy.strategy_type}' completed in {strategy_duration:.2f}s")
-                
+                logger.debug(
+                    f"Strategy '{strategy.strategy_type}' completed in {strategy_duration:.2f}s"
+                )
+
                 enriched_flights = _enrich_flight_results(
                     flights, strategy, search_request
                 )
-                search_results.append(SearchResult(strategy, enriched_flights, True))
+                search_results.append(
+                    SearchResult(
+                        strategy,
+                        enriched_flights,
+                        True,
+                        budget_alternatives=budget_alternatives,
+                    )
+                )
                 logger.debug(
                     f"Strategy '{strategy.strategy_type}' returned {len(enriched_flights)} flights"
                 )
-                
+
                 mem_current = process.memory_info().rss / 1024 / 1024
                 mem_delta = mem_current - mem_start
-                logger.debug(f"Memory now: {mem_current:.2f} MB (delta +{mem_delta:.2f} MB)")
-                
+                logger.debug(
+                    f"Memory now: {mem_current:.2f} MB (delta +{mem_delta:.2f} MB)"
+                )
+
             except Exception as e:
                 strategy_duration = (datetime.now() - strategy_start).total_seconds()
                 logger.warning(
@@ -104,38 +129,54 @@ def execute_flight_searches(
     total_duration = (datetime.now() - request_start).total_seconds()
     mem_end = process.memory_info().rss / 1024 / 1024
     mem_total_delta = mem_end - mem_start
-    
+
     logger.info(f"Total search duration: {total_duration:.2f}s")
     logger.info(f"Memory at end: {mem_end:.2f} MB (delta +{mem_total_delta:.2f} MB)")
-    logger.info(f"Completed {len([r for r in search_results if r.success])}/{len(search_results)} strategies successfully")
-    
-    if total_duration > 25:
-        logger.warning(f"Search took {total_duration:.2f}s - approaching timeout threshold!")
+    logger.info(
+        f"Completed {len([r for r in search_results if r.success])}/{len(search_results)} strategies successfully"
+    )
 
-    return _process_search_results(search_results, search_request)
+    if total_duration > 25:
+        logger.warning(
+            f"Search took {total_duration:.2f}s - approaching timeout threshold!"
+        )
+
+    # Deduplicate budget alternatives by airline code
+    unique_budget = {
+        alt["airline_code"]: alt
+        for alt in all_budget_alternatives
+        if "airline_code" in alt
+    }
+    budget_alternatives_list = list(unique_budget.values())
+
+    return _process_search_results(
+        search_results, search_request, budget_alternatives_list
+    )
 
 
 def _execute_single_search(
     strategy: SearchStrategy, search_request: SearchRequest
-) -> List[Dict]:
+) -> Tuple[List[Dict], List[Dict]]:
     """Execute a single search strategy using configured provider with rate limiting"""
 
     logger.debug(f"Executing search for strategy: {strategy.explanation}")
 
     passengers = _convert_search_request_to_passengers(search_request)
-    
+
     # Select provider based on configuration
     provider = AmadeusProvider()
-    logger.debug("Using Amadeus provider")
+    if USE_SERPAPI:
+        provider = SerpApiProvider()
+        logger.debug("Using SerpAPI provider")
+    else:
+        logger.debug("Using Amadeus provider")
 
     if search_request.is_roundtrip:
         return _search_roundtrip_strategy(
             provider, strategy, search_request, passengers
         )
     else:
-        return _search_oneway_strategy(
-            provider, strategy, search_request, passengers
-        )
+        return _search_oneway_strategy(provider, strategy, search_request, passengers)
 
 
 def _convert_search_request_to_passengers(
@@ -194,26 +235,23 @@ def _search_oneway_strategy(
     strategy: SearchStrategy,
     search_request: SearchRequest,
     passengers: List[Passenger],
-) -> List[Dict]:
+) -> Tuple[List[Dict], List[Dict]]:
     """Search one-way flights with support for hub connections"""
 
     if len(strategy.outbound_route) == 2:
-        # Direct flight
-        return _search_direct_flight(
-            provider, strategy, search_request, passengers
-        )
+        # Direct flight - returns budget alternatives
+        return _search_direct_flight(provider, strategy, search_request, passengers)
 
     elif len(strategy.outbound_route) == 3:
         # Hub connection: Origin → Hub → Destination
-        return _search_hub_connection(
-            provider, strategy, search_request, passengers
-        )
+        flights = _search_hub_connection(provider, strategy, search_request, passengers)
+        return flights, []  # Hub connections don't have budget alternatives
 
     else:
         logger.warning(
             f"Unsupported route complexity: {len(strategy.outbound_route)} segments"
         )
-        return []
+        return [], []
 
 
 def _search_direct_flight(
@@ -221,8 +259,8 @@ def _search_direct_flight(
     strategy: SearchStrategy,
     search_request: SearchRequest,
     passengers: List[Passenger],
-) -> List[Dict]:
-    """Search direct flights"""
+) -> Tuple[List[Dict], List[Dict]]:
+    """Search direct flights and return budget airline alternatives"""
     rate_limiter.wait_if_needed()
 
     try:
@@ -242,10 +280,18 @@ def _search_direct_flight(
             logger.debug(
                 f"Direct flight success: {len(full_response.flights)} flights found"
             )
-            return [offer.__dict__ for offer in full_response.flights]
+            flights = [offer.__dict__ for offer in full_response.flights]
+            budget_alternatives = full_response.budget_airline_alternatives or []
+
+            if budget_alternatives:
+                logger.info(
+                    f"Found {len(budget_alternatives)} budget airline alternatives for {origin} -> {destination}"
+                )
+
+            return flights, budget_alternatives
         else:
             logger.debug(f"Direct flight: no results")
-            return []
+            return [], []
     except Exception as e:
         logger.error(f"Direct flight API call failed: {str(e)}")
         raise
@@ -280,7 +326,7 @@ def _search_hub_connection(
         if not first_leg_response.success or not first_leg_response.flights:
             logger.debug(f"No flights found for first leg: {origin} -> {hub}")
             return []
-    
+
     except Exception as e:
         logger.error(f"First leg API call failed: {str(e)}")
         return []
@@ -301,7 +347,7 @@ def _search_hub_connection(
         if not second_leg_response.success or not second_leg_response.flights:
             logger.debug(f"No flights found for second leg: {hub} -> {destination}")
             return []
-    
+
     except Exception as e:
         logger.error(f"Second leg API call failed: {str(e)}")
         return []
@@ -335,13 +381,15 @@ def _find_compatible_connections(
 ):
     """Find first and second leg flights that have compatible timing"""
     compatible_pairs = []
-    
-    logger.debug(f"Analyzing connections: {len(first_leg_flights)} first leg x {len(second_leg_flights)} second leg flights")
-    
+
+    logger.debug(
+        f"Analyzing connections: {len(first_leg_flights)} first leg x {len(second_leg_flights)} second leg flights"
+    )
+
     for i, first_flight in enumerate(first_leg_flights):
         first_arrival = None
-        first_flight_id = getattr(first_flight, 'offer_id', f'first_flight_{i}')
-        
+        first_flight_id = getattr(first_flight, "offer_id", f"first_flight_{i}")
+
         if hasattr(first_flight, "arrival_time") and first_flight.arrival_time:
             first_arrival = first_flight.arrival_time
         elif hasattr(first_flight, "segments") and first_flight.segments:
@@ -350,14 +398,19 @@ def _find_compatible_connections(
                 first_arrival = last_segment.arrival_time
 
         if not first_arrival:
-            logger.debug(f"SKIP: No arrival time found for first leg flight {first_flight_id}")
+            logger.debug(
+                f"SKIP: No arrival time found for first leg flight {first_flight_id}"
+            )
             continue
 
         for j, second_flight in enumerate(second_leg_flights):
             second_departure = None
-            second_flight_id = getattr(second_flight, 'offer_id', f'second_flight_{j}')
-            
-            if hasattr(second_flight, "departure_time") and second_flight.departure_time:
+            second_flight_id = getattr(second_flight, "offer_id", f"second_flight_{j}")
+
+            if (
+                hasattr(second_flight, "departure_time")
+                and second_flight.departure_time
+            ):
                 second_departure = second_flight.departure_time
             elif hasattr(second_flight, "segments") and second_flight.segments:
                 first_segment = second_flight.segments[0]
@@ -365,35 +418,51 @@ def _find_compatible_connections(
                     second_departure = first_segment.departure_time
 
             if not second_departure:
-                logger.debug(f"SKIP: No departure time found for second leg flight {second_flight_id}")
+                logger.debug(
+                    f"SKIP: No departure time found for second leg flight {second_flight_id}"
+                )
                 continue
 
             try:
                 arrival_dt = first_arrival
                 departure_dt = second_departure
-                
-                if isinstance(first_arrival, str):
-                    arrival_dt = datetime.fromisoformat(first_arrival.replace("Z", "+00:00"))
-                    
-                if isinstance(second_departure, str):
-                    departure_dt = datetime.fromisoformat(second_departure.replace("Z", "+00:00"))
 
-                if not isinstance(arrival_dt, datetime) or not isinstance(departure_dt, datetime):
-                    logger.error(f"Time conversion failed - arrival_dt: {type(arrival_dt)}, departure_dt: {type(departure_dt)}")
+                if isinstance(first_arrival, str):
+                    arrival_dt = datetime.fromisoformat(
+                        first_arrival.replace("Z", "+00:00")
+                    )
+
+                if isinstance(second_departure, str):
+                    departure_dt = datetime.fromisoformat(
+                        second_departure.replace("Z", "+00:00")
+                    )
+
+                if not isinstance(arrival_dt, datetime) or not isinstance(
+                    departure_dt, datetime
+                ):
+                    logger.error(
+                        f"Time conversion failed - arrival_dt: {type(arrival_dt)}, departure_dt: {type(departure_dt)}"
+                    )
                     continue
 
                 layover_minutes = (departure_dt - arrival_dt).total_seconds() / 60
 
                 if min_layover_minutes <= layover_minutes <= max_layover_minutes:
                     compatible_pairs.append((first_flight, second_flight))
-                    logger.info(f"COMPATIBLE: {first_flight_id} + {second_flight_id} with {layover_minutes:.1f}min layover")
-                    
+                    logger.info(
+                        f"COMPATIBLE: {first_flight_id} + {second_flight_id} with {layover_minutes:.1f}min layover"
+                    )
+
             except Exception as e:
-                logger.error(f"Error calculating layover time for {first_flight_id} + {second_flight_id}: {e}")
+                logger.error(
+                    f"Error calculating layover time for {first_flight_id} + {second_flight_id}: {e}"
+                )
                 continue
 
-    logger.info(f"Connection summary: {len(compatible_pairs)} compatible connections found from {len(first_leg_flights) * len(second_leg_flights)} possible combinations")
-    
+    logger.info(
+        f"Connection summary: {len(compatible_pairs)} compatible connections found from {len(first_leg_flights) * len(second_leg_flights)} possible combinations"
+    )
+
     return compatible_pairs
 
 
@@ -474,53 +543,69 @@ def _create_combined_flight_offer(first_flight, second_flight, hub_code):
 def _split_roundtrip_offer(offer, origin, destination):
     """Split a round-trip FlightOffer into outbound and return flights"""
     offer_dict = offer.__dict__
-    
+
     segments = offer_dict.get("segments", [])
-    
+
     if not segments:
         logger.warning(f"No segments found in offer {offer_dict.get('offer_id')}")
         return _create_empty_roundtrip_structure(offer_dict)
-    
+
     split_index = None
     for i, segment in enumerate(segments):
         arrival_iata = getattr(segment, "arrival_iata", None)
         if arrival_iata == destination:
             split_index = i + 1
             break
-    
+
     if split_index is None or split_index >= len(segments):
         split_index = len(segments) // 2
-        logger.warning(f"Could not determine segment split point, using midpoint: {split_index}")
-    
+        logger.warning(
+            f"Could not determine segment split point, using midpoint: {split_index}"
+        )
+
     outbound_segments = segments[:split_index]
     return_segments = segments[split_index:]
-    
-    logger.debug(f"Split offer into {len(outbound_segments)} outbound + {len(return_segments)} return segments")
-    
+
+    logger.debug(
+        f"Split offer into {len(outbound_segments)} outbound + {len(return_segments)} return segments"
+    )
+
     total_price = 0
     if hasattr(offer_dict.get("pricing"), "price_total"):
         total_price = float(offer_dict["pricing"].price_total)
     elif isinstance(offer_dict.get("pricing"), dict):
         total_price = float(offer_dict["pricing"]["price_total"])
-    
+
     half_price = total_price / 2
-    
+
     outbound_flight = {
         "offer_id": f"{offer_dict.get('offer_id', offer_dict.get('id'))}_outbound",
         "id": f"{offer_dict.get('offer_id', offer_dict.get('id'))}_outbound",
         "origin": origin,
         "destination": destination,
-        "departure_time": outbound_segments[0].departure_time if outbound_segments else None,
-        "arrival_time": outbound_segments[-1].arrival_time if outbound_segments else None,
+        "departure_time": (
+            outbound_segments[0].departure_time if outbound_segments else None
+        ),
+        "arrival_time": (
+            outbound_segments[-1].arrival_time if outbound_segments else None
+        ),
         "duration_minutes": offer_dict.get("duration_minutes", 0) // 2,
         "trip_type": "ONE_WAY" if len(outbound_segments) == 1 else "ONE_WAY_CONNECTING",
         "total_segments": len(outbound_segments),
         "stops": len(outbound_segments) - 1,
-        "airline_code": getattr(outbound_segments[0], "airline_code", "MULTI") if outbound_segments else "MULTI",
+        "airline_code": (
+            getattr(outbound_segments[0], "airline_code", "MULTI")
+            if outbound_segments
+            else "MULTI"
+        ),
         "segments": outbound_segments,
         "pricing": {
             "price_total": str(half_price),
-            "currency": offer_dict.get("pricing", {}).get("currency", "USD") if isinstance(offer_dict.get("pricing"), dict) else getattr(offer_dict.get("pricing"), "currency", "USD"),
+            "currency": (
+                offer_dict.get("pricing", {}).get("currency", "USD")
+                if isinstance(offer_dict.get("pricing"), dict)
+                else getattr(offer_dict.get("pricing"), "currency", "USD")
+            ),
             "base_price": str(half_price * 0.8),
             "tax_amount": str(half_price * 0.2),
         },
@@ -528,23 +613,33 @@ def _split_roundtrip_offer(offer, origin, destination):
         "fare_details": offer_dict.get("fare_details"),
         "ancillary_services": offer_dict.get("ancillary_services"),
     }
-    
+
     return_flight = {
         "offer_id": f"{offer_dict.get('offer_id', offer_dict.get('id'))}_return",
         "id": f"{offer_dict.get('offer_id', offer_dict.get('id'))}_return",
         "origin": destination,
         "destination": origin,
-        "departure_time": return_segments[0].departure_time if return_segments else None,
+        "departure_time": (
+            return_segments[0].departure_time if return_segments else None
+        ),
         "arrival_time": return_segments[-1].arrival_time if return_segments else None,
         "duration_minutes": offer_dict.get("duration_minutes", 0) // 2,
         "trip_type": "ONE_WAY" if len(return_segments) == 1 else "ONE_WAY_CONNECTING",
         "total_segments": len(return_segments),
         "stops": len(return_segments) - 1,
-        "airline_code": getattr(return_segments[0], "airline_code", "MULTI") if return_segments else "MULTI",
+        "airline_code": (
+            getattr(return_segments[0], "airline_code", "MULTI")
+            if return_segments
+            else "MULTI"
+        ),
         "segments": return_segments,
         "pricing": {
             "price_total": str(half_price),
-            "currency": offer_dict.get("pricing", {}).get("currency", "USD") if isinstance(offer_dict.get("pricing"), dict) else getattr(offer_dict.get("pricing"), "currency", "USD"),
+            "currency": (
+                offer_dict.get("pricing", {}).get("currency", "USD")
+                if isinstance(offer_dict.get("pricing"), dict)
+                else getattr(offer_dict.get("pricing"), "currency", "USD")
+            ),
             "base_price": str(half_price * 0.8),
             "tax_amount": str(half_price * 0.2),
         },
@@ -552,7 +647,7 @@ def _split_roundtrip_offer(offer, origin, destination):
         "fare_details": offer_dict.get("fare_details"),
         "ancillary_services": offer_dict.get("ancillary_services"),
     }
-    
+
     return {
         "offer_id": offer_dict.get("offer_id", offer_dict.get("id")),
         "id": offer_dict.get("offer_id", offer_dict.get("id")),
@@ -561,7 +656,11 @@ def _split_roundtrip_offer(offer, origin, destination):
         "is_hub_roundtrip": False,
         "pricing": {
             "price_total": str(total_price),
-            "currency": offer_dict.get("pricing", {}).get("currency", "USD") if isinstance(offer_dict.get("pricing"), dict) else getattr(offer_dict.get("pricing"), "currency", "USD"),
+            "currency": (
+                offer_dict.get("pricing", {}).get("currency", "USD")
+                if isinstance(offer_dict.get("pricing"), dict)
+                else getattr(offer_dict.get("pricing"), "currency", "USD")
+            ),
         },
         "total_price": total_price,
     }
@@ -585,7 +684,7 @@ def _search_roundtrip_strategy(
     strategy: SearchStrategy,
     search_request: SearchRequest,
     passengers: List[Passenger],
-) -> List[Dict]:
+) -> Tuple[List[Dict], List[Dict]]:
     """Search round-trip flights with hub support"""
 
     if (
@@ -612,16 +711,26 @@ def _search_roundtrip_strategy(
                 logger.debug(
                     f"Round-trip success: {len(full_response.flights)} flights found"
                 )
-                
+
                 split_roundtrips = []
                 for offer in full_response.flights:
-                    split_offer = _split_roundtrip_offer(offer, origin, destination)
-                    split_roundtrips.append(split_offer)
-                
-                return split_roundtrips
+                    if isinstance(offer, dict) and "outbound_flight" in offer:
+                        split_roundtrips.append(offer)
+                    else:
+                        split_offer = _split_roundtrip_offer(offer, origin, destination)
+                        split_roundtrips.append(split_offer)
+
+                budget_alternatives = full_response.budget_airline_alternatives or []
+
+                if budget_alternatives:
+                    logger.info(
+                        f"Found {len(budget_alternatives)} budget airline alternatives for round-trip {origin} <-> {destination}"
+                    )
+
+                return split_roundtrips, budget_alternatives
             else:
                 logger.debug(f"Round-trip: no results")
-                return []
+                return [], []
         except Exception as e:
             logger.error(f"Round-trip API call failed: {str(e)}")
             raise
@@ -631,7 +740,7 @@ def _search_roundtrip_strategy(
         and strategy.return_route
         and len(strategy.return_route) == 3
     ):
-        # Hub round-trip
+        # Hub round-trip - no budget alternatives for complex routes
         logger.debug("Hub round-trip connection")
 
         outbound_request = SearchRequest(
@@ -710,11 +819,11 @@ def _search_roundtrip_strategy(
                     }
                 )
 
-        return combined_roundtrips
+        return combined_roundtrips, []
 
     else:
         logger.debug("Complex round-trip search not implemented yet")
-        return []
+        return [], []
 
 
 def _enrich_flight_results(
@@ -775,7 +884,9 @@ def _enrich_flight_results(
 
 
 def _process_search_results(
-    search_results: List[SearchResult], search_request: SearchRequest
+    search_results: List[SearchResult],
+    search_request: SearchRequest,
+    budget_alternatives: List[Dict] = [],
 ) -> Dict:
     """Process and group all search results"""
     all_flights = []
@@ -799,12 +910,18 @@ def _process_search_results(
         f"{len(all_flights)} total flights found"
     )
 
-    return {
+    if budget_alternatives:
+        logger.info(f"Returning {len(budget_alternatives)} budget airline alternatives")
+
+    response = {
         "search_summary": {
             "total_strategies_attempted": len(search_results),
             "successful_searches": successful_searches,
             "total_flights_found": len(all_flights),
             "search_request": search_request.__dict__,
+            "budget_airlines_checked": (
+                len(budget_alternatives) > 0 if budget_alternatives else False
+            ),
         },
         "results": {
             "direct_flights": [
@@ -817,5 +934,8 @@ def _process_search_results(
                 f for f in all_flights if f["search_strategy"] == "hub"
             ][:3],
         },
+        "budget_airline_alternatives": budget_alternatives or [],
         "debug_info": {"failed_searches": failed_searches},
     }
+
+    return response

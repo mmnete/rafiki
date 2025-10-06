@@ -1,5 +1,5 @@
 // components/SearchForm.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   TextField,
@@ -13,6 +13,10 @@ import {
   Fade,
   Autocomplete,
   CircularProgress,
+  FormControlLabel,
+  Checkbox,
+  Alert,
+  Chip,
 } from "@mui/material";
 import {
   FlightTakeoff,
@@ -22,6 +26,8 @@ import {
   Search as SearchIcon,
   AirlineSeatReclineNormal,
   ChildCare,
+  CalendarMonth,
+  LocationOn,
 } from "@mui/icons-material";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
@@ -49,12 +55,114 @@ export const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
       infants: 0,
     },
     travel_class: "economy",
+    flexible_dates: false,
   });
 
   const [originOptions, setOriginOptions] = useState<Airport[]>([]);
   const [destinationOptions, setDestinationOptions] = useState<Airport[]>([]);
   const [originLoading, setOriginLoading] = useState(false);
   const [destinationLoading, setDestinationLoading] = useState(false);
+  const [detectedLocation, setDetectedLocation] = useState<string | null>(null);
+
+  // Auto-detect user's approximate location on component mount
+  useEffect(() => {
+    const detectUserLocation = async () => {
+      try {
+        // Use ipapi.co (free, no API key required, 1000 requests/day)
+        const response = await fetch("https://ipapi.co/json/");
+        const data = await response.json();
+
+        // Map city to nearest major airport
+        const cityToAirport: { [key: string]: string } = {
+          "New York": "JFK",
+          "Los Angeles": "LAX",
+          Chicago: "ORD",
+          Houston: "IAH",
+          Phoenix: "PHX",
+          Philadelphia: "PHL",
+          "San Antonio": "SAT",
+          "San Diego": "SAN",
+          Dallas: "DFW",
+          "San Jose": "SJC",
+          Austin: "AUS",
+          Jacksonville: "JAX",
+          "Fort Worth": "DFW",
+          Columbus: "CMH",
+          Charlotte: "CLT",
+          "San Francisco": "SFO",
+          Indianapolis: "IND",
+          Seattle: "SEA",
+          Denver: "DEN",
+          Washington: "DCA",
+          Boston: "BOS",
+          "El Paso": "ELP",
+          Nashville: "BNA",
+          Detroit: "DTW",
+          "Oklahoma City": "OKC",
+          Portland: "PDX",
+          "Las Vegas": "LAS",
+          Memphis: "MEM",
+          Louisville: "SDF",
+          Baltimore: "BWI",
+          Milwaukee: "MKE",
+          Albuquerque: "ABQ",
+          Tucson: "TUS",
+          Fresno: "FAT",
+          Sacramento: "SMF",
+          "Kansas City": "MCI",
+          Mesa: "PHX",
+          Atlanta: "ATL",
+          Omaha: "OMA",
+          "Colorado Springs": "COS",
+          Raleigh: "RDU",
+          Miami: "MIA",
+          Oakland: "OAK",
+          Minneapolis: "MSP",
+          Tulsa: "TUL",
+          Cleveland: "CLE",
+          Wichita: "ICT",
+          Arlington: "DFW",
+          // International
+          Toronto: "YYZ",
+          Vancouver: "YVR",
+          Montreal: "YUL",
+          London: "LHR",
+          Paris: "CDG",
+          Berlin: "BER",
+          Madrid: "MAD",
+          Barcelona: "BCN",
+          Rome: "FCO",
+          Amsterdam: "AMS",
+          Brussels: "BRU",
+          Dubai: "DXB",
+          Singapore: "SIN",
+          "Hong Kong": "HKG",
+          Tokyo: "NRT",
+          Seoul: "ICN",
+          Bangkok: "BKK",
+          Delhi: "DEL",
+          Mumbai: "BOM",
+          Sydney: "SYD",
+          Melbourne: "MEL",
+        };
+
+        const detectedAirport = cityToAirport[data.city] || null;
+
+        if (detectedAirport) {
+          setDetectedLocation(data.city);
+          setFormData((prev) => ({
+            ...prev,
+            origin: detectedAirport,
+          }));
+        }
+      } catch (error) {
+        console.log("Could not detect location:", error);
+        // Fail silently - user can still search manually
+      }
+    };
+
+    detectUserLocation();
+  }, []);
 
   // Debounce helper
   const useDebounce = (callback: Function, delay: number) => {
@@ -1388,8 +1496,6 @@ export const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
       return;
     }
     setOriginLoading(true);
-
-    // Use static list for demo, replace with searchAirports(query) for API
     const results = searchAirportsStatic(query);
     setOriginOptions(results);
     setOriginLoading(false);
@@ -1401,8 +1507,6 @@ export const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
       return;
     }
     setDestinationLoading(true);
-
-    // Use static list for demo, replace with searchAirports(query) for API
     const results = searchAirportsStatic(query);
     setDestinationOptions(results);
     setDestinationLoading(false);
@@ -1424,24 +1528,13 @@ export const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
 
   const handleChange = (field: string, value: any) => {
     if (field === "departure_date" || field === "return_date") {
-      console.log("=== DATE CHANGE DEBUG ===");
-      console.log("Field:", field);
-      console.log("Raw value received:", value);
-      console.log("Value type:", typeof value);
-      console.log("Value toString:", value?.toString());
-
       const formattedDate = value ? formatDate(value) : "";
-
-      console.log("Formatted date string:", formattedDate);
-      console.log("========================");
-
       setFormData((prev) => ({
         ...prev,
         [field]: formattedDate,
       }));
     } else if (field.includes(".")) {
       const [parent, child] = field.split(".");
-      console.log(`Setting ${parent}.${child} to:`, Number(value));
       setFormData((prev) => ({
         ...prev,
         [parent]: {
@@ -1450,7 +1543,6 @@ export const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
         },
       }));
     } else {
-      console.log(`Setting ${field} to:`, value);
       setFormData((prev) => ({
         ...prev,
         [field]: value,
@@ -1481,12 +1573,27 @@ export const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
             >
               Find Your Flight
             </Typography>
+
+            {detectedLocation && (
+              <Alert severity="info" icon={<LocationOn />} sx={{ mb: 3 }}>
+                Detected your location: <strong>{detectedLocation}</strong>
+              </Alert>
+            )}
+
             <Box component="form" onSubmit={handleSubmit}>
               <Grid container spacing={3}>
                 <Grid item xs={12} md={6}>
                   <Autocomplete
                     freeSolo
                     options={originOptions}
+                    value={
+                      originOptions.find(
+                        (opt) => opt.code === formData.origin
+                      ) || null
+                    }
+                    getOptionDisabled={(option) =>
+                      option.code === formData.destination
+                    }
                     loading={originLoading}
                     getOptionLabel={(option) =>
                       typeof option === "string"
@@ -1553,6 +1660,9 @@ export const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
                     freeSolo
                     options={destinationOptions}
                     loading={destinationLoading}
+                    getOptionDisabled={(option) =>
+                      option.code === formData.origin
+                    }
                     getOptionLabel={(option) =>
                       typeof option === "string"
                         ? option
@@ -1618,7 +1728,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
                     label="Departure Date"
                     value={
                       formData.departure_date
-                        ? new Date(formData.departure_date + 'T12:00:00')
+                        ? new Date(formData.departure_date + "T12:00:00")
                         : null
                     }
                     onChange={(date) => handleChange("departure_date", date)}
@@ -1636,7 +1746,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
                     label="Return Date (Optional)"
                     value={
                       formData.return_date
-                        ? new Date(formData.return_date + 'T12:00:00')
+                        ? new Date(formData.return_date + "T12:00:00")
                         : null
                     }
                     onChange={(date) => handleChange("return_date", date)}
@@ -1653,6 +1763,27 @@ export const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
                     }
                   />
                 </Grid>
+
+                {/* Flexible Dates Checkbox */}
+                <Grid item xs={12}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={formData.flexible_dates}
+                        onChange={(e) =>
+                          handleChange("flexible_dates", e.target.checked)
+                        }
+                        color="primary"
+                      />
+                    }
+                    label={
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        Flexible dates (±3 days)
+                      </Typography>
+                    }
+                  />
+                </Grid>
+
                 <Grid item xs={12} md={4}>
                   <TextField
                     required

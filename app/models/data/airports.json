@@ -1,1614 +1,4637 @@
 {
-  "ATL": {
-    "name": "Hartsfield-Jackson Atlanta International",
-    "city": "Atlanta",
-    "country": "US",
-    "coordinates": { "lat": 33.6407, "lng": -84.4277 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "JFK", "flight_cost_typical": 180, "flight_time_min": 120 },
-      { "code": "LAX", "flight_cost_typical": 220, "flight_time_min": 240 },
-      { "code": "ORD", "flight_cost_typical": 150, "flight_time_min": 105 },
-      { "code": "MIA", "flight_cost_typical": 150, "flight_time_min": 120 },
-      { "code": "LHR", "flight_cost_typical": 450, "flight_time_min": 480 },
-      { "code": "CDG", "flight_cost_typical": 480, "flight_time_min": 500 },
-      { "code": "FRA", "flight_cost_typical": 460, "flight_time_min": 510 }
-    ]
-  },
-  "LAX": {
-    "name": "Los Angeles International",
-    "city": "Los Angeles",
-    "country": "US",
-    "coordinates": { "lat": 33.942791, "lng": -118.410042 },
-    "nearby_airports": [
-      {
-        "code": "BUR",
-        "distance_km": 30,
-        "transport_options": {
-          "uber": { "cost_usd": 40, "time_min": 45 },
-          "shuttle": { "cost_usd": 15, "time_min": 60 }
-        }
-      }
-    ],
-    "reachable_hubs": [
-      { "code": "SFO", "flight_cost_typical": 120, "flight_time_min": 90 },
-      { "code": "ORD", "flight_cost_typical": 200, "flight_time_min": 240 },
-      { "code": "ATL", "flight_cost_typical": 220, "flight_time_min": 240 },
-      { "code": "JFK", "flight_cost_typical": 220, "flight_time_min": 300 },
-      { "code": "NRT", "flight_cost_typical": 580, "flight_time_min": 690 },
-      { "code": "ICN", "flight_cost_typical": 620, "flight_time_min": 720 },
-      { "code": "LHR", "flight_cost_typical": 650, "flight_time_min": 660 }
-    ]
-  },
-  "ORD": {
-    "name": "Chicago O'Hare International",
-    "city": "Chicago",
-    "country": "US",
-    "coordinates": { "lat": 41.9742, "lng": -87.9073 },
-    "nearby_airports": [
-      {
-        "code": "MDW",
-        "distance_km": 25,
-        "transport_options": {
-          "uber": { "cost_usd": 40, "time_min": 45 },
-          "train": { "cost_usd": 5, "time_min": 90 }
-        }
-      }
-    ],
-    "reachable_hubs": [
-      { "code": "ATL", "flight_cost_typical": 150, "flight_time_min": 105 },
-      { "code": "LAX", "flight_cost_typical": 200, "flight_time_min": 240 },
-      { "code": "JFK", "flight_cost_typical": 170, "flight_time_min": 120 },
-      { "code": "SFO", "flight_cost_typical": 200, "flight_time_min": 270 },
-      { "code": "LHR", "flight_cost_typical": 520, "flight_time_min": 480 },
-      { "code": "FRA", "flight_cost_typical": 550, "flight_time_min": 510 }
-    ]
-  },
-  "DFW": {
-    "name": "Dallas/Fort Worth International",
-    "city": "Dallas/Fort Worth",
-    "country": "US",
-    "coordinates": { "lat": 32.8998, "lng": -97.0403 },
-    "nearby_airports": [
-      {
-        "code": "DAL",
-        "distance_km": 27,
-        "transport_options": {
-          "uber": { "cost_usd": 35, "time_min": 40 },
-          "bus": { "cost_usd": 6, "time_min": 60 }
-        }
-      }
-    ],
-    "reachable_hubs": [
-      { "code": "LAX", "flight_cost_typical": 180, "flight_time_min": 180 },
-      { "code": "ATL", "flight_cost_typical": 160, "flight_time_min": 120 },
-      { "code": "ORD", "flight_cost_typical": 140, "flight_time_min": 130 },
-      { "code": "LHR", "flight_cost_typical": 480, "flight_time_min": 540 },
-      { "code": "FRA", "flight_cost_typical": 520, "flight_time_min": 600 }
-    ]
-  },
-  "DEN": {
-    "name": "Denver International",
-    "city": "Denver",
-    "country": "US",
-    "coordinates": { "lat": 39.8561, "lng": -104.6737 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "LAX", "flight_cost_typical": 180, "flight_time_min": 150 },
-      { "code": "SFO", "flight_cost_typical": 180, "flight_time_min": 150 },
-      { "code": "ORD", "flight_cost_typical": 200, "flight_time_min": 150 },
-      { "code": "LHR", "flight_cost_typical": 580, "flight_time_min": 540 },
-      { "code": "FRA", "flight_cost_typical": 600, "flight_time_min": 570 }
-    ]
-  },
-  "SEA": {
-    "name": "Seattle-Tacoma International",
-    "city": "Seattle",
-    "country": "US",
-    "coordinates": { "lat": 47.4502, "lng": -122.3088 },
-    "nearby_airports": [
-      {
-        "code": "PAE",
-        "distance_km": 60,
-        "transport_options": {
-          "uber": { "cost_usd": 70, "time_min": 50 },
-          "bus": { "cost_usd": 15, "time_min": 90 }
-        }
-      }
-    ],
-    "reachable_hubs": [
-      { "code": "SFO", "flight_cost_typical": 160, "flight_time_min": 120 },
-      { "code": "LAX", "flight_cost_typical": 170, "flight_time_min": 150 },
-      { "code": "DEN", "flight_cost_typical": 200, "flight_time_min": 150 },
-      { "code": "NRT", "flight_cost_typical": 650, "flight_time_min": 600 },
-      { "code": "ICN", "flight_cost_typical": 680, "flight_time_min": 630 }
-    ]
-  },
-  "MCO": {
-    "name": "Orlando International",
-    "city": "Orlando",
-    "country": "US",
-    "coordinates": { "lat": 28.4312, "lng": -81.3081 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "ATL", "flight_cost_typical": 120, "flight_time_min": 90 },
-      { "code": "JFK", "flight_cost_typical": 150, "flight_time_min": 120 },
-      { "code": "LAX", "flight_cost_typical": 220, "flight_time_min": 240 },
-      { "code": "LHR", "flight_cost_typical": 480, "flight_time_min": 510 }
-    ]
-  },
-  "LAS": {
-    "name": "Harry Reid International",
-    "city": "Las Vegas",
-    "country": "US",
-    "coordinates": { "lat": 36.0840, "lng": -115.1537 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "LAX", "flight_cost_typical": 100, "flight_time_min": 60 },
-      { "code": "DEN", "flight_cost_typical": 140, "flight_time_min": 120 },
-      { "code": "ATL", "flight_cost_typical": 180, "flight_time_min": 180 },
-      { "code": "LHR", "flight_cost_typical": 650, "flight_time_min": 660 }
-    ]
-  },
-  "IAH": {
-    "name": "George Bush Intercontinental",
-    "city": "Houston",
-    "country": "US",
-    "coordinates": { "lat": 29.9902, "lng": -95.3368 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "DFW", "flight_cost_typical": 90, "flight_time_min": 60 },
-      { "code": "ATL", "flight_cost_typical": 140, "flight_time_min": 120 },
-      { "code": "LAX", "flight_cost_typical": 170, "flight_time_min": 180 },
-      { "code": "LHR", "flight_cost_typical": 500, "flight_time_min": 540 }
-    ]
-  },
-  "EWR": {
-    "name": "Newark Liberty International",
-    "city": "Newark / New York",
-    "country": "US",
-    "coordinates": { "lat": 40.6895, "lng": -74.1745 },
-    "nearby_airports": [
-      {
-        "code": "JFK",
-        "distance_km": 40,
-        "transport_options": {
-          "uber": { "cost_usd": 70, "time_min": 60 },
-          "train": { "cost_usd": 15, "time_min": 50 }
-        }
-      },
-      {
-        "code": "LGA",
-        "distance_km": 25,
-        "transport_options": {
-          "uber": { "cost_usd": 45, "time_min": 35 },
-          "bus": { "cost_usd": 10, "time_min": 60 }
-        }
-      }
-    ],
-    "reachable_hubs": [
-      { "code": "ATL", "flight_cost_typical": 180, "flight_time_min": 120 },
-      { "code": "ORD", "flight_cost_typical": 200, "flight_time_min": 150 },
-      { "code": "LAX", "flight_cost_typical": 220, "flight_time_min": 240 },
-      { "code": "LHR", "flight_cost_typical": 380, "flight_time_min": 420 }
-    ]
-  },
-  "BOS": {
-    "name": "Logan International",
-    "city": "Boston",
-    "country": "US",
-    "coordinates": { "lat": 42.3656, "lng": -71.0096 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "JFK", "flight_cost_typical": 80, "flight_time_min": 60 },
-      { "code": "ATL", "flight_cost_typical": 160, "flight_time_min": 120 },
-      { "code": "ORD", "flight_cost_typical": 180, "flight_time_min": 150 },
-      { "code": "LHR", "flight_cost_typical": 350, "flight_time_min": 390 }
-    ]
-  },
-  "MSP": {
-    "name": "Minneapolis–Saint Paul International",
-    "city": "Minneapolis / St. Paul",
-    "country": "US",
-    "coordinates": { "lat": 44.8830, "lng": -93.2268 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "ORD", "flight_cost_typical": 120, "flight_time_min": 90 },
-      { "code": "DEN", "flight_cost_typical": 140, "flight_time_min": 120 },
-      { "code": "ATL", "flight_cost_typical": 160, "flight_time_min": 150 },
-      { "code": "AMS", "flight_cost_typical": 520, "flight_time_min": 480 }
-    ]
-  },
-  "CLT": {
-    "name": "Charlotte Douglas International",
-    "city": "Charlotte",
-    "country": "US",
-    "coordinates": { "lat": 35.2140, "lng": -80.9431 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "ATL", "flight_cost_typical": 100, "flight_time_min": 60 },
-      { "code": "JFK", "flight_cost_typical": 120, "flight_time_min": 90 },
-      { "code": "ORD", "flight_cost_typical": 140, "flight_time_min": 120 },
-      { "code": "LHR", "flight_cost_typical": 450, "flight_time_min": 480 }
-    ]
-  },
-  "PHX": {
-    "name": "Phoenix Sky Harbor International",
-    "city": "Phoenix",
-    "country": "US",
-    "coordinates": { "lat": 33.4353, "lng": -112.0078 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "LAX", "flight_cost_typical": 80, "flight_time_min": 60 },
-      { "code": "DEN", "flight_cost_typical": 120, "flight_time_min": 90 },
-      { "code": "ORD", "flight_cost_typical": 160, "flight_time_min": 150 },
-      { "code": "LHR", "flight_cost_typical": 680, "flight_time_min": 720 }
-    ]
-  },
-  "PHL": {
-    "name": "Philadelphia International",
-    "city": "Philadelphia",
-    "country": "US",
-    "coordinates": { "lat": 39.87294, "lng": -75.243988 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "JFK", "flight_cost_typical": 80, "flight_time_min": 60 },
-      { "code": "ATL", "flight_cost_typical": 140, "flight_time_min": 120 },
-      { "code": "ORD", "flight_cost_typical": 170, "flight_time_min": 150 },
-      { "code": "LHR", "flight_cost_typical": 380, "flight_time_min": 450 }
-    ]
-  },
-  "DTW": {
-    "name": "Detroit Metropolitan Wayne County",
-    "city": "Detroit",
-    "country": "US",
-    "coordinates": { "lat": 42.213249, "lng": -83.352859 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "ORD", "flight_cost_typical": 100, "flight_time_min": 60 },
-      { "code": "ATL", "flight_cost_typical": 140, "flight_time_min": 120 },
-      { "code": "JFK", "flight_cost_typical": 160, "flight_time_min": 120 },
-      { "code": "AMS", "flight_cost_typical": 450, "flight_time_min": 480 }
-    ]
-  },
-  "LGA": {
-    "name": "LaGuardia Airport",
-    "city": "New York",
-    "country": "US",
-    "coordinates": { "lat": 40.776863, "lng": -73.874069 },
-    "nearby_airports": [
-      {
-        "code": "JFK",
-        "distance_km": 19,
-        "transport_options": {
-          "uber": { "cost_usd": 50, "time_min": 40 },
-          "shuttle": { "cost_usd": 20, "time_min": 60 }
-        }
-      },
-      {
-        "code": "EWR",
-        "distance_km": 40,
-        "transport_options": {
-          "uber": { "cost_usd": 80, "time_min": 70 },
-          "train": { "cost_usd": 25, "time_min": 90 }
-        }
-      }
-    ],
-    "reachable_hubs": [
-      { "code": "JFK", "flight_cost_typical": 60, "flight_time_min": 30 },
-      { "code": "ATL", "flight_cost_typical": 160, "flight_time_min": 120 },
-      { "code": "ORD", "flight_cost_typical": 180, "flight_time_min": 150 }
-    ]
-  },
-  "JFK": {
-    "name": "John F. Kennedy International",
-    "city": "New York",
-    "country": "US",
-    "coordinates": { "lat": 40.6413, "lng": -73.7781 },
-    "nearby_airports": [
-      {
-        "code": "LGA",
-        "distance_km": 19,
-        "transport_options": {
-          "uber": { "cost_usd": 50, "time_min": 40 },
-          "shuttle": { "cost_usd": 20, "time_min": 60 }
-        }
-      },
-      {
-        "code": "EWR",
-        "distance_km": 40,
-        "transport_options": {
-          "uber": { "cost_usd": 70, "time_min": 60 },
-          "train": { "cost_usd": 15, "time_min": 50 }
-        }
-      }
-    ],
-    "reachable_hubs": [
-      { "code": "LAX", "flight_cost_typical": 220, "flight_time_min": 300 },
-      { "code": "ORD", "flight_cost_typical": 170, "flight_time_min": 150 },
-      { "code": "ATL", "flight_cost_typical": 180, "flight_time_min": 120 },
-      { "code": "MIA", "flight_cost_typical": 150, "flight_time_min": 180 },
-      { "code": "LHR", "flight_cost_typical": 350, "flight_time_min": 420 },
-      { "code": "CDG", "flight_cost_typical": 380, "flight_time_min": 450 },
-      { "code": "FRA", "flight_cost_typical": 400, "flight_time_min": 480 }
-    ]
-  },
-  "SFO": {
-    "name": "San Francisco International",
-    "city": "San Francisco",
-    "country": "US",
-    "coordinates": { "lat": 37.6213, "lng": -122.3790 },
-    "nearby_airports": [
-      {
-        "code": "OAK",
-        "distance_km": 25,
-        "transport_options": {
-          "uber": { "cost_usd": 35, "time_min": 30 },
-          "shuttle": { "cost_usd": 15, "time_min": 45 }
-        }
-      },
-      {
-        "code": "SJC",
-        "distance_km": 50,
-        "transport_options": {
-          "uber": { "cost_usd": 60, "time_min": 50 },
-          "train": { "cost_usd": 12, "time_min": 75 }
-        }
-      }
-    ],
-    "reachable_hubs": [
-      { "code": "LAX", "flight_cost_typical": 120, "flight_time_min": 90 },
-      { "code": "SEA", "flight_cost_typical": 160, "flight_time_min": 120 },
-      { "code": "DEN", "flight_cost_typical": 180, "flight_time_min": 150 },
-      { "code": "ORD", "flight_cost_typical": 200, "flight_time_min": 270 },
-      { "code": "NRT", "flight_cost_typical": 550, "flight_time_min": 660 },
-      { "code": "ICN", "flight_cost_typical": 580, "flight_time_min": 720 },
-      { "code": "LHR", "flight_cost_typical": 650, "flight_time_min": 660 }
-    ]
-  },
-  "MIA": {
-    "name": "Miami International",
-    "city": "Miami",
-    "country": "US",
-    "coordinates": { "lat": 25.7959, "lng": -80.2871 },
-    "nearby_airports": [
-      {
-        "code": "FLL",
-        "distance_km": 35,
-        "transport_options": {
-          "uber": { "cost_usd": 40, "time_min": 40 },
-          "train": { "cost_usd": 8, "time_min": 60 }
-        }
-      }
-    ],
-    "reachable_hubs": [
-      { "code": "ATL", "flight_cost_typical": 150, "flight_time_min": 120 },
-      { "code": "JFK", "flight_cost_typical": 150, "flight_time_min": 180 },
-      { "code": "ORD", "flight_cost_typical": 180, "flight_time_min": 210 },
-      { "code": "LAX", "flight_cost_typical": 220, "flight_time_min": 300 },
-      { "code": "LHR", "flight_cost_typical": 480, "flight_time_min": 540 },
-      { "code": "MAD", "flight_cost_typical": 450, "flight_time_min": 510 }
-    ]
-  },
-  "FLL": {
-    "name": "Fort Lauderdale-Hollywood International",
-    "city": "Fort Lauderdale",
-    "country": "US",
-    "coordinates": { "lat": 26.0742, "lng": -80.1506 },
-    "nearby_airports": [
-      {
-        "code": "MIA",
-        "distance_km": 35,
-        "transport_options": {
-          "uber": { "cost_usd": 40, "time_min": 40 },
-          "train": { "cost_usd": 8, "time_min": 60 }
-        }
-      }
-    ],
-    "reachable_hubs": [
-      { "code": "ATL", "flight_cost_typical": 120, "flight_time_min": 100 },
-      { "code": "JFK", "flight_cost_typical": 150, "flight_time_min": 180 },
-      { "code": "ORD", "flight_cost_typical": 180, "flight_time_min": 210 },
-      { "code": "LHR", "flight_cost_typical": 520, "flight_time_min": 570 }
-    ]
-  },
-  "BWI": {
-    "name": "Baltimore/Washington International Thurgood Marshall",
-    "city": "Baltimore",
-    "country": "US",
-    "coordinates": { "lat": 39.1764, "lng": -76.6685 },
-    "nearby_airports": [
-      {
-        "code": "DCA",
-        "distance_km": 50,
-        "transport_options": {
-          "uber": { "cost_usd": 60, "time_min": 45 },
-          "train": { "cost_usd": 15, "time_min": 60 }
-        }
-      },
-      {
-        "code": "IAD",
-        "distance_km": 60,
-        "transport_options": {
-          "uber": { "cost_usd": 70, "time_min": 50 },
-          "shuttle": { "cost_usd": 25, "time_min": 75 }
-        }
-      }
-    ],
-    "reachable_hubs": [
-      { "code": "ORD", "flight_cost_typical": 150, "flight_time_min": 120 },
-      { "code": "ATL", "flight_cost_typical": 160, "flight_time_min": 120 },
-      { "code": "BOS", "flight_cost_typical": 100, "flight_time_min": 90 },
-      { "code": "LHR", "flight_cost_typical": 400, "flight_time_min": 450 }
-    ]
-  },
-  "LHR": {
-    "name": "London Heathrow",
-    "city": "London",
-    "country": "GB",
-    "coordinates": { "lat": 51.4700, "lng": -0.4543 },
-    "nearby_airports": [
-      {
-        "code": "LGW",
-        "distance_km": 45,
-        "transport_options": {
-          "train": { "cost_usd": 25, "time_min": 45 },
-          "uber": { "cost_usd": 80, "time_min": 60 }
-        }
-      },
-      {
-        "code": "STN",
-        "distance_km": 60,
-        "transport_options": {
-          "train": { "cost_usd": 30, "time_min": 60 },
-          "bus": { "cost_usd": 15, "time_min": 90 }
-        }
-      }
-    ],
-    "reachable_hubs": [
-      { "code": "CDG", "flight_cost_typical": 80, "flight_time_min": 60 },
-      { "code": "FRA", "flight_cost_typical": 90, "flight_time_min": 90 },
-      { "code": "AMS", "flight_cost_typical": 85, "flight_time_min": 75 },
-      { "code": "MAD", "flight_cost_typical": 100, "flight_time_min": 120 },
-      { "code": "FCO", "flight_cost_typical": 120, "flight_time_min": 150 },
-      { "code": "JFK", "flight_cost_typical": 350, "flight_time_min": 480 },
-      { "code": "ATL", "flight_cost_typical": 450, "flight_time_min": 540 },
-      { "code": "DXB", "flight_cost_typical": 380, "flight_time_min": 420 },
-      { "code": "DOH", "flight_cost_typical": 350, "flight_time_min": 390 },
-      { "code": "SIN", "flight_cost_typical": 650, "flight_time_min": 780 },
-      { "code": "NRT", "flight_cost_typical": 680, "flight_time_min": 720 },
-      { "code": "CAI", "flight_cost_typical": 280, "flight_time_min": 300 },
-      { "code": "JNB", "flight_cost_typical": 580, "flight_time_min": 660 }
-    ]
-  },
-  "LGW": {
-    "name": "London Gatwick",
-    "city": "London",
-    "country": "GB",
-    "coordinates": { "lat": 51.1481, "lng": -0.1903 },
-    "nearby_airports": [
-      {
-        "code": "LHR",
-        "distance_km": 45,
-        "transport_options": {
-          "train": { "cost_usd": 25, "time_min": 45 },
-          "uber": { "cost_usd": 80, "time_min": 60 }
-        }
-      }
-    ],
-    "reachable_hubs": [
-      { "code": "LHR", "flight_cost_typical": 60, "flight_time_min": 30 },
-      { "code": "CDG", "flight_cost_typical": 90, "flight_time_min": 75 },
-      { "code": "AMS", "flight_cost_typical": 95, "flight_time_min": 60 },
-      { "code": "BCN", "flight_cost_typical": 110, "flight_time_min": 120 },
-      { "code": "FCO", "flight_cost_typical": 130, "flight_time_min": 150 }
-    ]
-  },
-  "STN": {
-    "name": "London Stansted",
-    "city": "London",
-    "country": "GB",
-    "coordinates": { "lat": 51.8850, "lng": 0.2350 },
-    "nearby_airports": [
-      {
-        "code": "LHR",
-        "distance_km": 60,
-        "transport_options": {
-          "train": { "cost_usd": 30, "time_min": 60 },
-          "bus": { "cost_usd": 15, "time_min": 90 }
-        }
-      }
-    ],
-    "reachable_hubs": [
-      { "code": "LHR", "flight_cost_typical": 70, "flight_time_min": 45 },
-      { "code": "CDG", "flight_cost_typical": 85, "flight_time_min": 75 },
-      { "code": "AMS", "flight_cost_typical": 80, "flight_time_min": 60 },
-      { "code": "DUB", "flight_cost_typical": 75, "flight_time_min": 75 }
-    ]
-  },
-  "CDG": {
-    "name": "Charles de Gaulle",
-    "city": "Paris",
-    "country": "FR",
-    "coordinates": { "lat": 49.0097, "lng": 2.5479 },
-    "nearby_airports": [
-      {
-        "code": "ORY",
-        "distance_km": 35,
-        "transport_options": {
-          "train": { "cost_usd": 20, "time_min": 40 },
-          "bus": { "cost_usd": 12, "time_min": 60 }
-        }
-      }
-    ],
-    "reachable_hubs": [
-      { "code": "LHR", "flight_cost_typical": 80, "flight_time_min": 60 },
-      { "code": "FRA", "flight_cost_typical": 70, "flight_time_min": 75 },
-      { "code": "AMS", "flight_cost_typical": 65, "flight_time_min": 60 },
-      { "code": "MAD", "flight_cost_typical": 85, "flight_time_min": 105 },
-      { "code": "FCO", "flight_cost_typical": 100, "flight_time_min": 120 },
-      { "code": "JFK", "flight_cost_typical": 380, "flight_time_min": 450 },
-      { "code": "ATL", "flight_cost_typical": 480, "flight_time_min": 500 },
-      { "code": "DXB", "flight_cost_typical": 400, "flight_time_min": 420 },
-      { "code": "DOH", "flight_cost_typical": 380, "flight_time_min": 390 },
-      { "code": "CAI", "flight_cost_typical": 250, "flight_time_min": 270 },
-      { "code": "JNB", "flight_cost_typical": 620, "flight_time_min": 660 },
-      { "code": "NRT", "flight_cost_typical": 720, "flight_time_min": 720 }
-    ]
-  },
-  "ORY": {
-    "name": "Paris Orly",
-    "city": "Paris",
-    "country": "FR",
-    "coordinates": { "lat": 48.7233, "lng": 2.3794 },
-    "nearby_airports": [
-      {
-        "code": "CDG",
-        "distance_km": 35,
-        "transport_options": {
-          "train": { "cost_usd": 20, "time_min": 40 },
-          "bus": { "cost_usd": 12, "time_min": 60 }
-        }
-      }
-    ],
-    "reachable_hubs": [
-      { "code": "CDG", "flight_cost_typical": 50, "flight_time_min": 30 },
-      { "code": "LHR", "flight_cost_typical": 90, "flight_time_min": 75 },
-      { "code": "MAD", "flight_cost_typical": 80, "flight_time_min": 105 },
-      { "code": "BCN", "flight_cost_typical": 85, "flight_time_min": 90 }
-    ]
-  },
-  "FRA": {
-    "name": "Frankfurt am Main",
-    "city": "Frankfurt",
-    "country": "DE",
-    "coordinates": { "lat": 50.0379, "lng": 8.5622 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "LHR", "flight_cost_typical": 90, "flight_time_min": 90 },
-      { "code": "CDG", "flight_cost_typical": 70, "flight_time_min": 75 },
-      { "code": "AMS", "flight_cost_typical": 65, "flight_time_min": 60 },
-      { "code": "MUC", "flight_cost_typical": 60, "flight_time_min": 45 },
-      { "code": "VIE", "flight_cost_typical": 80, "flight_time_min": 75 },
-      { "code": "JFK", "flight_cost_typical": 400, "flight_time_min": 480 },
-      { "code": "ORD", "flight_cost_typical": 550, "flight_time_min": 510 },
-      { "code": "DXB", "flight_cost_typical": 350, "flight_time_min": 360 },
-      { "code": "DOH", "flight_cost_typical": 320, "flight_time_min": 330 },
-      { "code": "SIN", "flight_cost_typical": 580, "flight_time_min": 720 },
-      { "code": "NRT", "flight_cost_typical": 650, "flight_time_min": 660 },
-      { "code": "CAI", "flight_cost_typical": 280, "flight_time_min": 270 },
-      { "code": "JNB", "flight_cost_typical": 550, "flight_time_min": 600 }
-    ]
-  },
-  "MUC": {
-    "name": "Munich Airport",
-    "city": "Munich",
-    "country": "DE",
-    "coordinates": { "lat": 48.3538, "lng": 11.7861 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "FRA", "flight_cost_typical": 60, "flight_time_min": 45 },
-      { "code": "LHR", "flight_cost_typical": 100, "flight_time_min": 105 },
-      { "code": "CDG", "flight_cost_typical": 85, "flight_time_min": 90 },
-      { "code": "VIE", "flight_cost_typical": 70, "flight_time_min": 60 },
-      { "code": "FCO", "flight_cost_typical": 90, "flight_time_min": 75 },
-      { "code": "DOH", "flight_cost_typical": 380, "flight_time_min": 360 },
-      { "code": "DXB", "flight_cost_typical": 400, "flight_time_min": 390 }
-    ]
-  },
-  "AMS": {
-    "name": "Amsterdam Airport Schiphol",
-    "city": "Amsterdam",
-    "country": "NL",
-    "coordinates": { "lat": 52.3105, "lng": 4.7683 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "LHR", "flight_cost_typical": 85, "flight_time_min": 75 },
-      { "code": "CDG", "flight_cost_typical": 65, "flight_time_min": 60 },
-      { "code": "FRA", "flight_cost_typical": 65, "flight_time_min": 60 },
-      { "code": "CPH", "flight_cost_typical": 70, "flight_time_min": 75 },
-      { "code": "ARN", "flight_cost_typical": 80, "flight_time_min": 105 },
-      { "code": "JFK", "flight_cost_typical": 420, "flight_time_min": 480 },
-      { "code": "ATL", "flight_cost_typical": 520, "flight_time_min": 540 },
-      { "code": "DXB", "flight_cost_typical": 380, "flight_time_min": 390 },
-      { "code": "DOH", "flight_cost_typical": 360, "flight_time_min": 360 },
-      { "code": "SIN", "flight_cost_typical": 620, "flight_time_min": 720 },
-      { "code": "NRT", "flight_cost_typical": 680, "flight_time_min": 660 },
-      { "code": "CAI", "flight_cost_typical": 300, "flight_time_min": 300 }
-    ]
-  },
-  "MAD": {
-    "name": "Adolfo Suárez Madrid–Barajas",
-    "city": "Madrid",
-    "country": "ES",
-    "coordinates": { "lat": 40.4719, "lng": -3.5626 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "LHR", "flight_cost_typical": 100, "flight_time_min": 120 },
-      { "code": "CDG", "flight_cost_typical": 85, "flight_time_min": 105 },
-      { "code": "FRA", "flight_cost_typical": 95, "flight_time_min": 135 },
-      { "code": "BCN", "flight_cost_typical": 60, "flight_time_min": 75 },
-      { "code": "FCO", "flight_cost_typical": 110, "flight_time_min": 135 },
-      { "code": "MIA", "flight_cost_typical": 450, "flight_time_min": 510 },
-      { "code": "JFK", "flight_cost_typical": 420, "flight_time_min": 480 },
-      { "code": "CAI", "flight_cost_typical": 250, "flight_time_min": 240 },
-      { "code": "CAS", "flight_cost_typical": 120, "flight_time_min": 90 }
-    ]
-  },
-  "BCN": {
-    "name": "Josep Tarradellas Barcelona–El Prat",
-    "city": "Barcelona",
-    "country": "ES",
-    "coordinates": { "lat": 41.2974, "lng": 2.0833 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "MAD", "flight_cost_typical": 60, "flight_time_min": 75 },
-      { "code": "CDG", "flight_cost_typical": 80, "flight_time_min": 90 },
-      { "code": "LHR", "flight_cost_typical": 110, "flight_time_min": 120 },
-      { "code": "FCO", "flight_cost_typical": 90, "flight_time_min": 105 },
-      { "code": "AMS", "flight_cost_typical": 95, "flight_time_min": 120 }
-    ]
-  },
-  "FCO": {
-    "name": "Leonardo da Vinci–Fiumicino Airport",
-    "city": "Rome",
-    "country": "IT",
-    "coordinates": { "lat": 41.8003, "lng": 12.2389 },
-    "nearby_airports": [
-      {
-        "code": "CIA",
-        "distance_km": 40,
-        "transport_options": {
-          "bus": { "cost_usd": 8, "time_min": 60 },
-          "uber": { "cost_usd": 45, "time_min": 45 }
-        }
-      }
-    ],
-    "reachable_hubs": [
-      { "code": "LHR", "flight_cost_typical": 120, "flight_time_min": 150 },
-      { "code": "CDG", "flight_cost_typical": 100, "flight_time_min": 120 },
-      { "code": "FRA", "flight_cost_typical": 110, "flight_time_min": 105 },
-      { "code": "MAD", "flight_cost_typical": 110, "flight_time_min": 135 },
-      { "code": "MUC", "flight_cost_typical": 90, "flight_time_min": 75 },
-      { "code": "ATH", "flight_cost_typical": 100, "flight_time_min": 120 },
-      { "code": "CAI", "flight_cost_typical": 200, "flight_time_min": 180 },
-      { "code": "DXB", "flight_cost_typical": 350, "flight_time_min": 330 }
-    ]
-  },
-  "MXP": {
-    "name": "Milan Malpensa",
-    "city": "Milan",
-    "country": "IT",
-    "coordinates": { "lat": 45.6301, "lng": 8.7281 },
-    "nearby_airports": [
-      {
-        "code": "LIN",
-        "distance_km": 50,
-        "transport_options": {
-          "bus": { "cost_usd": 10, "time_min": 75 },
-          "train": { "cost_usd": 15, "time_min": 60 }
-        }
-      }
-    ],
-    "reachable_hubs": [
-      { "code": "FCO", "flight_cost_typical": 80, "flight_time_min": 75 },
-      { "code": "CDG", "flight_cost_typical": 85, "flight_time_min": 90 },
-      { "code": "FRA", "flight_cost_typical": 90, "flight_time_min": 75 },
-      { "code": "LHR", "flight_cost_typical": 110, "flight_time_min": 135 },
-      { "code": "MUC", "flight_cost_typical": 75, "flight_time_min": 60 }
-    ]
-  },
-  "VIE": {
-    "name": "Vienna International Airport",
-    "city": "Vienna",
-    "country": "AT",
-    "coordinates": { "lat": 48.1103, "lng": 16.5697 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "FRA", "flight_cost_typical": 80, "flight_time_min": 75 },
-      { "code": "MUC", "flight_cost_typical": 70, "flight_time_min": 60 },
-      { "code": "LHR", "flight_cost_typical": 120, "flight_time_min": 135 },
-      { "code": "CDG", "flight_cost_typical": 100, "flight_time_min": 120 },
-      { "code": "DOH", "flight_cost_typical": 380, "flight_time_min": 330 },
-      { "code": "DXB", "flight_cost_typical": 400, "flight_time_min": 360 }
-    ]
-  },
-  "ZUR": {
-    "name": "Zurich Airport",
-    "city": "Zurich",
-    "country": "CH",
-    "coordinates": { "lat": 47.4647, "lng": 8.5492 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "FRA", "flight_cost_typical": 70, "flight_time_min": 60 },
-      { "code": "LHR", "flight_cost_typical": 110, "flight_time_min": 105 },
-      { "code": "CDG", "flight_cost_typical": 90, "flight_time_min": 75 },
-      { "code": "VIE", "flight_cost_typical": 85, "flight_time_min": 90 },
-      { "code": "DXB", "flight_cost_typical": 420, "flight_time_min": 360 }
-    ]
-  },
-  "CPH": {
-    "name": "Copenhagen Airport",
-    "city": "Copenhagen",
-    "country": "DK",
-    "coordinates": { "lat": 55.6181, "lng": 12.6561 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "AMS", "flight_cost_typical": 70, "flight_time_min": 75 },
-      { "code": "LHR", "flight_cost_typical": 100, "flight_time_min": 105 },
-      { "code": "FRA", "flight_cost_typical": 85, "flight_time_min": 90 },
-      { "code": "ARN", "flight_cost_typical": 60, "flight_time_min": 75 },
-      { "code": "OSL", "flight_cost_typical": 65, "flight_time_min": 75 }
-    ]
-  },
-  "ARN": {
-    "name": "Stockholm Arlanda Airport",
-    "city": "Stockholm",
-    "country": "SE",
-    "coordinates": { "lat": 59.6519, "lng": 17.9186 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "CPH", "flight_cost_typical": 60, "flight_time_min": 75 },
-      { "code": "AMS", "flight_cost_typical": 80, "flight_time_min": 105 },
-      { "code": "LHR", "flight_cost_typical": 120, "flight_time_min": 135 },
-      { "code": "FRA", "flight_cost_typical": 100, "flight_time_min": 120 },
-      { "code": "OSL", "flight_cost_typical": 50, "flight_time_min": 60 }
-    ]
-  },
-  "OSL": {
-    "name": "Oslo Airport, Gardermoen",
-    "city": "Oslo",
-    "country": "NO",
-    "coordinates": { "lat": 60.1976, "lng": 11.1004 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "CPH", "flight_cost_typical": 65, "flight_time_min": 75 },
-      { "code": "ARN", "flight_cost_typical": 50, "flight_time_min": 60 },
-      { "code": "LHR", "flight_cost_typical": 130, "flight_time_min": 120 },
-      { "code": "AMS", "flight_cost_typical": 90, "flight_time_min": 105 }
-    ]
-  },
-  "HEL": {
-    "name": "Helsinki-Vantaa Airport",
-    "city": "Helsinki",
-    "country": "FI",
-    "coordinates": { "lat": 60.3172, "lng": 24.9633 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "ARN", "flight_cost_typical": 70, "flight_time_min": 75 },
-      { "code": "CPH", "flight_cost_typical": 80, "flight_time_min": 90 },
-      { "code": "AMS", "flight_cost_typical": 100, "flight_time_min": 135 },
-      { "code": "LHR", "flight_cost_typical": 140, "flight_time_min": 180 },
-      { "code": "SVO", "flight_cost_typical": 150, "flight_time_min": 90 }
-    ]
-  },
-  "ATH": {
-    "name": "Athens International Airport",
-    "city": "Athens",
-    "country": "GR",
-    "coordinates": { "lat": 37.9364, "lng": 23.9445 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "FCO", "flight_cost_typical": 100, "flight_time_min": 120 },
-      { "code": "LHR", "flight_cost_typical": 150, "flight_time_min": 180 },
-      { "code": "FRA", "flight_cost_typical": 130, "flight_time_min": 150 },
-      { "code": "CDG", "flight_cost_typical": 120, "flight_time_min": 165 },
-      { "code": "CAI", "flight_cost_typical": 120, "flight_time_min": 90 },
-      { "code": "DXB", "flight_cost_typical": 300, "flight_time_min": 270 }
-    ]
-  },
-  "IST": {
-    "name": "Istanbul Airport",
-    "city": "Istanbul",
-    "country": "TR",
-    "coordinates": { "lat": 41.2753, "lng": 28.7519 },
-    "nearby_airports": [
-      {
-        "code": "SAW",
-        "distance_km": 70,
-        "transport_options": {
-          "bus": { "cost_usd": 5, "time_min": 120 },
-          "uber": { "cost_usd": 35, "time_min": 90 }
-        }
-      }
-    ],
-    "reachable_hubs": [
-      { "code": "LHR", "flight_cost_typical": 180, "flight_time_min": 240 },
-      { "code": "FRA", "flight_cost_typical": 160, "flight_time_min": 210 },
-      { "code": "CDG", "flight_cost_typical": 170, "flight_time_min": 225 },
-      { "code": "ATH", "flight_cost_typical": 100, "flight_time_min": 90 },
-      { "code": "DXB", "flight_cost_typical": 250, "flight_time_min": 240 },
-      { "code": "DOH", "flight_cost_typical": 280, "flight_time_min": 270 },
-      { "code": "CAI", "flight_cost_typical": 150, "flight_time_min": 120 },
-      { "code": "JNB", "flight_cost_typical": 450, "flight_time_min": 480 }
-    ]
-  },
-  "SVO": {
-    "name": "Sheremetyevo International Airport",
-    "city": "Moscow",
-    "country": "RU",
-    "coordinates": { "lat": 55.9736, "lng": 37.4125 },
-    "nearby_airports": [
-      {
-        "code": "DME",
-        "distance_km": 45,
-        "transport_options": {
-          "train": { "cost_usd": 8, "time_min": 60 },
-          "bus": { "cost_usd": 3, "time_min": 90 }
-        }
-      }
-    ],
-    "reachable_hubs": [
-      { "code": "HEL", "flight_cost_typical": 150, "flight_time_min": 90 },
-      { "code": "FRA", "flight_cost_typical": 200, "flight_time_min": 210 },
-      { "code": "IST", "flight_cost_typical": 180, "flight_time_min": 150 },
-      { "code": "PEK", "flight_cost_typical": 350, "flight_time_min": 480 },
-      { "code": "DXB", "flight_cost_typical": 300, "flight_time_min": 300 }
-    ]
-  },
-  "DUB": {
-    "name": "Dublin Airport",
-    "city": "Dublin",
-    "country": "IE",
-    "coordinates": { "lat": 53.4264, "lng": -6.2499 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "LHR", "flight_cost_typical": 80, "flight_time_min": 75 },
-      { "code": "AMS", "flight_cost_typical": 90, "flight_time_min": 90 },
-      { "code": "CDG", "flight_cost_typical": 100, "flight_time_min": 105 },
-      { "code": "JFK", "flight_cost_typical": 320, "flight_time_min": 420 },
-      { "code": "BOS", "flight_cost_typical": 280, "flight_time_min": 390 }
-    ]
-  },
-  "BRU": {
-    "name": "Brussels Airport",
-    "city": "Brussels",
-    "country": "BE",
-    "coordinates": { "lat": 50.9010, "lng": 4.4856 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "LHR", "flight_cost_typical": 85, "flight_time_min": 60 },
-      { "code": "CDG", "flight_cost_typical": 60, "flight_time_min": 45 },
-      { "code": "AMS", "flight_cost_typical": 50, "flight_time_min": 30 },
-      { "code": "FRA", "flight_cost_typical": 70, "flight_time_min": 60 }
-    ]
-  },
-  "NRT": {
-    "name": "Narita International Airport",
-    "city": "Tokyo",
-    "country": "JP",
-    "coordinates": { "lat": 35.7647, "lng": 140.3864 },
-    "nearby_airports": [
-      {
-        "code": "HND",
-        "distance_km": 70,
-        "transport_options": {
-          "train": { "cost_usd": 15, "time_min": 60 },
-          "bus": { "cost_usd": 12, "time_min": 90 }
-        }
-      }
-    ],
-    "reachable_hubs": [
-      { "code": "HND", "flight_cost_typical": 60, "flight_time_min": 30 },
-      { "code": "ICN", "flight_cost_typical": 180, "flight_time_min": 150 },
-      { "code": "PEK", "flight_cost_typical": 220, "flight_time_min": 210 },
-      { "code": "PVG", "flight_cost_typical": 200, "flight_time_min": 180 },
-      { "code": "SIN", "flight_cost_typical": 380, "flight_time_min": 420 },
-      { "code": "BKK", "flight_cost_typical": 350, "flight_time_min": 390 },
-      { "code": "LAX", "flight_cost_typical": 580, "flight_time_min": 690 },
-      { "code": "SFO", "flight_cost_typical": 550, "flight_time_min": 660 },
-      { "code": "LHR", "flight_cost_typical": 680, "flight_time_min": 720 },
-      { "code": "FRA", "flight_cost_typical": 650, "flight_time_min": 660 }
-    ]
-  },
-  "HND": {
-    "name": "Tokyo Haneda Airport",
-    "city": "Tokyo",
-    "country": "JP",
-    "coordinates": { "lat": 35.5494, "lng": 139.7798 },
-    "nearby_airports": [
-      {
-        "code": "NRT",
-        "distance_km": 70,
-        "transport_options": {
-          "train": { "cost_usd": 15, "time_min": 60 },
-          "bus": { "cost_usd": 12, "time_min": 90 }
-        }
-      }
-    ],
-    "reachable_hubs": [
-      { "code": "NRT", "flight_cost_typical": 60, "flight_time_min": 30 },
-      { "code": "ICN", "flight_cost_typical": 160, "flight_time_min": 135 },
-      { "code": "PVG", "flight_cost_typical": 180, "flight_time_min": 165 },
-      { "code": "SIN", "flight_cost_typical": 360, "flight_time_min": 420 },
-      { "code": "LAX", "flight_cost_typical": 600, "flight_time_min": 720 }
-    ]
-  },
-  "ICN": {
-    "name": "Incheon International Airport",
-    "city": "Seoul",
-    "country": "KR",
-    "coordinates": { "lat": 37.4602, "lng": 126.4407 },
-    "nearby_airports": [
-      {
-        "code": "GMP",
-        "distance_km": 55,
-        "transport_options": {
-          "train": { "cost_usd": 8, "time_min": 45 },
-          "bus": { "cost_usd": 6, "time_min": 60 }
-        }
-      }
-    ],
-    "reachable_hubs": [
-      { "code": "NRT", "flight_cost_typical": 180, "flight_time_min": 150 },
-      { "code": "PEK", "flight_cost_typical": 160, "flight_time_min": 120 },
-      { "code": "PVG", "flight_cost_typical": 140, "flight_time_min": 105 },
-      { "code": "SIN", "flight_cost_typical": 320, "flight_time_min": 390 },
-      { "code": "BKK", "flight_cost_typical": 280, "flight_time_min": 330 },
-      { "code": "DXB", "flight_cost_typical": 450, "flight_time_min": 480 },
-      { "code": "LAX", "flight_cost_typical": 620, "flight_time_min": 720 },
-      { "code": "SFO", "flight_cost_typical": 580, "flight_time_min": 720 },
-      { "code": "LHR", "flight_cost_typical": 720, "flight_time_min": 720 },
-      { "code": "FRA", "flight_cost_typical": 680, "flight_time_min": 660 }
-    ]
-  },
-  "PEK": {
-    "name": "Beijing Capital International Airport",
-    "city": "Beijing",
-    "country": "CN",
-    "coordinates": { "lat": 40.0799, "lng": 116.6031 },
-    "nearby_airports": [
-      {
-        "code": "PKX",
-        "distance_km": 67,
-        "transport_options": {
-          "train": { "cost_usd": 5, "time_min": 45 },
-          "bus": { "cost_usd": 3, "time_min": 90 }
-        }
-      }
-    ],
-    "reachable_hubs": [
-      { "code": "PVG", "flight_cost_typical": 120, "flight_time_min": 120 },
-      { "code": "ICN", "flight_cost_typical": 160, "flight_time_min": 120 },
-      { "code": "NRT", "flight_cost_typical": 220, "flight_time_min": 210 },
-      { "code": "SIN", "flight_cost_typical": 300, "flight_time_min": 360 },
-      { "code": "BKK", "flight_cost_typical": 250, "flight_time_min": 300 },
-      { "code": "DXB", "flight_cost_typical": 380, "flight_time_min": 480 },
-      { "code": "SVO", "flight_cost_typical": 350, "flight_time_min": 480 },
-      { "code": "LHR", "flight_cost_typical": 650, "flight_time_min": 660 },
-      { "code": "FRA", "flight_cost_typical": 620, "flight_time_min": 600 }
-    ]
-  },
-  "PVG": {
-    "name": "Shanghai Pudong International Airport",
-    "city": "Shanghai",
-    "country": "CN",
-    "coordinates": { "lat": 31.1443, "lng": 121.8083 },
-    "nearby_airports": [
-      {
-        "code": "SHA",
-        "distance_km": 45,
-        "transport_options": {
-          "train": { "cost_usd": 3, "time_min": 30 },
-          "bus": { "cost_usd": 2, "time_min": 60 }
-        }
-      }
-    ],
-    "reachable_hubs": [
-      { "code": "PEK", "flight_cost_typical": 120, "flight_time_min": 120 },
-      { "code": "ICN", "flight_cost_typical": 140, "flight_time_min": 105 },
-      { "code": "NRT", "flight_cost_typical": 200, "flight_time_min": 180 },
-      { "code": "HND", "flight_cost_typical": 180, "flight_time_min": 165 },
-      { "code": "SIN", "flight_cost_typical": 280, "flight_time_min": 330 },
-      { "code": "BKK", "flight_cost_typical": 220, "flight_time_min": 270 },
-      { "code": "DXB", "flight_cost_typical": 350, "flight_time_min": 450 },
-      { "code": "LAX", "flight_cost_typical": 580, "flight_time_min": 780 },
-      { "code": "SFO", "flight_cost_typical": 560, "flight_time_min": 720 }
-    ]
-  },
-  "CAN": {
-    "name": "Guangzhou Baiyun International Airport",
-    "city": "Guangzhou",
-    "country": "CN",
-    "coordinates": { "lat": 23.3924, "lng": 113.2988 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "PVG", "flight_cost_typical": 100, "flight_time_min": 105 },
-      { "code": "PEK", "flight_cost_typical": 140, "flight_time_min": 150 },
-      { "code": "HKG", "flight_cost_typical": 80, "flight_time_min": 45 },
-      { "code": "SIN", "flight_cost_typical": 200, "flight_time_min": 210 },
-      { "code": "BKK", "flight_cost_typical": 150, "flight_time_min": 180 }
-    ]
-  },
-  "HKG": {
-    "name": "Hong Kong International Airport",
-    "city": "Hong Kong",
-    "country": "HK",
-    "coordinates": { "lat": 22.3080, "lng": 113.9185 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "PVG", "flight_cost_typical": 120, "flight_time_min": 150 },
-      { "code": "CAN", "flight_cost_typical": 80, "flight_time_min": 45 },
-      { "code": "SIN", "flight_cost_typical": 180, "flight_time_min": 210 },
-      { "code": "BKK", "flight_cost_typical": 140, "flight_time_min": 165 },
-      { "code": "NRT", "flight_cost_typical": 250, "flight_time_min": 240 },
-      { "code": "ICN", "flight_cost_typical": 200, "flight_time_min": 195 },
-      { "code": "DXB", "flight_cost_typical": 350, "flight_time_min": 480 },
-      { "code": "LAX", "flight_cost_typical": 550, "flight_time_min": 900 }
-    ]
-  },
-  "TPE": {
-    "name": "Taiwan Taoyuan International Airport",
-    "city": "Taipei",
-    "country": "TW",
-    "coordinates": { "lat": 25.0797, "lng": 121.2342 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "HKG", "flight_cost_typical": 120, "flight_time_min": 90 },
-      { "code": "NRT", "flight_cost_typical": 180, "flight_time_min": 210 },
-      { "code": "ICN", "flight_cost_typical": 160, "flight_time_min": 150 },
-      { "code": "SIN", "flight_cost_typical": 200, "flight_time_min": 240 },
-      { "code": "LAX", "flight_cost_typical": 520, "flight_time_min": 780 }
-    ]
-  },
-  "SIN": {
-    "name": "Singapore Changi Airport",
-    "city": "Singapore",
-    "country": "SG",
-    "coordinates": { "lat": 1.3644, "lng": 103.9915 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "BKK", "flight_cost_typical": 120, "flight_time_min": 135 },
-      { "code": "KUL", "flight_cost_typical": 80, "flight_time_min": 75 },
-      { "code": "CGK", "flight_cost_typical": 100, "flight_time_min": 105 },
-      { "code": "HKG", "flight_cost_typical": 180, "flight_time_min": 210 },
-      { "code": "PVG", "flight_cost_typical": 280, "flight_time_min": 330 },
-      { "code": "ICN", "flight_cost_typical": 320, "flight_time_min": 390 },
-      { "code": "NRT", "flight_cost_typical": 380, "flight_time_min": 420 },
-      { "code": "DXB", "flight_cost_typical": 300, "flight_time_min": 420 },
-      { "code": "DOH", "flight_cost_typical": 280, "flight_time_min": 450 },
-      { "code": "BOM", "flight_cost_typical": 200, "flight_time_min": 330 },
-      { "code": "DEL", "flight_cost_typical": 220, "flight_time_min": 360 },
-      { "code": "SYD", "flight_cost_typical": 350, "flight_time_min": 480 },
-      { "code": "LHR", "flight_cost_typical": 650, "flight_time_min": 780 },
-      { "code": "FRA", "flight_cost_typical": 580, "flight_time_min": 720 }
-    ]
-  },
-  "KUL": {
-    "name": "Kuala Lumpur International Airport",
-    "city": "Kuala Lumpur",
-    "country": "MY",
-    "coordinates": { "lat": 2.7456, "lng": 101.7072 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "SIN", "flight_cost_typical": 80, "flight_time_min": 75 },
-      { "code": "BKK", "flight_cost_typical": 100, "flight_time_min": 120 },
-      { "code": "CGK", "flight_cost_typical": 90, "flight_time_min": 105 },
-      { "code": "DXB", "flight_cost_typical": 280, "flight_time_min": 420 },
-      { "code": "DOH", "flight_cost_typical": 260, "flight_time_min": 450 }
-    ]
-  },
-  "BKK": {
-    "name": "Suvarnabhumi Airport",
-    "city": "Bangkok",
-    "country": "TH",
-    "coordinates": { "lat": 13.6900, "lng": 100.7501 },
-    "nearby_airports": [
-      {
-        "code": "DMK",
-        "distance_km": 35,
-        "transport_options": {
-          "bus": { "cost_usd": 2, "time_min": 60 },
-          "taxi": { "cost_usd": 20, "time_min": 45 }
-        }
-      }
-    ],
-    "reachable_hubs": [
-      { "code": "SIN", "flight_cost_typical": 120, "flight_time_min": 135 },
-      { "code": "KUL", "flight_cost_typical": 100, "flight_time_min": 120 },
-      { "code": "CGK", "flight_cost_typical": 110, "flight_time_min": 150 },
-      { "code": "HKG", "flight_cost_typical": 140, "flight_time_min": 165 },
-      { "code": "ICN", "flight_cost_typical": 280, "flight_time_min": 330 },
-      { "code": "NRT", "flight_cost_typical": 350, "flight_time_min": 390 },
-      { "code": "DXB", "flight_cost_typical": 300, "flight_time_min": 360 },
-      { "code": "DOH", "flight_cost_typical": 280, "flight_time_min": 390 },
-      { "code": "BOM", "flight_cost_typical": 180, "flight_time_min": 240 },
-      { "code": "DEL", "flight_cost_typical": 200, "flight_time_min": 270 }
-    ]
-  },
-  "CGK": {
-    "name": "Soekarno–Hatta International Airport",
-    "city": "Jakarta",
-    "country": "ID",
-    "coordinates": { "lat": -6.1256, "lng": 106.6558 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "SIN", "flight_cost_typical": 100, "flight_time_min": 105 },
-      { "code": "KUL", "flight_cost_typical": 90, "flight_time_min": 105 },
-      { "code": "BKK", "flight_cost_typical": 110, "flight_time_min": 150 },
-      { "code": "DXB", "flight_cost_typical": 320, "flight_time_min": 480 },
-      { "code": "SYD", "flight_cost_typical": 380, "flight_time_min": 420 }
-    ]
-  },
-  "MNL": {
-    "name": "Ninoy Aquino International Airport",
-    "city": "Manila",
-    "country": "PH",
-    "coordinates": { "lat": 14.5086, "lng": 121.0194 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "SIN", "flight_cost_typical": 150, "flight_time_min": 195 },
-      { "code": "HKG", "flight_cost_typical": 120, "flight_time_min": 135 },
-      { "code": "NRT", "flight_cost_typical": 200, "flight_time_min": 210 },
-      { "code": "ICN", "flight_cost_typical": 180, "flight_time_min": 180 },
-      { "code": "DXB", "flight_cost_typical": 380, "flight_time_min": 540 }
-    ]
-  },
-  "DEL": {
-    "name": "Indira Gandhi International Airport",
-    "city": "Delhi",
-    "country": "IN",
-    "coordinates": { "lat": 28.5562, "lng": 77.1000 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "BOM", "flight_cost_typical": 80, "flight_time_min": 120 },
-      { "code": "BLR", "flight_cost_typical": 90, "flight_time_min": 150 },
-      { "code": "SIN", "flight_cost_typical": 220, "flight_time_min": 360 },
-      { "code": "BKK", "flight_cost_typical": 200, "flight_time_min": 270 },
-      { "code": "DXB", "flight_cost_typical": 180, "flight_time_min": 180 },
-      { "code": "DOH", "flight_cost_typical": 200, "flight_time_min": 210 },
-      { "code": "LHR", "flight_cost_typical": 450, "flight_time_min": 480 },
-      { "code": "FRA", "flight_cost_typical": 480, "flight_time_min": 450 }
-    ]
-  },
-  "BOM": {
-    "name": "Chhatrapati Shivaji Maharaj International Airport",
-    "city": "Mumbai",
-    "country": "IN",
-    "coordinates": { "lat": 19.0896, "lng": 72.8656 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "DEL", "flight_cost_typical": 80, "flight_time_min": 120 },
-      { "code": "BLR", "flight_cost_typical": 70, "flight_time_min": 90 },
-      { "code": "SIN", "flight_cost_typical": 200, "flight_time_min": 330 },
-      { "code": "BKK", "flight_cost_typical": 180, "flight_time_min": 240 },
-      { "code": "DXB", "flight_cost_typical": 150, "flight_time_min": 150 },
-      { "code": "DOH", "flight_cost_typical": 180, "flight_time_min": 180 },
-      { "code": "LHR", "flight_cost_typical": 420, "flight_time_min": 540 }
-    ]
-  },
-  "BLR": {
-    "name": "Kempegowda International Airport",
-    "city": "Bangalore",
-    "country": "IN",
-    "coordinates": { "lat": 13.1979, "lng": 77.7063 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "BOM", "flight_cost_typical": 70, "flight_time_min": 90 },
-      { "code": "DEL", "flight_cost_typical": 90, "flight_time_min": 150 },
-      { "code": "SIN", "flight_cost_typical": 180, "flight_time_min": 270 },
-      { "code": "DXB", "flight_cost_typical": 140, "flight_time_min": 195 },
-      { "code": "DOH", "flight_cost_typical": 160, "flight_time_min": 225 }
-    ]
-  },
-  "DXB": {
-    "name": "Dubai International Airport",
-    "city": "Dubai",
-    "country": "AE",
-    "coordinates": { "lat": 25.2532, "lng": 55.3657 },
-    "nearby_airports": [
-      {
-        "code": "DWC",
-        "distance_km": 55,
-        "transport_options": {
-          "bus": { "cost_usd": 8, "time_min": 75 },
-          "taxi": { "cost_usd": 50, "time_min": 45 }
-        }
-      }
-    ],
-    "reachable_hubs": [
-      { "code": "DOH", "flight_cost_typical": 120, "flight_time_min": 75 },
-      { "code": "AUH", "flight_cost_typical": 80, "flight_time_min": 45 },
-      { "code": "KWI", "flight_cost_typical": 100, "flight_time_min": 90 },
-      { "code": "CAI", "flight_cost_typical": 180, "flight_time_min": 240 },
-      { "code": "LHR", "flight_cost_typical": 380, "flight_time_min": 420 },
-      { "code": "FRA", "flight_cost_typical": 350, "flight_time_min": 360 },
-      { "code": "CDG", "flight_cost_typical": 400, "flight_time_min": 420 },
-      { "code": "BOM", "flight_cost_typical": 150, "flight_time_min": 150 },
-      { "code": "DEL", "flight_cost_typical": 180, "flight_time_min": 180 },
-      { "code": "SIN", "flight_cost_typical": 300, "flight_time_min": 420 },
-      { "code": "BKK", "flight_cost_typical": 300, "flight_time_min": 360 },
-      { "code": "ICN", "flight_cost_typical": 450, "flight_time_min": 480 },
-      { "code": "NRT", "flight_cost_typical": 520, "flight_time_min": 540 },
-      { "code": "JNB", "flight_cost_typical": 380, "flight_time_min": 480 }
-    ]
-  },
-  "DOH": {
-    "name": "Hamad International Airport",
-    "city": "Doha",
-    "country": "QA",
-    "coordinates": { "lat": 25.2731, "lng": 51.6086 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "DXB", "flight_cost_typical": 120, "flight_time_min": 75 },
-      { "code": "AUH", "flight_cost_typical": 100, "flight_time_min": 60 },
-      { "code": "KWI", "flight_cost_typical": 90, "flight_time_min": 45 },
-      { "code": "CAI", "flight_cost_typical": 160, "flight_time_min": 210 },
-      { "code": "LHR", "flight_cost_typical": 350, "flight_time_min": 390 },
-      { "code": "FRA", "flight_cost_typical": 320, "flight_time_min": 330 },
-      { "code": "CDG", "flight_cost_typical": 380, "flight_time_min": 390 },
-      { "code": "BOM", "flight_cost_typical": 180, "flight_time_min": 180 },
-      { "code": "DEL", "flight_cost_typical": 200, "flight_time_min": 210 },
-      { "code": "SIN", "flight_cost_typical": 280, "flight_time_min": 450 },
-      { "code": "BKK", "flight_cost_typical": 280, "flight_time_min": 390 },
-      { "code": "JFK", "flight_cost_typical": 650, "flight_time_min": 780 },
-      { "code": "JNB", "flight_cost_typical": 400, "flight_time_min": 480 }
-    ]
-  },
-  "AUH": {
-    "name": "Abu Dhabi International Airport",
-    "city": "Abu Dhabi",
-    "country": "AE",
-    "coordinates": { "lat": 24.4330, "lng": 54.6511 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "DXB", "flight_cost_typical": 80, "flight_time_min": 45 },
-      { "code": "DOH", "flight_cost_typical": 100, "flight_time_min": 60 },
-      { "code": "LHR", "flight_cost_typical": 400, "flight_time_min": 450 },
-      { "code": "FRA", "flight_cost_typical": 380, "flight_time_min": 390 },
-      { "code": "BOM", "flight_cost_typical": 160, "flight_time_min": 165 },
-      { "code": "DEL", "flight_cost_typical": 190, "flight_time_min": 195 }
-    ]
-  },
-  "KWI": {
-    "name": "Kuwait International Airport",
-    "city": "Kuwait City",
-    "country": "KW",
-    "coordinates": { "lat": 29.2267, "lng": 47.9689 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "DXB", "flight_cost_typical": 100, "flight_time_min": 90 },
-      { "code": "DOH", "flight_cost_typical": 90, "flight_time_min": 45 },
-      { "code": "CAI", "flight_cost_typical": 120, "flight_time_min": 120 },
-      { "code": "LHR", "flight_cost_typical": 350, "flight_time_min": 390 }
-    ]
-  },
-  "CAI": {
-    "name": "Cairo International Airport",
-    "city": "Cairo",
-    "country": "EG",
-    "coordinates": { "lat": 30.1219, "lng": 31.4056 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "DXB", "flight_cost_typical": 180, "flight_time_min": 240 },
-      { "code": "DOH", "flight_cost_typical": 160, "flight_time_min": 210 },
-      { "code": "IST", "flight_cost_typical": 150, "flight_time_min": 120 },
-      { "code": "ATH", "flight_cost_typical": 120, "flight_time_min": 90 },
-      { "code": "LHR", "flight_cost_typical": 280, "flight_time_min": 300 },
-      { "code": "CDG", "flight_cost_typical": 250, "flight_time_min": 270 },
-      { "code": "FRA", "flight_cost_typical": 280, "flight_time_min": 270 },
-      { "code": "FCO", "flight_cost_typical": 200, "flight_time_min": 180 },
-      { "code": "JNB", "flight_cost_typical": 350, "flight_time_min": 480 },
-      { "code": "ADD", "flight_cost_typical": 180, "flight_time_min": 240 }
-    ]
-  },
-  "JNB": {
-    "name": "O.R. Tambo International Airport",
-    "city": "Johannesburg",
-    "country": "ZA",
-    "coordinates": { "lat": -26.1367, "lng": 28.2411 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "CPT", "flight_cost_typical": 100, "flight_time_min": 120 },
-      { "code": "DUR", "flight_cost_typical": 80, "flight_time_min": 75 },
-      { "code": "ADD", "flight_cost_typical": 200, "flight_time_min": 240 },
-      { "code": "NBO", "flight_cost_typical": 180, "flight_time_min": 240 },
-      { "code": "CAI", "flight_cost_typical": 350, "flight_time_min": 480 },
-      { "code": "DXB", "flight_cost_typical": 380, "flight_time_min": 480 },
-      { "code": "DOH", "flight_cost_typical": 400, "flight_time_min": 480 },
-      { "code": "LHR", "flight_cost_typical": 580, "flight_time_min": 660 },
-      { "code": "CDG", "flight_cost_typical": 620, "flight_time_min": 660 },
-      { "code": "IST", "flight_cost_typical": 450, "flight_time_min": 480 }
-    ]
-  },
-  "CPT": {
-    "name": "Cape Town International Airport",
-    "city": "Cape Town",
-    "country": "ZA",
-    "coordinates": { "lat": -33.9649, "lng": 18.6017 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "JNB", "flight_cost_typical": 100, "flight_time_min": 120 },
-      { "code": "DUR", "flight_cost_typical": 120, "flight_time_min": 135 },
-      { "code": "LHR", "flight_cost_typical": 600, "flight_time_min": 720 },
-      { "code": "DXB", "flight_cost_typical": 420, "flight_time_min": 540 }
-    ]
-  },
-  "DUR": {
-    "name": "King Shaka International Airport",
-    "city": "Durban",
-    "country": "ZA",
-    "coordinates": { "lat": -29.6144, "lng": 31.1197 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "JNB", "flight_cost_typical": 80, "flight_time_min": 75 },
-      { "code": "CPT", "flight_cost_typical": 120, "flight_time_min": 135 },
-      { "code": "DXB", "flight_cost_typical": 380, "flight_time_min": 480 }
-    ]
-  },
-  "ADD": {
-    "name": "Addis Ababa Bole International Airport",
-    "city": "Addis Ababa",
-    "country": "ET",
-    "coordinates": { "lat": 8.9806, "lng": 38.7992 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "NBO", "flight_cost_typical": 120, "flight_time_min": 120 },
-      { "code": "JNB", "flight_cost_typical": 200, "flight_time_min": 240 },
-      { "code": "CAI", "flight_cost_typical": 180, "flight_time_min": 240 },
-      { "code": "DXB", "flight_cost_typical": 250, "flight_time_min": 210 },
-      { "code": "DOH", "flight_cost_typical": 280, "flight_time_min": 240 },
-      { "code": "LHR", "flight_cost_typical": 450, "flight_time_min": 420 },
-      { "code": "FRA", "flight_cost_typical": 420, "flight_time_min": 390 }
-    ]
-  },
-  "NBO": {
-    "name": "Jomo Kenyatta International Airport",
-    "city": "Nairobi",
-    "country": "KE",
-    "coordinates": { "lat": -1.3192, "lng": 36.9278 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "ADD", "flight_cost_typical": 120, "flight_time_min": 120 },
-      { "code": "JNB", "flight_cost_typical": 180, "flight_time_min": 240 },
-      { "code": "DXB", "flight_cost_typical": 280, "flight_time_min": 270 },
-      { "code": "DOH", "flight_cost_typical": 300, "flight_time_min": 300 },
-      { "code": "LHR", "flight_cost_typical": 480, "flight_time_min": 480 }
-    ]
-  },
-  "LOS": {
-    "name": "Murtala Muhammed International Airport",
-    "city": "Lagos",
-    "country": "NG",
-    "coordinates": { "lat": 6.5774, "lng": 3.3212 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "ABV", "flight_cost_typical": 80, "flight_time_min": 90 },
-      { "code": "ACC", "flight_cost_typical": 100, "flight_time_min": 75 },
-      { "code": "CAI", "flight_cost_typical": 220, "flight_time_min": 300 },
-      { "code": "LHR", "flight_cost_typical": 450, "flight_time_min": 390 },
-      { "code": "CDG", "flight_cost_typical": 420, "flight_time_min": 360 }
-    ]
-  },
-  "ABV": {
-    "name": "Nnamdi Azikiwe International Airport",
-    "city": "Abuja",
-    "country": "NG",
-    "coordinates": { "lat": 9.0068, "lng": 7.2631 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "LOS", "flight_cost_typical": 80, "flight_time_min": 90 },
-      { "code": "ADD", "flight_cost_typical": 180, "flight_time_min": 180 },
-      { "code": "LHR", "flight_cost_typical": 480, "flight_time_min": 420 }
-    ]
-  },
-  "ACC": {
-    "name": "Kotoka International Airport",
-    "city": "Accra",
-    "country": "GH",
-    "coordinates": { "lat": 5.6052, "lng": -0.1719 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "LOS", "flight_cost_typical": 100, "flight_time_min": 75 },
-      { "code": "ABV", "flight_cost_typical": 120, "flight_time_min": 120 },
-      { "code": "LHR", "flight_cost_typical": 420, "flight_time_min": 360 },
-      { "code": "CDG", "flight_cost_typical": 380, "flight_time_min": 330 }
-    ]
-  },
-  "CAS": {
-    "name": "Mohammed V International Airport",
-    "city": "Casablanca",
-    "country": "MA",
-    "coordinates": { "lat": 33.3675, "lng": -7.5898 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "MAD", "flight_cost_typical": 120, "flight_time_min": 90 },
-      { "code": "CDG", "flight_cost_typical": 150, "flight_time_min": 180 },
-      { "code": "LHR", "flight_cost_typical": 180, "flight_time_min": 210 },
-      { "code": "CAI", "flight_cost_typical": 200, "flight_time_min": 300 }
-    ]
-  },
-  "SYD": {
-    "name": "Kingsford Smith Airport",
-    "city": "Sydney",
-    "country": "AU",
-    "coordinates": { "lat": -33.9399, "lng": 151.1753 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "MEL", "flight_cost_typical": 120, "flight_time_min": 90 },
-      { "code": "BNE", "flight_cost_typical": 140, "flight_time_min": 75 },
-      { "code": "SIN", "flight_cost_typical": 350, "flight_time_min": 480 },
-      { "code": "NRT", "flight_cost_typical": 450, "flight_time_min": 540 },
-      { "code": "LAX", "flight_cost_typical": 650, "flight_time_min": 840 },
-      { "code": "DXB", "flight_cost_typical": 500, "flight_time_min": 840 }
-    ]
-  },
-  "MEL": {
-    "name": "Melbourne Airport",
-    "city": "Melbourne",
-    "country": "AU",
-    "coordinates": { "lat": -37.6690, "lng": 144.8410 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "SYD", "flight_cost_typical": 120, "flight_time_min": 90 },
-      { "code": "SIN", "flight_cost_typical": 320, "flight_time_min": 450 },
-      { "code": "DXB", "flight_cost_typical": 480, "flight_time_min": 780 }
-    ]
-  },
-  "DAR": {
-    "name": "Julius Nyerere International Airport",
-    "city": "Dar es Salaam",
-    "country": "TZ",
-    "coordinates": { "lat": -6.8781, "lng": 39.2026 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "NBO", "flight_cost_typical": 120, "flight_time_min": 90 },
-      { "code": "ADD", "flight_cost_typical": 140, "flight_time_min": 120 },
-      { "code": "JNB", "flight_cost_typical": 200, "flight_time_min": 180 },
-      { "code": "DXB", "flight_cost_typical": 320, "flight_time_min": 300 },
-      { "code": "DOH", "flight_cost_typical": 350, "flight_time_min": 330 }
-    ]
-  },
-  "JRO": {
-    "name": "Kilimanjaro International Airport",
-    "city": "Arusha",
-    "country": "TZ",
-    "coordinates": { "lat": -3.4294, "lng": 37.0744 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "NBO", "flight_cost_typical": 100, "flight_time_min": 60 },
-      { "code": "DAR", "flight_cost_typical": 80, "flight_time_min": 75 },
-      { "code": "ADD", "flight_cost_typical": 120, "flight_time_min": 90 },
-      { "code": "DXB", "flight_cost_typical": 380, "flight_time_min": 330 }
-    ]
-  },
-  "EBB": {
-    "name": "Entebbe International Airport",
-    "city": "Kampala",
-    "country": "UG",
-    "coordinates": { "lat": 0.0464, "lng": 32.4435 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "NBO", "flight_cost_typical": 110, "flight_time_min": 90 },
-      { "code": "ADD", "flight_cost_typical": 130, "flight_time_min": 105 },
-      { "code": "KGL", "flight_cost_typical": 90, "flight_time_min": 75 },
-      { "code": "JNB", "flight_cost_typical": 220, "flight_time_min": 240 },
-      { "code": "DXB", "flight_cost_typical": 350, "flight_time_min": 360 },
-      { "code": "LHR", "flight_cost_typical": 520, "flight_time_min": 540 }
-    ]
-  },
-  "KGL": {
-    "name": "Kigali International Airport",
-    "city": "Kigali",
-    "country": "RW",
-    "coordinates": { "lat": -1.9686, "lng": 30.1395 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "EBB", "flight_cost_typical": 90, "flight_time_min": 75 },
-      { "code": "NBO", "flight_cost_typical": 120, "flight_time_min": 105 },
-      { "code": "ADD", "flight_cost_typical": 110, "flight_time_min": 90 },
-      { "code": "JNB", "flight_cost_typical": 200, "flight_time_min": 210 },
-      { "code": "DXB", "flight_cost_typical": 380, "flight_time_min": 390 },
-      { "code": "BRU", "flight_cost_typical": 450, "flight_time_min": 480 }
-    ]
-  },
-  "JIB": {
-    "name": "Djibouti-Ambouli International Airport",
-    "city": "Djibouti City",
-    "country": "DJ",
-    "coordinates": { "lat": 11.5473, "lng": 43.1595 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "ADD", "flight_cost_typical": 80, "flight_time_min": 45 },
-      { "code": "CAI", "flight_cost_typical": 150, "flight_time_min": 150 },
-      { "code": "DXB", "flight_cost_typical": 200, "flight_time_min": 120 },
-      { "code": "DOH", "flight_cost_typical": 220, "flight_time_min": 150 }
-    ]
-  },
-  "KRT": {
-    "name": "Khartoum International Airport",
-    "city": "Khartoum",
-    "country": "SD",
-    "coordinates": { "lat": 15.5895, "lng": 32.5532 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "CAI", "flight_cost_typical": 120, "flight_time_min": 120 },
-      { "code": "ADD", "flight_cost_typical": 140, "flight_time_min": 105 },
-      { "code": "DXB", "flight_cost_typical": 250, "flight_time_min": 210 },
-      { "code": "DOH", "flight_cost_typical": 280, "flight_time_min": 240 }
-    ]
-  },
-  "JUB": {
-    "name": "Juba International Airport",
-    "city": "Juba",
-    "country": "SS",
-    "coordinates": { "lat": 4.8721, "lng": 31.6011 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "KRT", "flight_cost_typical": 100, "flight_time_min": 90 },
-      { "code": "ADD", "flight_cost_typical": 120, "flight_time_min": 75 },
-      { "code": "NBO", "flight_cost_typical": 140, "flight_time_min": 120 },
-      { "code": "EBB", "flight_cost_typical": 80, "flight_time_min": 60 }
-    ]
-  },
-  "ASM": {
-    "name": "Asmara International Airport",
-    "city": "Asmara",
-    "country": "ER",
-    "coordinates": { "lat": 15.2919, "lng": 38.9107 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "CAI", "flight_cost_typical": 180, "flight_time_min": 180 },
-      { "code": "KRT", "flight_cost_typical": 120, "flight_time_min": 90 },
-      { "code": "DXB", "flight_cost_typical": 280, "flight_time_min": 240 }
-    ]
-  },
-  "MGQ": {
-    "name": "Aden Adde International Airport",
-    "city": "Mogadishu",
-    "country": "SO",
-    "coordinates": { "lat": 2.0144, "lng": 45.3047 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "ADD", "flight_cost_typical": 150, "flight_time_min": 120 },
-      { "code": "NBO", "flight_cost_typical": 140, "flight_time_min": 105 },
-      { "code": "DXB", "flight_cost_typical": 300, "flight_time_min": 270 }
-    ]
-  },
-  "SEZ": {
-    "name": "Seychelles International Airport",
-    "city": "Victoria",
-    "country": "SC",
-    "coordinates": { "lat": -4.6743, "lng": 55.5218 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "ADD", "flight_cost_typical": 200, "flight_time_min": 240 },
-      { "code": "NBO", "flight_cost_typical": 220, "flight_time_min": 180 },
-      { "code": "MRU", "flight_cost_typical": 150, "flight_time_min": 90 },
-      { "code": "DXB", "flight_cost_typical": 280, "flight_time_min": 240 }
-    ]
-  },
-  "MRU": {
-    "name": "Sir Seewoosagur Ramgoolam International Airport",
-    "city": "Port Louis",
-    "country": "MU",
-    "coordinates": { "lat": -20.4302, "lng": 57.6836 },
-    "nearby_airports": [],
-    "reachable_hubs": [
-      { "code": "SEZ", "flight_cost_typical": 150, "flight_time_min": 90 },
-      { "code": "JNB", "flight_cost_typical": 250, "flight_time_min": 240 },
-      { "code": "DXB", "flight_cost_typical": 320, "flight_time_min": 300 },
-      { "code": "CDG", "flight_cost_typical": 550, "flight_time_min": 660 }
-    ]
-  }
+    "ATL": {
+        "name": "Hartsfield-Jackson Atlanta International",
+        "city": "Atlanta",
+        "country": "US",
+        "coordinates": {
+            "lat": 33.6407,
+            "lng": -84.4277
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "JFK",
+                "flight_cost_typical": 180,
+                "flight_time_min": 120
+            },
+            {
+                "code": "LAX",
+                "flight_cost_typical": 220,
+                "flight_time_min": 240
+            },
+            {
+                "code": "ORD",
+                "flight_cost_typical": 150,
+                "flight_time_min": 105
+            },
+            {
+                "code": "MIA",
+                "flight_cost_typical": 150,
+                "flight_time_min": 120
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 450,
+                "flight_time_min": 480
+            },
+            {
+                "code": "CDG",
+                "flight_cost_typical": 480,
+                "flight_time_min": 500
+            },
+            {
+                "code": "FRA",
+                "flight_cost_typical": 460,
+                "flight_time_min": 510
+            }
+        ]
+    },
+    "LAX": {
+        "name": "Los Angeles International",
+        "city": "Los Angeles",
+        "country": "US",
+        "coordinates": {
+            "lat": 33.942791,
+            "lng": -118.410042
+        },
+        "nearby_airports": [
+            {
+                "code": "BUR",
+                "distance_km": 30,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 40,
+                        "time_min": 45
+                    },
+                    "shuttle": {
+                        "cost_usd": 15,
+                        "time_min": 60
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "SFO",
+                "flight_cost_typical": 120,
+                "flight_time_min": 90
+            },
+            {
+                "code": "ORD",
+                "flight_cost_typical": 200,
+                "flight_time_min": 240
+            },
+            {
+                "code": "ATL",
+                "flight_cost_typical": 220,
+                "flight_time_min": 240
+            },
+            {
+                "code": "JFK",
+                "flight_cost_typical": 220,
+                "flight_time_min": 300
+            },
+            {
+                "code": "NRT",
+                "flight_cost_typical": 580,
+                "flight_time_min": 690
+            },
+            {
+                "code": "ICN",
+                "flight_cost_typical": 620,
+                "flight_time_min": 720
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 650,
+                "flight_time_min": 660
+            }
+        ]
+    },
+    "ORD": {
+        "name": "Chicago O'Hare International",
+        "city": "Chicago",
+        "country": "US",
+        "coordinates": {
+            "lat": 41.9742,
+            "lng": -87.9073
+        },
+        "nearby_airports": [
+            {
+                "code": "MDW",
+                "distance_km": 25,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 40,
+                        "time_min": 45
+                    },
+                    "train": {
+                        "cost_usd": 5,
+                        "time_min": 90
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "ATL",
+                "flight_cost_typical": 150,
+                "flight_time_min": 105
+            },
+            {
+                "code": "LAX",
+                "flight_cost_typical": 200,
+                "flight_time_min": 240
+            },
+            {
+                "code": "JFK",
+                "flight_cost_typical": 170,
+                "flight_time_min": 120
+            },
+            {
+                "code": "SFO",
+                "flight_cost_typical": 200,
+                "flight_time_min": 270
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 520,
+                "flight_time_min": 480
+            },
+            {
+                "code": "FRA",
+                "flight_cost_typical": 550,
+                "flight_time_min": 510
+            }
+        ]
+    },
+    "DFW": {
+        "name": "Dallas/Fort Worth International",
+        "city": "Dallas/Fort Worth",
+        "country": "US",
+        "coordinates": {
+            "lat": 32.8998,
+            "lng": -97.0403
+        },
+        "nearby_airports": [
+            {
+                "code": "DAL",
+                "distance_km": 27,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 35,
+                        "time_min": 40
+                    },
+                    "bus": {
+                        "cost_usd": 6,
+                        "time_min": 60
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "LAX",
+                "flight_cost_typical": 180,
+                "flight_time_min": 180
+            },
+            {
+                "code": "ATL",
+                "flight_cost_typical": 160,
+                "flight_time_min": 120
+            },
+            {
+                "code": "ORD",
+                "flight_cost_typical": 140,
+                "flight_time_min": 130
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 480,
+                "flight_time_min": 540
+            },
+            {
+                "code": "FRA",
+                "flight_cost_typical": 520,
+                "flight_time_min": 600
+            }
+        ]
+    },
+    "DEN": {
+        "name": "Denver International",
+        "city": "Denver",
+        "country": "US",
+        "coordinates": {
+            "lat": 39.8561,
+            "lng": -104.6737
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "LAX",
+                "flight_cost_typical": 180,
+                "flight_time_min": 150
+            },
+            {
+                "code": "SFO",
+                "flight_cost_typical": 180,
+                "flight_time_min": 150
+            },
+            {
+                "code": "ORD",
+                "flight_cost_typical": 200,
+                "flight_time_min": 150
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 580,
+                "flight_time_min": 540
+            },
+            {
+                "code": "FRA",
+                "flight_cost_typical": 600,
+                "flight_time_min": 570
+            }
+        ]
+    },
+    "SEA": {
+        "name": "Seattle-Tacoma International",
+        "city": "Seattle",
+        "country": "US",
+        "coordinates": {
+            "lat": 47.4502,
+            "lng": -122.3088
+        },
+        "nearby_airports": [
+            {
+                "code": "PAE",
+                "distance_km": 60,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 70,
+                        "time_min": 50
+                    },
+                    "bus": {
+                        "cost_usd": 15,
+                        "time_min": 90
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "SFO",
+                "flight_cost_typical": 160,
+                "flight_time_min": 120
+            },
+            {
+                "code": "LAX",
+                "flight_cost_typical": 170,
+                "flight_time_min": 150
+            },
+            {
+                "code": "DEN",
+                "flight_cost_typical": 200,
+                "flight_time_min": 150
+            },
+            {
+                "code": "NRT",
+                "flight_cost_typical": 650,
+                "flight_time_min": 600
+            },
+            {
+                "code": "ICN",
+                "flight_cost_typical": 680,
+                "flight_time_min": 630
+            }
+        ]
+    },
+    "MCO": {
+        "name": "Orlando International",
+        "city": "Orlando",
+        "country": "US",
+        "coordinates": {
+            "lat": 28.4312,
+            "lng": -81.3081
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "ATL",
+                "flight_cost_typical": 120,
+                "flight_time_min": 90
+            },
+            {
+                "code": "JFK",
+                "flight_cost_typical": 150,
+                "flight_time_min": 120
+            },
+            {
+                "code": "LAX",
+                "flight_cost_typical": 220,
+                "flight_time_min": 240
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 480,
+                "flight_time_min": 510
+            }
+        ]
+    },
+    "LAS": {
+        "name": "Harry Reid International",
+        "city": "Las Vegas",
+        "country": "US",
+        "coordinates": {
+            "lat": 36.0840,
+            "lng": -115.1537
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "LAX",
+                "flight_cost_typical": 100,
+                "flight_time_min": 60
+            },
+            {
+                "code": "DEN",
+                "flight_cost_typical": 140,
+                "flight_time_min": 120
+            },
+            {
+                "code": "ATL",
+                "flight_cost_typical": 180,
+                "flight_time_min": 180
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 650,
+                "flight_time_min": 660
+            }
+        ]
+    },
+    "IAH": {
+        "name": "George Bush Intercontinental",
+        "city": "Houston",
+        "country": "US",
+        "coordinates": {
+            "lat": 29.9902,
+            "lng": -95.3368
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "DFW",
+                "flight_cost_typical": 90,
+                "flight_time_min": 60
+            },
+            {
+                "code": "ATL",
+                "flight_cost_typical": 140,
+                "flight_time_min": 120
+            },
+            {
+                "code": "LAX",
+                "flight_cost_typical": 170,
+                "flight_time_min": 180
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 500,
+                "flight_time_min": 540
+            }
+        ]
+    },
+    "EWR": {
+        "name": "Newark Liberty International",
+        "city": "Newark / New York",
+        "country": "US",
+        "coordinates": {
+            "lat": 40.6895,
+            "lng": -74.1745
+        },
+        "nearby_airports": [
+            {
+                "code": "JFK",
+                "distance_km": 40,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 70,
+                        "time_min": 60
+                    },
+                    "train": {
+                        "cost_usd": 15,
+                        "time_min": 50
+                    }
+                }
+            },
+            {
+                "code": "LGA",
+                "distance_km": 25,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 45,
+                        "time_min": 35
+                    },
+                    "bus": {
+                        "cost_usd": 10,
+                        "time_min": 60
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "ATL",
+                "flight_cost_typical": 180,
+                "flight_time_min": 120
+            },
+            {
+                "code": "ORD",
+                "flight_cost_typical": 200,
+                "flight_time_min": 150
+            },
+            {
+                "code": "LAX",
+                "flight_cost_typical": 220,
+                "flight_time_min": 240
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 380,
+                "flight_time_min": 420
+            }
+        ]
+    },
+    "BOS": {
+        "name": "Logan International",
+        "city": "Boston",
+        "country": "US",
+        "coordinates": {
+            "lat": 42.3656,
+            "lng": -71.0096
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "JFK",
+                "flight_cost_typical": 80,
+                "flight_time_min": 60
+            },
+            {
+                "code": "ATL",
+                "flight_cost_typical": 160,
+                "flight_time_min": 120
+            },
+            {
+                "code": "ORD",
+                "flight_cost_typical": 180,
+                "flight_time_min": 150
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 350,
+                "flight_time_min": 390
+            }
+        ]
+    },
+    "MSP": {
+        "name": "Minneapolis–Saint Paul International",
+        "city": "Minneapolis / St. Paul",
+        "country": "US",
+        "coordinates": {
+            "lat": 44.8830,
+            "lng": -93.2268
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "ORD",
+                "flight_cost_typical": 120,
+                "flight_time_min": 90
+            },
+            {
+                "code": "DEN",
+                "flight_cost_typical": 140,
+                "flight_time_min": 120
+            },
+            {
+                "code": "ATL",
+                "flight_cost_typical": 160,
+                "flight_time_min": 150
+            },
+            {
+                "code": "AMS",
+                "flight_cost_typical": 520,
+                "flight_time_min": 480
+            }
+        ]
+    },
+    "CLT": {
+        "name": "Charlotte Douglas International",
+        "city": "Charlotte",
+        "country": "US",
+        "coordinates": {
+            "lat": 35.2140,
+            "lng": -80.9431
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "ATL",
+                "flight_cost_typical": 100,
+                "flight_time_min": 60
+            },
+            {
+                "code": "JFK",
+                "flight_cost_typical": 120,
+                "flight_time_min": 90
+            },
+            {
+                "code": "ORD",
+                "flight_cost_typical": 140,
+                "flight_time_min": 120
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 450,
+                "flight_time_min": 480
+            }
+        ]
+    },
+    "PHX": {
+        "name": "Phoenix Sky Harbor International",
+        "city": "Phoenix",
+        "country": "US",
+        "coordinates": {
+            "lat": 33.4353,
+            "lng": -112.0078
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "LAX",
+                "flight_cost_typical": 80,
+                "flight_time_min": 60
+            },
+            {
+                "code": "DEN",
+                "flight_cost_typical": 120,
+                "flight_time_min": 90
+            },
+            {
+                "code": "ORD",
+                "flight_cost_typical": 160,
+                "flight_time_min": 150
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 680,
+                "flight_time_min": 720
+            }
+        ]
+    },
+    "PHL": {
+        "name": "Philadelphia International",
+        "city": "Philadelphia",
+        "country": "US",
+        "coordinates": {
+            "lat": 39.87294,
+            "lng": -75.243988
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "JFK",
+                "flight_cost_typical": 80,
+                "flight_time_min": 60
+            },
+            {
+                "code": "ATL",
+                "flight_cost_typical": 140,
+                "flight_time_min": 120
+            },
+            {
+                "code": "ORD",
+                "flight_cost_typical": 170,
+                "flight_time_min": 150
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 380,
+                "flight_time_min": 450
+            }
+        ]
+    },
+    "DTW": {
+        "name": "Detroit Metropolitan Wayne County",
+        "city": "Detroit",
+        "country": "US",
+        "coordinates": {
+            "lat": 42.213249,
+            "lng": -83.352859
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "ORD",
+                "flight_cost_typical": 100,
+                "flight_time_min": 60
+            },
+            {
+                "code": "ATL",
+                "flight_cost_typical": 140,
+                "flight_time_min": 120
+            },
+            {
+                "code": "JFK",
+                "flight_cost_typical": 160,
+                "flight_time_min": 120
+            },
+            {
+                "code": "AMS",
+                "flight_cost_typical": 450,
+                "flight_time_min": 480
+            }
+        ]
+    },
+    "LGA": {
+        "name": "LaGuardia Airport",
+        "city": "New York",
+        "country": "US",
+        "coordinates": {
+            "lat": 40.776863,
+            "lng": -73.874069
+        },
+        "nearby_airports": [
+            {
+                "code": "JFK",
+                "distance_km": 19,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 50,
+                        "time_min": 40
+                    },
+                    "shuttle": {
+                        "cost_usd": 20,
+                        "time_min": 60
+                    }
+                }
+            },
+            {
+                "code": "EWR",
+                "distance_km": 40,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 80,
+                        "time_min": 70
+                    },
+                    "train": {
+                        "cost_usd": 25,
+                        "time_min": 90
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "JFK",
+                "flight_cost_typical": 60,
+                "flight_time_min": 30
+            },
+            {
+                "code": "ATL",
+                "flight_cost_typical": 160,
+                "flight_time_min": 120
+            },
+            {
+                "code": "ORD",
+                "flight_cost_typical": 180,
+                "flight_time_min": 150
+            }
+        ]
+    },
+    "JFK": {
+        "name": "John F. Kennedy International",
+        "city": "New York",
+        "country": "US",
+        "coordinates": {
+            "lat": 40.6413,
+            "lng": -73.7781
+        },
+        "nearby_airports": [
+            {
+                "code": "LGA",
+                "distance_km": 19,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 50,
+                        "time_min": 40
+                    },
+                    "shuttle": {
+                        "cost_usd": 20,
+                        "time_min": 60
+                    }
+                }
+            },
+            {
+                "code": "EWR",
+                "distance_km": 40,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 70,
+                        "time_min": 60
+                    },
+                    "train": {
+                        "cost_usd": 15,
+                        "time_min": 50
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "LAX",
+                "flight_cost_typical": 220,
+                "flight_time_min": 300
+            },
+            {
+                "code": "ORD",
+                "flight_cost_typical": 170,
+                "flight_time_min": 150
+            },
+            {
+                "code": "ATL",
+                "flight_cost_typical": 180,
+                "flight_time_min": 120
+            },
+            {
+                "code": "MIA",
+                "flight_cost_typical": 150,
+                "flight_time_min": 180
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 350,
+                "flight_time_min": 420
+            },
+            {
+                "code": "CDG",
+                "flight_cost_typical": 380,
+                "flight_time_min": 450
+            },
+            {
+                "code": "FRA",
+                "flight_cost_typical": 400,
+                "flight_time_min": 480
+            }
+        ]
+    },
+    "SFO": {
+        "name": "San Francisco International",
+        "city": "San Francisco",
+        "country": "US",
+        "coordinates": {
+            "lat": 37.6213,
+            "lng": -122.3790
+        },
+        "nearby_airports": [
+            {
+                "code": "OAK",
+                "distance_km": 25,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 35,
+                        "time_min": 30
+                    },
+                    "shuttle": {
+                        "cost_usd": 15,
+                        "time_min": 45
+                    }
+                }
+            },
+            {
+                "code": "SJC",
+                "distance_km": 50,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 60,
+                        "time_min": 50
+                    },
+                    "train": {
+                        "cost_usd": 12,
+                        "time_min": 75
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "LAX",
+                "flight_cost_typical": 120,
+                "flight_time_min": 90
+            },
+            {
+                "code": "SEA",
+                "flight_cost_typical": 160,
+                "flight_time_min": 120
+            },
+            {
+                "code": "DEN",
+                "flight_cost_typical": 180,
+                "flight_time_min": 150
+            },
+            {
+                "code": "ORD",
+                "flight_cost_typical": 200,
+                "flight_time_min": 270
+            },
+            {
+                "code": "NRT",
+                "flight_cost_typical": 550,
+                "flight_time_min": 660
+            },
+            {
+                "code": "ICN",
+                "flight_cost_typical": 580,
+                "flight_time_min": 720
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 650,
+                "flight_time_min": 660
+            }
+        ]
+    },
+    "MIA": {
+        "name": "Miami International",
+        "city": "Miami",
+        "country": "US",
+        "coordinates": {
+            "lat": 25.7959,
+            "lng": -80.2871
+        },
+        "nearby_airports": [
+            {
+                "code": "FLL",
+                "distance_km": 35,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 40,
+                        "time_min": 40
+                    },
+                    "train": {
+                        "cost_usd": 8,
+                        "time_min": 60
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "ATL",
+                "flight_cost_typical": 150,
+                "flight_time_min": 120
+            },
+            {
+                "code": "JFK",
+                "flight_cost_typical": 150,
+                "flight_time_min": 180
+            },
+            {
+                "code": "ORD",
+                "flight_cost_typical": 180,
+                "flight_time_min": 210
+            },
+            {
+                "code": "LAX",
+                "flight_cost_typical": 220,
+                "flight_time_min": 300
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 480,
+                "flight_time_min": 540
+            },
+            {
+                "code": "MAD",
+                "flight_cost_typical": 450,
+                "flight_time_min": 510
+            }
+        ]
+    },
+    "FLL": {
+        "name": "Fort Lauderdale-Hollywood International",
+        "city": "Fort Lauderdale",
+        "country": "US",
+        "coordinates": {
+            "lat": 26.0742,
+            "lng": -80.1506
+        },
+        "nearby_airports": [
+            {
+                "code": "MIA",
+                "distance_km": 35,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 40,
+                        "time_min": 40
+                    },
+                    "train": {
+                        "cost_usd": 8,
+                        "time_min": 60
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "ATL",
+                "flight_cost_typical": 120,
+                "flight_time_min": 100
+            },
+            {
+                "code": "JFK",
+                "flight_cost_typical": 150,
+                "flight_time_min": 180
+            },
+            {
+                "code": "ORD",
+                "flight_cost_typical": 180,
+                "flight_time_min": 210
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 520,
+                "flight_time_min": 570
+            }
+        ]
+    },
+    "BWI": {
+        "name": "Baltimore/Washington International Thurgood Marshall",
+        "city": "Baltimore",
+        "country": "US",
+        "coordinates": {
+            "lat": 39.1764,
+            "lng": -76.6685
+        },
+        "nearby_airports": [
+            {
+                "code": "DCA",
+                "distance_km": 50,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 60,
+                        "time_min": 45
+                    },
+                    "train": {
+                        "cost_usd": 15,
+                        "time_min": 60
+                    }
+                }
+            },
+            {
+                "code": "IAD",
+                "distance_km": 60,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 70,
+                        "time_min": 50
+                    },
+                    "shuttle": {
+                        "cost_usd": 25,
+                        "time_min": 75
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "ORD",
+                "flight_cost_typical": 150,
+                "flight_time_min": 120
+            },
+            {
+                "code": "ATL",
+                "flight_cost_typical": 160,
+                "flight_time_min": 120
+            },
+            {
+                "code": "BOS",
+                "flight_cost_typical": 100,
+                "flight_time_min": 90
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 400,
+                "flight_time_min": 450
+            }
+        ]
+    },
+    "LHR": {
+        "name": "London Heathrow",
+        "city": "London",
+        "country": "GB",
+        "coordinates": {
+            "lat": 51.4700,
+            "lng": -0.4543
+        },
+        "nearby_airports": [
+            {
+                "code": "LGW",
+                "distance_km": 45,
+                "transport_options": {
+                    "train": {
+                        "cost_usd": 25,
+                        "time_min": 45
+                    },
+                    "uber": {
+                        "cost_usd": 80,
+                        "time_min": 60
+                    }
+                }
+            },
+            {
+                "code": "STN",
+                "distance_km": 60,
+                "transport_options": {
+                    "train": {
+                        "cost_usd": 30,
+                        "time_min": 60
+                    },
+                    "bus": {
+                        "cost_usd": 15,
+                        "time_min": 90
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "CDG",
+                "flight_cost_typical": 80,
+                "flight_time_min": 60
+            },
+            {
+                "code": "FRA",
+                "flight_cost_typical": 90,
+                "flight_time_min": 90
+            },
+            {
+                "code": "AMS",
+                "flight_cost_typical": 85,
+                "flight_time_min": 75
+            },
+            {
+                "code": "MAD",
+                "flight_cost_typical": 100,
+                "flight_time_min": 120
+            },
+            {
+                "code": "FCO",
+                "flight_cost_typical": 120,
+                "flight_time_min": 150
+            },
+            {
+                "code": "JFK",
+                "flight_cost_typical": 350,
+                "flight_time_min": 480
+            },
+            {
+                "code": "ATL",
+                "flight_cost_typical": 450,
+                "flight_time_min": 540
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 380,
+                "flight_time_min": 420
+            },
+            {
+                "code": "DOH",
+                "flight_cost_typical": 350,
+                "flight_time_min": 390
+            },
+            {
+                "code": "SIN",
+                "flight_cost_typical": 650,
+                "flight_time_min": 780
+            },
+            {
+                "code": "NRT",
+                "flight_cost_typical": 680,
+                "flight_time_min": 720
+            },
+            {
+                "code": "CAI",
+                "flight_cost_typical": 280,
+                "flight_time_min": 300
+            },
+            {
+                "code": "JNB",
+                "flight_cost_typical": 580,
+                "flight_time_min": 660
+            },
+            {
+                "code": "ADD",
+                "flight_cost_typical": 450,
+                "flight_time_min": 420
+            }
+        ]
+    },
+    "LGW": {
+        "name": "London Gatwick",
+        "city": "London",
+        "country": "GB",
+        "coordinates": {
+            "lat": 51.1481,
+            "lng": -0.1903
+        },
+        "nearby_airports": [
+            {
+                "code": "LHR",
+                "distance_km": 45,
+                "transport_options": {
+                    "train": {
+                        "cost_usd": 25,
+                        "time_min": 45
+                    },
+                    "uber": {
+                        "cost_usd": 80,
+                        "time_min": 60
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "LHR",
+                "flight_cost_typical": 60,
+                "flight_time_min": 30
+            },
+            {
+                "code": "CDG",
+                "flight_cost_typical": 90,
+                "flight_time_min": 75
+            },
+            {
+                "code": "AMS",
+                "flight_cost_typical": 95,
+                "flight_time_min": 60
+            },
+            {
+                "code": "BCN",
+                "flight_cost_typical": 110,
+                "flight_time_min": 120
+            },
+            {
+                "code": "FCO",
+                "flight_cost_typical": 130,
+                "flight_time_min": 150
+            }
+        ]
+    },
+    "STN": {
+        "name": "London Stansted",
+        "city": "London",
+        "country": "GB",
+        "coordinates": {
+            "lat": 51.8850,
+            "lng": 0.2350
+        },
+        "nearby_airports": [
+            {
+                "code": "LHR",
+                "distance_km": 60,
+                "transport_options": {
+                    "train": {
+                        "cost_usd": 30,
+                        "time_min": 60
+                    },
+                    "bus": {
+                        "cost_usd": 15,
+                        "time_min": 90
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "LHR",
+                "flight_cost_typical": 70,
+                "flight_time_min": 45
+            },
+            {
+                "code": "CDG",
+                "flight_cost_typical": 85,
+                "flight_time_min": 75
+            },
+            {
+                "code": "AMS",
+                "flight_cost_typical": 80,
+                "flight_time_min": 60
+            },
+            {
+                "code": "DUB",
+                "flight_cost_typical": 75,
+                "flight_time_min": 75
+            }
+        ]
+    },
+    "CDG": {
+        "name": "Charles de Gaulle",
+        "city": "Paris",
+        "country": "FR",
+        "coordinates": {
+            "lat": 49.0097,
+            "lng": 2.5479
+        },
+        "nearby_airports": [
+            {
+                "code": "ORY",
+                "distance_km": 35,
+                "transport_options": {
+                    "train": {
+                        "cost_usd": 20,
+                        "time_min": 40
+                    },
+                    "bus": {
+                        "cost_usd": 12,
+                        "time_min": 60
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "LHR",
+                "flight_cost_typical": 80,
+                "flight_time_min": 60
+            },
+            {
+                "code": "FRA",
+                "flight_cost_typical": 70,
+                "flight_time_min": 75
+            },
+            {
+                "code": "AMS",
+                "flight_cost_typical": 65,
+                "flight_time_min": 60
+            },
+            {
+                "code": "MAD",
+                "flight_cost_typical": 85,
+                "flight_time_min": 105
+            },
+            {
+                "code": "FCO",
+                "flight_cost_typical": 100,
+                "flight_time_min": 120
+            },
+            {
+                "code": "JFK",
+                "flight_cost_typical": 380,
+                "flight_time_min": 450
+            },
+            {
+                "code": "ATL",
+                "flight_cost_typical": 480,
+                "flight_time_min": 500
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 400,
+                "flight_time_min": 420
+            },
+            {
+                "code": "DOH",
+                "flight_cost_typical": 380,
+                "flight_time_min": 390
+            },
+            {
+                "code": "CAI",
+                "flight_cost_typical": 250,
+                "flight_time_min": 270
+            },
+            {
+                "code": "JNB",
+                "flight_cost_typical": 620,
+                "flight_time_min": 660
+            },
+            {
+                "code": "NRT",
+                "flight_cost_typical": 720,
+                "flight_time_min": 720
+            }
+        ]
+    },
+    "ORY": {
+        "name": "Paris Orly",
+        "city": "Paris",
+        "country": "FR",
+        "coordinates": {
+            "lat": 48.7233,
+            "lng": 2.3794
+        },
+        "nearby_airports": [
+            {
+                "code": "CDG",
+                "distance_km": 35,
+                "transport_options": {
+                    "train": {
+                        "cost_usd": 20,
+                        "time_min": 40
+                    },
+                    "bus": {
+                        "cost_usd": 12,
+                        "time_min": 60
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "CDG",
+                "flight_cost_typical": 50,
+                "flight_time_min": 30
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 90,
+                "flight_time_min": 75
+            },
+            {
+                "code": "MAD",
+                "flight_cost_typical": 80,
+                "flight_time_min": 105
+            },
+            {
+                "code": "BCN",
+                "flight_cost_typical": 85,
+                "flight_time_min": 90
+            }
+        ]
+    },
+    "FRA": {
+        "name": "Frankfurt am Main",
+        "city": "Frankfurt",
+        "country": "DE",
+        "coordinates": {
+            "lat": 50.0379,
+            "lng": 8.5622
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "LHR",
+                "flight_cost_typical": 90,
+                "flight_time_min": 90
+            },
+            {
+                "code": "CDG",
+                "flight_cost_typical": 70,
+                "flight_time_min": 75
+            },
+            {
+                "code": "AMS",
+                "flight_cost_typical": 65,
+                "flight_time_min": 60
+            },
+            {
+                "code": "MUC",
+                "flight_cost_typical": 60,
+                "flight_time_min": 45
+            },
+            {
+                "code": "VIE",
+                "flight_cost_typical": 80,
+                "flight_time_min": 75
+            },
+            {
+                "code": "JFK",
+                "flight_cost_typical": 400,
+                "flight_time_min": 480
+            },
+            {
+                "code": "ORD",
+                "flight_cost_typical": 550,
+                "flight_time_min": 510
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 350,
+                "flight_time_min": 360
+            },
+            {
+                "code": "DOH",
+                "flight_cost_typical": 320,
+                "flight_time_min": 330
+            },
+            {
+                "code": "SIN",
+                "flight_cost_typical": 580,
+                "flight_time_min": 720
+            },
+            {
+                "code": "NRT",
+                "flight_cost_typical": 650,
+                "flight_time_min": 660
+            },
+            {
+                "code": "CAI",
+                "flight_cost_typical": 280,
+                "flight_time_min": 270
+            },
+            {
+                "code": "JNB",
+                "flight_cost_typical": 550,
+                "flight_time_min": 600
+            }
+        ]
+    },
+    "MUC": {
+        "name": "Munich Airport",
+        "city": "Munich",
+        "country": "DE",
+        "coordinates": {
+            "lat": 48.3538,
+            "lng": 11.7861
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "FRA",
+                "flight_cost_typical": 60,
+                "flight_time_min": 45
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 100,
+                "flight_time_min": 105
+            },
+            {
+                "code": "CDG",
+                "flight_cost_typical": 85,
+                "flight_time_min": 90
+            },
+            {
+                "code": "VIE",
+                "flight_cost_typical": 70,
+                "flight_time_min": 60
+            },
+            {
+                "code": "FCO",
+                "flight_cost_typical": 90,
+                "flight_time_min": 75
+            },
+            {
+                "code": "DOH",
+                "flight_cost_typical": 380,
+                "flight_time_min": 360
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 400,
+                "flight_time_min": 390
+            }
+        ]
+    },
+    "AMS": {
+        "name": "Amsterdam Airport Schiphol",
+        "city": "Amsterdam",
+        "country": "NL",
+        "coordinates": {
+            "lat": 52.3105,
+            "lng": 4.7683
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "LHR",
+                "flight_cost_typical": 85,
+                "flight_time_min": 75
+            },
+            {
+                "code": "CDG",
+                "flight_cost_typical": 65,
+                "flight_time_min": 60
+            },
+            {
+                "code": "FRA",
+                "flight_cost_typical": 65,
+                "flight_time_min": 60
+            },
+            {
+                "code": "CPH",
+                "flight_cost_typical": 70,
+                "flight_time_min": 75
+            },
+            {
+                "code": "ARN",
+                "flight_cost_typical": 80,
+                "flight_time_min": 105
+            },
+            {
+                "code": "JFK",
+                "flight_cost_typical": 420,
+                "flight_time_min": 480
+            },
+            {
+                "code": "ATL",
+                "flight_cost_typical": 520,
+                "flight_time_min": 540
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 380,
+                "flight_time_min": 390
+            },
+            {
+                "code": "DOH",
+                "flight_cost_typical": 360,
+                "flight_time_min": 360
+            },
+            {
+                "code": "SIN",
+                "flight_cost_typical": 620,
+                "flight_time_min": 720
+            },
+            {
+                "code": "NRT",
+                "flight_cost_typical": 680,
+                "flight_time_min": 660
+            },
+            {
+                "code": "CAI",
+                "flight_cost_typical": 300,
+                "flight_time_min": 300
+            }
+        ]
+    },
+    "MAD": {
+        "name": "Adolfo Suárez Madrid–Barajas",
+        "city": "Madrid",
+        "country": "ES",
+        "coordinates": {
+            "lat": 40.4719,
+            "lng": -3.5626
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "LHR",
+                "flight_cost_typical": 100,
+                "flight_time_min": 120
+            },
+            {
+                "code": "CDG",
+                "flight_cost_typical": 85,
+                "flight_time_min": 105
+            },
+            {
+                "code": "FRA",
+                "flight_cost_typical": 95,
+                "flight_time_min": 135
+            },
+            {
+                "code": "BCN",
+                "flight_cost_typical": 60,
+                "flight_time_min": 75
+            },
+            {
+                "code": "FCO",
+                "flight_cost_typical": 110,
+                "flight_time_min": 135
+            },
+            {
+                "code": "MIA",
+                "flight_cost_typical": 450,
+                "flight_time_min": 510
+            },
+            {
+                "code": "JFK",
+                "flight_cost_typical": 420,
+                "flight_time_min": 480
+            },
+            {
+                "code": "CAI",
+                "flight_cost_typical": 250,
+                "flight_time_min": 240
+            },
+            {
+                "code": "CAS",
+                "flight_cost_typical": 120,
+                "flight_time_min": 90
+            }
+        ]
+    },
+    "BCN": {
+        "name": "Josep Tarradellas Barcelona–El Prat",
+        "city": "Barcelona",
+        "country": "ES",
+        "coordinates": {
+            "lat": 41.2974,
+            "lng": 2.0833
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "MAD",
+                "flight_cost_typical": 60,
+                "flight_time_min": 75
+            },
+            {
+                "code": "CDG",
+                "flight_cost_typical": 80,
+                "flight_time_min": 90
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 110,
+                "flight_time_min": 120
+            },
+            {
+                "code": "FCO",
+                "flight_cost_typical": 90,
+                "flight_time_min": 105
+            },
+            {
+                "code": "AMS",
+                "flight_cost_typical": 95,
+                "flight_time_min": 120
+            }
+        ]
+    },
+    "FCO": {
+        "name": "Leonardo da Vinci–Fiumicino Airport",
+        "city": "Rome",
+        "country": "IT",
+        "coordinates": {
+            "lat": 41.8003,
+            "lng": 12.2389
+        },
+        "nearby_airports": [
+            {
+                "code": "CIA",
+                "distance_km": 40,
+                "transport_options": {
+                    "bus": {
+                        "cost_usd": 8,
+                        "time_min": 60
+                    },
+                    "uber": {
+                        "cost_usd": 45,
+                        "time_min": 45
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "LHR",
+                "flight_cost_typical": 120,
+                "flight_time_min": 150
+            },
+            {
+                "code": "CDG",
+                "flight_cost_typical": 100,
+                "flight_time_min": 120
+            },
+            {
+                "code": "FRA",
+                "flight_cost_typical": 110,
+                "flight_time_min": 105
+            },
+            {
+                "code": "MAD",
+                "flight_cost_typical": 110,
+                "flight_time_min": 135
+            },
+            {
+                "code": "MUC",
+                "flight_cost_typical": 90,
+                "flight_time_min": 75
+            },
+            {
+                "code": "ATH",
+                "flight_cost_typical": 100,
+                "flight_time_min": 120
+            },
+            {
+                "code": "CAI",
+                "flight_cost_typical": 200,
+                "flight_time_min": 180
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 350,
+                "flight_time_min": 330
+            }
+        ]
+    },
+    "MXP": {
+        "name": "Milan Malpensa",
+        "city": "Milan",
+        "country": "IT",
+        "coordinates": {
+            "lat": 45.6301,
+            "lng": 8.7281
+        },
+        "nearby_airports": [
+            {
+                "code": "LIN",
+                "distance_km": 50,
+                "transport_options": {
+                    "bus": {
+                        "cost_usd": 10,
+                        "time_min": 75
+                    },
+                    "train": {
+                        "cost_usd": 15,
+                        "time_min": 60
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "FCO",
+                "flight_cost_typical": 80,
+                "flight_time_min": 75
+            },
+            {
+                "code": "CDG",
+                "flight_cost_typical": 85,
+                "flight_time_min": 90
+            },
+            {
+                "code": "FRA",
+                "flight_cost_typical": 90,
+                "flight_time_min": 75
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 110,
+                "flight_time_min": 135
+            },
+            {
+                "code": "MUC",
+                "flight_cost_typical": 75,
+                "flight_time_min": 60
+            }
+        ]
+    },
+    "VIE": {
+        "name": "Vienna International Airport",
+        "city": "Vienna",
+        "country": "AT",
+        "coordinates": {
+            "lat": 48.1103,
+            "lng": 16.5697
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "FRA",
+                "flight_cost_typical": 80,
+                "flight_time_min": 75
+            },
+            {
+                "code": "MUC",
+                "flight_cost_typical": 70,
+                "flight_time_min": 60
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 120,
+                "flight_time_min": 135
+            },
+            {
+                "code": "CDG",
+                "flight_cost_typical": 100,
+                "flight_time_min": 120
+            },
+            {
+                "code": "DOH",
+                "flight_cost_typical": 380,
+                "flight_time_min": 330
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 400,
+                "flight_time_min": 360
+            }
+        ]
+    },
+    "ZUR": {
+        "name": "Zurich Airport",
+        "city": "Zurich",
+        "country": "CH",
+        "coordinates": {
+            "lat": 47.4647,
+            "lng": 8.5492
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "FRA",
+                "flight_cost_typical": 70,
+                "flight_time_min": 60
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 110,
+                "flight_time_min": 105
+            },
+            {
+                "code": "CDG",
+                "flight_cost_typical": 90,
+                "flight_time_min": 75
+            },
+            {
+                "code": "VIE",
+                "flight_cost_typical": 85,
+                "flight_time_min": 90
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 420,
+                "flight_time_min": 360
+            }
+        ]
+    },
+    "CPH": {
+        "name": "Copenhagen Airport",
+        "city": "Copenhagen",
+        "country": "DK",
+        "coordinates": {
+            "lat": 55.6181,
+            "lng": 12.6561
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "AMS",
+                "flight_cost_typical": 70,
+                "flight_time_min": 75
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 100,
+                "flight_time_min": 105
+            },
+            {
+                "code": "FRA",
+                "flight_cost_typical": 85,
+                "flight_time_min": 90
+            },
+            {
+                "code": "ARN",
+                "flight_cost_typical": 60,
+                "flight_time_min": 75
+            },
+            {
+                "code": "OSL",
+                "flight_cost_typical": 65,
+                "flight_time_min": 75
+            }
+        ]
+    },
+    "ARN": {
+        "name": "Stockholm Arlanda Airport",
+        "city": "Stockholm",
+        "country": "SE",
+        "coordinates": {
+            "lat": 59.6519,
+            "lng": 17.9186
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "CPH",
+                "flight_cost_typical": 60,
+                "flight_time_min": 75
+            },
+            {
+                "code": "AMS",
+                "flight_cost_typical": 80,
+                "flight_time_min": 105
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 120,
+                "flight_time_min": 135
+            },
+            {
+                "code": "FRA",
+                "flight_cost_typical": 100,
+                "flight_time_min": 120
+            },
+            {
+                "code": "OSL",
+                "flight_cost_typical": 50,
+                "flight_time_min": 60
+            }
+        ]
+    },
+    "OSL": {
+        "name": "Oslo Airport, Gardermoen",
+        "city": "Oslo",
+        "country": "NO",
+        "coordinates": {
+            "lat": 60.1976,
+            "lng": 11.1004
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "CPH",
+                "flight_cost_typical": 65,
+                "flight_time_min": 75
+            },
+            {
+                "code": "ARN",
+                "flight_cost_typical": 50,
+                "flight_time_min": 60
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 130,
+                "flight_time_min": 120
+            },
+            {
+                "code": "AMS",
+                "flight_cost_typical": 90,
+                "flight_time_min": 105
+            }
+        ]
+    },
+    "HEL": {
+        "name": "Helsinki-Vantaa Airport",
+        "city": "Helsinki",
+        "country": "FI",
+        "coordinates": {
+            "lat": 60.3172,
+            "lng": 24.9633
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "ARN",
+                "flight_cost_typical": 70,
+                "flight_time_min": 75
+            },
+            {
+                "code": "CPH",
+                "flight_cost_typical": 80,
+                "flight_time_min": 90
+            },
+            {
+                "code": "AMS",
+                "flight_cost_typical": 100,
+                "flight_time_min": 135
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 140,
+                "flight_time_min": 180
+            },
+            {
+                "code": "SVO",
+                "flight_cost_typical": 150,
+                "flight_time_min": 90
+            }
+        ]
+    },
+    "ATH": {
+        "name": "Athens International Airport",
+        "city": "Athens",
+        "country": "GR",
+        "coordinates": {
+            "lat": 37.9364,
+            "lng": 23.9445
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "FCO",
+                "flight_cost_typical": 100,
+                "flight_time_min": 120
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 150,
+                "flight_time_min": 180
+            },
+            {
+                "code": "FRA",
+                "flight_cost_typical": 130,
+                "flight_time_min": 150
+            },
+            {
+                "code": "CDG",
+                "flight_cost_typical": 120,
+                "flight_time_min": 165
+            },
+            {
+                "code": "CAI",
+                "flight_cost_typical": 120,
+                "flight_time_min": 90
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 300,
+                "flight_time_min": 270
+            }
+        ]
+    },
+    "IST": {
+        "name": "Istanbul Airport",
+        "city": "Istanbul",
+        "country": "TR",
+        "coordinates": {
+            "lat": 41.2753,
+            "lng": 28.7519
+        },
+        "nearby_airports": [
+            {
+                "code": "SAW",
+                "distance_km": 70,
+                "transport_options": {
+                    "bus": {
+                        "cost_usd": 5,
+                        "time_min": 120
+                    },
+                    "uber": {
+                        "cost_usd": 35,
+                        "time_min": 90
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "LHR",
+                "flight_cost_typical": 180,
+                "flight_time_min": 240
+            },
+            {
+                "code": "FRA",
+                "flight_cost_typical": 160,
+                "flight_time_min": 210
+            },
+            {
+                "code": "CDG",
+                "flight_cost_typical": 170,
+                "flight_time_min": 225
+            },
+            {
+                "code": "ATH",
+                "flight_cost_typical": 100,
+                "flight_time_min": 90
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 250,
+                "flight_time_min": 240
+            },
+            {
+                "code": "DOH",
+                "flight_cost_typical": 280,
+                "flight_time_min": 270
+            },
+            {
+                "code": "CAI",
+                "flight_cost_typical": 150,
+                "flight_time_min": 120
+            },
+            {
+                "code": "JNB",
+                "flight_cost_typical": 450,
+                "flight_time_min": 480
+            }
+        ]
+    },
+    "SVO": {
+        "name": "Sheremetyevo International Airport",
+        "city": "Moscow",
+        "country": "RU",
+        "coordinates": {
+            "lat": 55.9736,
+            "lng": 37.4125
+        },
+        "nearby_airports": [
+            {
+                "code": "DME",
+                "distance_km": 45,
+                "transport_options": {
+                    "train": {
+                        "cost_usd": 8,
+                        "time_min": 60
+                    },
+                    "bus": {
+                        "cost_usd": 3,
+                        "time_min": 90
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "HEL",
+                "flight_cost_typical": 150,
+                "flight_time_min": 90
+            },
+            {
+                "code": "FRA",
+                "flight_cost_typical": 200,
+                "flight_time_min": 210
+            },
+            {
+                "code": "IST",
+                "flight_cost_typical": 180,
+                "flight_time_min": 150
+            },
+            {
+                "code": "PEK",
+                "flight_cost_typical": 350,
+                "flight_time_min": 480
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 300,
+                "flight_time_min": 300
+            }
+        ]
+    },
+    "DUB": {
+        "name": "Dublin Airport",
+        "city": "Dublin",
+        "country": "IE",
+        "coordinates": {
+            "lat": 53.4264,
+            "lng": -6.2499
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "LHR",
+                "flight_cost_typical": 80,
+                "flight_time_min": 75
+            },
+            {
+                "code": "LGW",
+                "flight_cost_typical": 70,
+                "flight_time_min": 75
+            },
+            {
+                "code": "MAN",
+                "flight_cost_typical": 60,
+                "flight_time_min": 60
+            },
+            {
+                "code": "AMS",
+                "flight_cost_typical": 90,
+                "flight_time_min": 90
+            },
+            {
+                "code": "CDG",
+                "flight_cost_typical": 100,
+                "flight_time_min": 105
+            },
+            {
+                "code": "FRA",
+                "flight_cost_typical": 110,
+                "flight_time_min": 120
+            },
+            {
+                "code": "MUC",
+                "flight_cost_typical": 120,
+                "flight_time_min": 135
+            },
+            {
+                "code": "BRU",
+                "flight_cost_typical": 85,
+                "flight_time_min": 100
+            },
+            {
+                "code": "ZRH",
+                "flight_cost_typical": 130,
+                "flight_time_min": 125
+            },
+            {
+                "code": "MAD",
+                "flight_cost_typical": 110,
+                "flight_time_min": 160
+            },
+            {
+                "code": "BCN",
+                "flight_cost_typical": 100,
+                "flight_time_min": 155
+            },
+            {
+                "code": "FCO",
+                "flight_cost_typical": 120,
+                "flight_time_min": 185
+            },
+            {
+                "code": "MXP",
+                "flight_cost_typical": 110,
+                "flight_time_min": 165
+            },
+            {
+                "code": "LIS",
+                "flight_cost_typical": 90,
+                "flight_time_min": 165
+            },
+            {
+                "code": "VIE",
+                "flight_cost_typical": 130,
+                "flight_time_min": 165
+            },
+            {
+                "code": "WAW",
+                "flight_cost_typical": 100,
+                "flight_time_min": 165
+            },
+            {
+                "code": "CPH",
+                "flight_cost_typical": 100,
+                "flight_time_min": 130
+            },
+            {
+                "code": "ARN",
+                "flight_cost_typical": 110,
+                "flight_time_min": 165
+            },
+            {
+                "code": "DOH",
+                "flight_cost_typical": 350,
+                "flight_time_min": 420
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 380,
+                "flight_time_min": 450
+            },
+            {
+                "code": "IST",
+                "flight_cost_typical": 200,
+                "flight_time_min": 270
+            },
+            {
+                "code": "JFK",
+                "flight_cost_typical": 320,
+                "flight_time_min": 420
+            },
+            {
+                "code": "EWR",
+                "flight_cost_typical": 310,
+                "flight_time_min": 420
+            },
+            {
+                "code": "BOS",
+                "flight_cost_typical": 280,
+                "flight_time_min": 390
+            },
+            {
+                "code": "ORD",
+                "flight_cost_typical": 340,
+                "flight_time_min": 480
+            },
+            {
+                "code": "ATL",
+                "flight_cost_typical": 350,
+                "flight_time_min": 510
+            },
+            {
+                "code": "YYZ",
+                "flight_cost_typical": 300,
+                "flight_time_min": 450
+            },
+            {
+                "code": "YUL",
+                "flight_cost_typical": 280,
+                "flight_time_min": 420
+            }
+        ]
+    },
+    "BRU": {
+        "name": "Brussels Airport",
+        "city": "Brussels",
+        "country": "BE",
+        "coordinates": {
+            "lat": 50.9010,
+            "lng": 4.4856
+        },
+        "annual_passengers_millions": 26.4,
+        "nearby_airports": [
+            {
+                "code": "CRL",
+                "distance_km": 46,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 65,
+                        "time_min": 50
+                    },
+                    "bus": {
+                        "cost_usd": 17,
+                        "time_min": 75
+                    },
+                    "train": {
+                        "cost_usd": 14,
+                        "time_min": 90
+                    }
+                }
+            },
+            {
+                "code": "ANR",
+                "distance_km": 45,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 70,
+                        "time_min": 55
+                    },
+                    "train": {
+                        "cost_usd": 12,
+                        "time_min": 60
+                    }
+                }
+            },
+            {
+                "code": "LGG",
+                "distance_km": 90,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 110,
+                        "time_min": 90
+                    },
+                    "train": {
+                        "cost_usd": 20,
+                        "time_min": 75
+                    }
+                }
+            },
+            {
+                "code": "EIN",
+                "distance_km": 120,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 140,
+                        "time_min": 110
+                    },
+                    "train": {
+                        "cost_usd": 25,
+                        "time_min": 120
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "LHR",
+                "flight_cost_typical": 85,
+                "flight_time_min": 60
+            },
+            {
+                "code": "CDG",
+                "flight_cost_typical": 60,
+                "flight_time_min": 45
+            },
+            {
+                "code": "AMS",
+                "flight_cost_typical": 50,
+                "flight_time_min": 30
+            },
+            {
+                "code": "FRA",
+                "flight_cost_typical": 70,
+                "flight_time_min": 60
+            }
+        ]
+    },
+    "CRL": {
+        "name": "Brussels South Charleroi Airport",
+        "city": "Charleroi",
+        "country": "BE",
+        "coordinates": {
+            "lat": 50.4592,
+            "lng": 4.4538
+        },
+        "annual_passengers_millions": 8.2,
+        "nearby_airports": [
+            {
+                "code": "BRU",
+                "distance_km": 46,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 65,
+                        "time_min": 50
+                    },
+                    "bus": {
+                        "cost_usd": 17,
+                        "time_min": 75
+                    },
+                    "train": {
+                        "cost_usd": 14,
+                        "time_min": 90
+                    }
+                }
+            },
+            {
+                "code": "ANR",
+                "distance_km": 85,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 100,
+                        "time_min": 85
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "STN",
+                "flight_cost_typical": 35,
+                "flight_time_min": 75
+            },
+            {
+                "code": "BGY",
+                "flight_cost_typical": 40,
+                "flight_time_min": 90
+            },
+            {
+                "code": "OPO",
+                "flight_cost_typical": 45,
+                "flight_time_min": 150
+            },
+            {
+                "code": "MAD",
+                "flight_cost_typical": 50,
+                "flight_time_min": 130
+            },
+            {
+                "code": "BCN",
+                "flight_cost_typical": 55,
+                "flight_time_min": 120
+            }
+        ]
+    },
+    "ANR": {
+        "name": "Antwerp International Airport",
+        "city": "Antwerp",
+        "country": "BE",
+        "coordinates": {
+            "lat": 51.1894,
+            "lng": 4.4603
+        },
+        "annual_passengers_millions": 0.3,
+        "nearby_airports": [
+            {
+                "code": "BRU",
+                "distance_km": 45,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 70,
+                        "time_min": 55
+                    },
+                    "train": {
+                        "cost_usd": 12,
+                        "time_min": 60
+                    }
+                }
+            },
+            {
+                "code": "EIN",
+                "distance_km": 70,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 85,
+                        "time_min": 65
+                    }
+                }
+            },
+            {
+                "code": "AMS",
+                "distance_km": 130,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 150,
+                        "time_min": 110
+                    },
+                    "train": {
+                        "cost_usd": 30,
+                        "time_min": 90
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "LCY",
+                "flight_cost_typical": 120,
+                "flight_time_min": 65
+            },
+            {
+                "code": "MAN",
+                "flight_cost_typical": 110,
+                "flight_time_min": 75
+            }
+        ]
+    },
+    "LGG": {
+        "name": "Liège Airport",
+        "city": "Liège",
+        "country": "BE",
+        "coordinates": {
+            "lat": 50.6374,
+            "lng": 5.4432
+        },
+        "annual_passengers_millions": 0.8,
+        "nearby_airports": [
+            {
+                "code": "BRU",
+                "distance_km": 90,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 110,
+                        "time_min": 90
+                    },
+                    "train": {
+                        "cost_usd": 20,
+                        "time_min": 75
+                    }
+                }
+            },
+            {
+                "code": "EIN",
+                "distance_km": 95,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 115,
+                        "time_min": 90
+                    }
+                }
+            },
+            {
+                "code": "CGN",
+                "distance_km": 125,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 145,
+                        "time_min": 110
+                    },
+                    "train": {
+                        "cost_usd": 35,
+                        "time_min": 90
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "BCN",
+                "flight_cost_typical": 80,
+                "flight_time_min": 140
+            },
+            {
+                "code": "PMI",
+                "flight_cost_typical": 75,
+                "flight_time_min": 145
+            }
+        ]
+    },
+    "EIN": {
+        "name": "Eindhoven Airport",
+        "city": "Eindhoven",
+        "country": "NL",
+        "coordinates": {
+            "lat": 51.4500,
+            "lng": 5.3753
+        },
+        "annual_passengers_millions": 6.8,
+        "nearby_airports": [
+            {
+                "code": "BRU",
+                "distance_km": 120,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 140,
+                        "time_min": 110
+                    },
+                    "train": {
+                        "cost_usd": 25,
+                        "time_min": 120
+                    }
+                }
+            },
+            {
+                "code": "ANR",
+                "distance_km": 70,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 85,
+                        "time_min": 65
+                    }
+                }
+            },
+            {
+                "code": "AMS",
+                "distance_km": 125,
+                "transport_options": {
+                    "uber": {
+                        "cost_usd": 145,
+                        "time_min": 100
+                    },
+                    "train": {
+                        "cost_usd": 20,
+                        "time_min": 90
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "STN",
+                "flight_cost_typical": 40,
+                "flight_time_min": 70
+            },
+            {
+                "code": "BCN",
+                "flight_cost_typical": 60,
+                "flight_time_min": 130
+            },
+            {
+                "code": "ALC",
+                "flight_cost_typical": 55,
+                "flight_time_min": 155
+            },
+            {
+                "code": "MAD",
+                "flight_cost_typical": 65,
+                "flight_time_min": 150
+            }
+        ]
+    },
+    "NRT": {
+        "name": "Narita International Airport",
+        "city": "Tokyo",
+        "country": "JP",
+        "coordinates": {
+            "lat": 35.7647,
+            "lng": 140.3864
+        },
+        "nearby_airports": [
+            {
+                "code": "HND",
+                "distance_km": 70,
+                "transport_options": {
+                    "train": {
+                        "cost_usd": 15,
+                        "time_min": 60
+                    },
+                    "bus": {
+                        "cost_usd": 12,
+                        "time_min": 90
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "HND",
+                "flight_cost_typical": 60,
+                "flight_time_min": 30
+            },
+            {
+                "code": "ICN",
+                "flight_cost_typical": 180,
+                "flight_time_min": 150
+            },
+            {
+                "code": "PEK",
+                "flight_cost_typical": 220,
+                "flight_time_min": 210
+            },
+            {
+                "code": "PVG",
+                "flight_cost_typical": 200,
+                "flight_time_min": 180
+            },
+            {
+                "code": "SIN",
+                "flight_cost_typical": 380,
+                "flight_time_min": 420
+            },
+            {
+                "code": "BKK",
+                "flight_cost_typical": 350,
+                "flight_time_min": 390
+            },
+            {
+                "code": "LAX",
+                "flight_cost_typical": 580,
+                "flight_time_min": 690
+            },
+            {
+                "code": "SFO",
+                "flight_cost_typical": 550,
+                "flight_time_min": 660
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 680,
+                "flight_time_min": 720
+            },
+            {
+                "code": "FRA",
+                "flight_cost_typical": 650,
+                "flight_time_min": 660
+            }
+        ]
+    },
+    "HND": {
+        "name": "Tokyo Haneda Airport",
+        "city": "Tokyo",
+        "country": "JP",
+        "coordinates": {
+            "lat": 35.5494,
+            "lng": 139.7798
+        },
+        "nearby_airports": [
+            {
+                "code": "NRT",
+                "distance_km": 70,
+                "transport_options": {
+                    "train": {
+                        "cost_usd": 15,
+                        "time_min": 60
+                    },
+                    "bus": {
+                        "cost_usd": 12,
+                        "time_min": 90
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "NRT",
+                "flight_cost_typical": 60,
+                "flight_time_min": 30
+            },
+            {
+                "code": "ICN",
+                "flight_cost_typical": 160,
+                "flight_time_min": 135
+            },
+            {
+                "code": "PVG",
+                "flight_cost_typical": 180,
+                "flight_time_min": 165
+            },
+            {
+                "code": "SIN",
+                "flight_cost_typical": 360,
+                "flight_time_min": 420
+            },
+            {
+                "code": "LAX",
+                "flight_cost_typical": 600,
+                "flight_time_min": 720
+            }
+        ]
+    },
+    "ICN": {
+        "name": "Incheon International Airport",
+        "city": "Seoul",
+        "country": "KR",
+        "coordinates": {
+            "lat": 37.4602,
+            "lng": 126.4407
+        },
+        "nearby_airports": [
+            {
+                "code": "GMP",
+                "distance_km": 55,
+                "transport_options": {
+                    "train": {
+                        "cost_usd": 8,
+                        "time_min": 45
+                    },
+                    "bus": {
+                        "cost_usd": 6,
+                        "time_min": 60
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "NRT",
+                "flight_cost_typical": 180,
+                "flight_time_min": 150
+            },
+            {
+                "code": "PEK",
+                "flight_cost_typical": 160,
+                "flight_time_min": 120
+            },
+            {
+                "code": "PVG",
+                "flight_cost_typical": 140,
+                "flight_time_min": 105
+            },
+            {
+                "code": "SIN",
+                "flight_cost_typical": 320,
+                "flight_time_min": 390
+            },
+            {
+                "code": "BKK",
+                "flight_cost_typical": 280,
+                "flight_time_min": 330
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 450,
+                "flight_time_min": 480
+            },
+            {
+                "code": "LAX",
+                "flight_cost_typical": 620,
+                "flight_time_min": 720
+            },
+            {
+                "code": "SFO",
+                "flight_cost_typical": 580,
+                "flight_time_min": 720
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 720,
+                "flight_time_min": 720
+            },
+            {
+                "code": "FRA",
+                "flight_cost_typical": 680,
+                "flight_time_min": 660
+            }
+        ]
+    },
+    "PEK": {
+        "name": "Beijing Capital International Airport",
+        "city": "Beijing",
+        "country": "CN",
+        "coordinates": {
+            "lat": 40.0799,
+            "lng": 116.6031
+        },
+        "nearby_airports": [
+            {
+                "code": "PKX",
+                "distance_km": 67,
+                "transport_options": {
+                    "train": {
+                        "cost_usd": 5,
+                        "time_min": 45
+                    },
+                    "bus": {
+                        "cost_usd": 3,
+                        "time_min": 90
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "PVG",
+                "flight_cost_typical": 120,
+                "flight_time_min": 120
+            },
+            {
+                "code": "ICN",
+                "flight_cost_typical": 160,
+                "flight_time_min": 120
+            },
+            {
+                "code": "NRT",
+                "flight_cost_typical": 220,
+                "flight_time_min": 210
+            },
+            {
+                "code": "SIN",
+                "flight_cost_typical": 300,
+                "flight_time_min": 360
+            },
+            {
+                "code": "BKK",
+                "flight_cost_typical": 250,
+                "flight_time_min": 300
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 380,
+                "flight_time_min": 480
+            },
+            {
+                "code": "SVO",
+                "flight_cost_typical": 350,
+                "flight_time_min": 480
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 650,
+                "flight_time_min": 660
+            },
+            {
+                "code": "FRA",
+                "flight_cost_typical": 620,
+                "flight_time_min": 600
+            }
+        ]
+    },
+    "PVG": {
+        "name": "Shanghai Pudong International Airport",
+        "city": "Shanghai",
+        "country": "CN",
+        "coordinates": {
+            "lat": 31.1443,
+            "lng": 121.8083
+        },
+        "nearby_airports": [
+            {
+                "code": "SHA",
+                "distance_km": 45,
+                "transport_options": {
+                    "train": {
+                        "cost_usd": 3,
+                        "time_min": 30
+                    },
+                    "bus": {
+                        "cost_usd": 2,
+                        "time_min": 60
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "PEK",
+                "flight_cost_typical": 120,
+                "flight_time_min": 120
+            },
+            {
+                "code": "ICN",
+                "flight_cost_typical": 140,
+                "flight_time_min": 105
+            },
+            {
+                "code": "NRT",
+                "flight_cost_typical": 200,
+                "flight_time_min": 180
+            },
+            {
+                "code": "HND",
+                "flight_cost_typical": 180,
+                "flight_time_min": 165
+            },
+            {
+                "code": "SIN",
+                "flight_cost_typical": 280,
+                "flight_time_min": 330
+            },
+            {
+                "code": "BKK",
+                "flight_cost_typical": 220,
+                "flight_time_min": 270
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 350,
+                "flight_time_min": 450
+            },
+            {
+                "code": "LAX",
+                "flight_cost_typical": 580,
+                "flight_time_min": 780
+            },
+            {
+                "code": "SFO",
+                "flight_cost_typical": 560,
+                "flight_time_min": 720
+            }
+        ]
+    },
+    "CAN": {
+        "name": "Guangzhou Baiyun International Airport",
+        "city": "Guangzhou",
+        "country": "CN",
+        "coordinates": {
+            "lat": 23.3924,
+            "lng": 113.2988
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "PVG",
+                "flight_cost_typical": 100,
+                "flight_time_min": 105
+            },
+            {
+                "code": "PEK",
+                "flight_cost_typical": 140,
+                "flight_time_min": 150
+            },
+            {
+                "code": "HKG",
+                "flight_cost_typical": 80,
+                "flight_time_min": 45
+            },
+            {
+                "code": "SIN",
+                "flight_cost_typical": 200,
+                "flight_time_min": 210
+            },
+            {
+                "code": "BKK",
+                "flight_cost_typical": 150,
+                "flight_time_min": 180
+            }
+        ]
+    },
+    "HKG": {
+        "name": "Hong Kong International Airport",
+        "city": "Hong Kong",
+        "country": "HK",
+        "coordinates": {
+            "lat": 22.3080,
+            "lng": 113.9185
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "PVG",
+                "flight_cost_typical": 120,
+                "flight_time_min": 150
+            },
+            {
+                "code": "CAN",
+                "flight_cost_typical": 80,
+                "flight_time_min": 45
+            },
+            {
+                "code": "SIN",
+                "flight_cost_typical": 180,
+                "flight_time_min": 210
+            },
+            {
+                "code": "BKK",
+                "flight_cost_typical": 140,
+                "flight_time_min": 165
+            },
+            {
+                "code": "NRT",
+                "flight_cost_typical": 250,
+                "flight_time_min": 240
+            },
+            {
+                "code": "ICN",
+                "flight_cost_typical": 200,
+                "flight_time_min": 195
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 350,
+                "flight_time_min": 480
+            },
+            {
+                "code": "LAX",
+                "flight_cost_typical": 550,
+                "flight_time_min": 900
+            }
+        ]
+    },
+    "TPE": {
+        "name": "Taiwan Taoyuan International Airport",
+        "city": "Taipei",
+        "country": "TW",
+        "coordinates": {
+            "lat": 25.0797,
+            "lng": 121.2342
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "HKG",
+                "flight_cost_typical": 120,
+                "flight_time_min": 90
+            },
+            {
+                "code": "NRT",
+                "flight_cost_typical": 180,
+                "flight_time_min": 210
+            },
+            {
+                "code": "ICN",
+                "flight_cost_typical": 160,
+                "flight_time_min": 150
+            },
+            {
+                "code": "SIN",
+                "flight_cost_typical": 200,
+                "flight_time_min": 240
+            },
+            {
+                "code": "LAX",
+                "flight_cost_typical": 520,
+                "flight_time_min": 780
+            }
+        ]
+    },
+    "SIN": {
+        "name": "Singapore Changi Airport",
+        "city": "Singapore",
+        "country": "SG",
+        "coordinates": {
+            "lat": 1.3644,
+            "lng": 103.9915
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "BKK",
+                "flight_cost_typical": 120,
+                "flight_time_min": 135
+            },
+            {
+                "code": "KUL",
+                "flight_cost_typical": 80,
+                "flight_time_min": 75
+            },
+            {
+                "code": "CGK",
+                "flight_cost_typical": 100,
+                "flight_time_min": 105
+            },
+            {
+                "code": "HKG",
+                "flight_cost_typical": 180,
+                "flight_time_min": 210
+            },
+            {
+                "code": "PVG",
+                "flight_cost_typical": 280,
+                "flight_time_min": 330
+            },
+            {
+                "code": "ICN",
+                "flight_cost_typical": 320,
+                "flight_time_min": 390
+            },
+            {
+                "code": "NRT",
+                "flight_cost_typical": 380,
+                "flight_time_min": 420
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 300,
+                "flight_time_min": 420
+            },
+            {
+                "code": "DOH",
+                "flight_cost_typical": 280,
+                "flight_time_min": 450
+            },
+            {
+                "code": "BOM",
+                "flight_cost_typical": 200,
+                "flight_time_min": 330
+            },
+            {
+                "code": "DEL",
+                "flight_cost_typical": 220,
+                "flight_time_min": 360
+            },
+            {
+                "code": "SYD",
+                "flight_cost_typical": 350,
+                "flight_time_min": 480
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 650,
+                "flight_time_min": 780
+            },
+            {
+                "code": "FRA",
+                "flight_cost_typical": 580,
+                "flight_time_min": 720
+            }
+        ]
+    },
+    "KUL": {
+        "name": "Kuala Lumpur International Airport",
+        "city": "Kuala Lumpur",
+        "country": "MY",
+        "coordinates": {
+            "lat": 2.7456,
+            "lng": 101.7072
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "SIN",
+                "flight_cost_typical": 80,
+                "flight_time_min": 75
+            },
+            {
+                "code": "BKK",
+                "flight_cost_typical": 100,
+                "flight_time_min": 120
+            },
+            {
+                "code": "CGK",
+                "flight_cost_typical": 90,
+                "flight_time_min": 105
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 280,
+                "flight_time_min": 420
+            },
+            {
+                "code": "DOH",
+                "flight_cost_typical": 260,
+                "flight_time_min": 450
+            }
+        ]
+    },
+    "BKK": {
+        "name": "Suvarnabhumi Airport",
+        "city": "Bangkok",
+        "country": "TH",
+        "coordinates": {
+            "lat": 13.6900,
+            "lng": 100.7501
+        },
+        "nearby_airports": [
+            {
+                "code": "DMK",
+                "distance_km": 35,
+                "transport_options": {
+                    "bus": {
+                        "cost_usd": 2,
+                        "time_min": 60
+                    },
+                    "taxi": {
+                        "cost_usd": 20,
+                        "time_min": 45
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "SIN",
+                "flight_cost_typical": 120,
+                "flight_time_min": 135
+            },
+            {
+                "code": "KUL",
+                "flight_cost_typical": 100,
+                "flight_time_min": 120
+            },
+            {
+                "code": "CGK",
+                "flight_cost_typical": 110,
+                "flight_time_min": 150
+            },
+            {
+                "code": "HKG",
+                "flight_cost_typical": 140,
+                "flight_time_min": 165
+            },
+            {
+                "code": "ICN",
+                "flight_cost_typical": 280,
+                "flight_time_min": 330
+            },
+            {
+                "code": "NRT",
+                "flight_cost_typical": 350,
+                "flight_time_min": 390
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 300,
+                "flight_time_min": 360
+            },
+            {
+                "code": "DOH",
+                "flight_cost_typical": 280,
+                "flight_time_min": 390
+            },
+            {
+                "code": "BOM",
+                "flight_cost_typical": 180,
+                "flight_time_min": 240
+            },
+            {
+                "code": "DEL",
+                "flight_cost_typical": 200,
+                "flight_time_min": 270
+            }
+        ]
+    },
+    "CGK": {
+        "name": "Soekarno–Hatta International Airport",
+        "city": "Jakarta",
+        "country": "ID",
+        "coordinates": {
+            "lat": -6.1256,
+            "lng": 106.6558
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "SIN",
+                "flight_cost_typical": 100,
+                "flight_time_min": 105
+            },
+            {
+                "code": "KUL",
+                "flight_cost_typical": 90,
+                "flight_time_min": 105
+            },
+            {
+                "code": "BKK",
+                "flight_cost_typical": 110,
+                "flight_time_min": 150
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 320,
+                "flight_time_min": 480
+            },
+            {
+                "code": "SYD",
+                "flight_cost_typical": 380,
+                "flight_time_min": 420
+            }
+        ]
+    },
+    "MNL": {
+        "name": "Ninoy Aquino International Airport",
+        "city": "Manila",
+        "country": "PH",
+        "coordinates": {
+            "lat": 14.5086,
+            "lng": 121.0194
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "SIN",
+                "flight_cost_typical": 150,
+                "flight_time_min": 195
+            },
+            {
+                "code": "HKG",
+                "flight_cost_typical": 120,
+                "flight_time_min": 135
+            },
+            {
+                "code": "NRT",
+                "flight_cost_typical": 200,
+                "flight_time_min": 210
+            },
+            {
+                "code": "ICN",
+                "flight_cost_typical": 180,
+                "flight_time_min": 180
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 380,
+                "flight_time_min": 540
+            }
+        ]
+    },
+    "DEL": {
+        "name": "Indira Gandhi International Airport",
+        "city": "Delhi",
+        "country": "IN",
+        "coordinates": {
+            "lat": 28.5562,
+            "lng": 77.1000
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "BOM",
+                "flight_cost_typical": 80,
+                "flight_time_min": 120
+            },
+            {
+                "code": "BLR",
+                "flight_cost_typical": 90,
+                "flight_time_min": 150
+            },
+            {
+                "code": "SIN",
+                "flight_cost_typical": 220,
+                "flight_time_min": 360
+            },
+            {
+                "code": "BKK",
+                "flight_cost_typical": 200,
+                "flight_time_min": 270
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 180,
+                "flight_time_min": 180
+            },
+            {
+                "code": "DOH",
+                "flight_cost_typical": 200,
+                "flight_time_min": 210
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 450,
+                "flight_time_min": 480
+            },
+            {
+                "code": "FRA",
+                "flight_cost_typical": 480,
+                "flight_time_min": 450
+            }
+        ]
+    },
+    "BOM": {
+        "name": "Chhatrapati Shivaji Maharaj International Airport",
+        "city": "Mumbai",
+        "country": "IN",
+        "coordinates": {
+            "lat": 19.0896,
+            "lng": 72.8656
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "DEL",
+                "flight_cost_typical": 80,
+                "flight_time_min": 120
+            },
+            {
+                "code": "BLR",
+                "flight_cost_typical": 70,
+                "flight_time_min": 90
+            },
+            {
+                "code": "SIN",
+                "flight_cost_typical": 200,
+                "flight_time_min": 330
+            },
+            {
+                "code": "BKK",
+                "flight_cost_typical": 180,
+                "flight_time_min": 240
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 150,
+                "flight_time_min": 150
+            },
+            {
+                "code": "DOH",
+                "flight_cost_typical": 180,
+                "flight_time_min": 180
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 420,
+                "flight_time_min": 540
+            }
+        ]
+    },
+    "BLR": {
+        "name": "Kempegowda International Airport",
+        "city": "Bangalore",
+        "country": "IN",
+        "coordinates": {
+            "lat": 13.1979,
+            "lng": 77.7063
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "BOM",
+                "flight_cost_typical": 70,
+                "flight_time_min": 90
+            },
+            {
+                "code": "DEL",
+                "flight_cost_typical": 90,
+                "flight_time_min": 150
+            },
+            {
+                "code": "SIN",
+                "flight_cost_typical": 180,
+                "flight_time_min": 270
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 140,
+                "flight_time_min": 195
+            },
+            {
+                "code": "DOH",
+                "flight_cost_typical": 160,
+                "flight_time_min": 225
+            }
+        ]
+    },
+    "DXB": {
+        "name": "Dubai International Airport",
+        "city": "Dubai",
+        "country": "AE",
+        "coordinates": {
+            "lat": 25.2532,
+            "lng": 55.3657
+        },
+        "nearby_airports": [
+            {
+                "code": "DWC",
+                "distance_km": 55,
+                "transport_options": {
+                    "bus": {
+                        "cost_usd": 8,
+                        "time_min": 75
+                    },
+                    "taxi": {
+                        "cost_usd": 50,
+                        "time_min": 45
+                    }
+                }
+            }
+        ],
+        "reachable_hubs": [
+            {
+                "code": "DOH",
+                "flight_cost_typical": 120,
+                "flight_time_min": 75
+            },
+            {
+                "code": "AUH",
+                "flight_cost_typical": 80,
+                "flight_time_min": 45
+            },
+            {
+                "code": "KWI",
+                "flight_cost_typical": 100,
+                "flight_time_min": 90
+            },
+            {
+                "code": "CAI",
+                "flight_cost_typical": 180,
+                "flight_time_min": 240
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 380,
+                "flight_time_min": 420
+            },
+            {
+                "code": "FRA",
+                "flight_cost_typical": 350,
+                "flight_time_min": 360
+            },
+            {
+                "code": "CDG",
+                "flight_cost_typical": 400,
+                "flight_time_min": 420
+            },
+            {
+                "code": "BOM",
+                "flight_cost_typical": 150,
+                "flight_time_min": 150
+            },
+            {
+                "code": "DEL",
+                "flight_cost_typical": 180,
+                "flight_time_min": 180
+            },
+            {
+                "code": "SIN",
+                "flight_cost_typical": 300,
+                "flight_time_min": 420
+            },
+            {
+                "code": "BKK",
+                "flight_cost_typical": 300,
+                "flight_time_min": 360
+            },
+            {
+                "code": "ICN",
+                "flight_cost_typical": 450,
+                "flight_time_min": 480
+            },
+            {
+                "code": "NRT",
+                "flight_cost_typical": 520,
+                "flight_time_min": 540
+            },
+            {
+                "code": "JNB",
+                "flight_cost_typical": 380,
+                "flight_time_min": 480
+            }
+        ]
+    },
+    "DOH": {
+        "name": "Hamad International Airport",
+        "city": "Doha",
+        "country": "QA",
+        "coordinates": {
+            "lat": 25.2731,
+            "lng": 51.6086
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "DXB",
+                "flight_cost_typical": 120,
+                "flight_time_min": 75
+            },
+            {
+                "code": "AUH",
+                "flight_cost_typical": 100,
+                "flight_time_min": 60
+            },
+            {
+                "code": "KWI",
+                "flight_cost_typical": 90,
+                "flight_time_min": 45
+            },
+            {
+                "code": "CAI",
+                "flight_cost_typical": 160,
+                "flight_time_min": 210
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 350,
+                "flight_time_min": 390
+            },
+            {
+                "code": "FRA",
+                "flight_cost_typical": 320,
+                "flight_time_min": 330
+            },
+            {
+                "code": "CDG",
+                "flight_cost_typical": 380,
+                "flight_time_min": 390
+            },
+            {
+                "code": "BOM",
+                "flight_cost_typical": 180,
+                "flight_time_min": 180
+            },
+            {
+                "code": "DEL",
+                "flight_cost_typical": 200,
+                "flight_time_min": 210
+            },
+            {
+                "code": "SIN",
+                "flight_cost_typical": 280,
+                "flight_time_min": 450
+            },
+            {
+                "code": "BKK",
+                "flight_cost_typical": 280,
+                "flight_time_min": 390
+            },
+            {
+                "code": "JFK",
+                "flight_cost_typical": 650,
+                "flight_time_min": 780
+            },
+            {
+                "code": "JNB",
+                "flight_cost_typical": 400,
+                "flight_time_min": 480
+            }
+        ]
+    },
+    "AUH": {
+        "name": "Abu Dhabi International Airport",
+        "city": "Abu Dhabi",
+        "country": "AE",
+        "coordinates": {
+            "lat": 24.4330,
+            "lng": 54.6511
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "DXB",
+                "flight_cost_typical": 80,
+                "flight_time_min": 45
+            },
+            {
+                "code": "DOH",
+                "flight_cost_typical": 100,
+                "flight_time_min": 60
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 400,
+                "flight_time_min": 450
+            },
+            {
+                "code": "FRA",
+                "flight_cost_typical": 380,
+                "flight_time_min": 390
+            },
+            {
+                "code": "BOM",
+                "flight_cost_typical": 160,
+                "flight_time_min": 165
+            },
+            {
+                "code": "DEL",
+                "flight_cost_typical": 190,
+                "flight_time_min": 195
+            }
+        ]
+    },
+    "KWI": {
+        "name": "Kuwait International Airport",
+        "city": "Kuwait City",
+        "country": "KW",
+        "coordinates": {
+            "lat": 29.2267,
+            "lng": 47.9689
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "DXB",
+                "flight_cost_typical": 100,
+                "flight_time_min": 90
+            },
+            {
+                "code": "DOH",
+                "flight_cost_typical": 90,
+                "flight_time_min": 45
+            },
+            {
+                "code": "CAI",
+                "flight_cost_typical": 120,
+                "flight_time_min": 120
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 350,
+                "flight_time_min": 390
+            }
+        ]
+    },
+    "CAI": {
+        "name": "Cairo International Airport",
+        "city": "Cairo",
+        "country": "EG",
+        "coordinates": {
+            "lat": 30.1219,
+            "lng": 31.4056
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "DXB",
+                "flight_cost_typical": 180,
+                "flight_time_min": 240
+            },
+            {
+                "code": "DOH",
+                "flight_cost_typical": 160,
+                "flight_time_min": 210
+            },
+            {
+                "code": "IST",
+                "flight_cost_typical": 150,
+                "flight_time_min": 120
+            },
+            {
+                "code": "ATH",
+                "flight_cost_typical": 120,
+                "flight_time_min": 90
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 280,
+                "flight_time_min": 300
+            },
+            {
+                "code": "CDG",
+                "flight_cost_typical": 250,
+                "flight_time_min": 270
+            },
+            {
+                "code": "FRA",
+                "flight_cost_typical": 280,
+                "flight_time_min": 270
+            },
+            {
+                "code": "FCO",
+                "flight_cost_typical": 200,
+                "flight_time_min": 180
+            },
+            {
+                "code": "JNB",
+                "flight_cost_typical": 350,
+                "flight_time_min": 480
+            },
+            {
+                "code": "ADD",
+                "flight_cost_typical": 180,
+                "flight_time_min": 240
+            }
+        ]
+    },
+    "JNB": {
+        "name": "O.R. Tambo International Airport",
+        "city": "Johannesburg",
+        "country": "ZA",
+        "coordinates": {
+            "lat": -26.1367,
+            "lng": 28.2411
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "CPT",
+                "flight_cost_typical": 100,
+                "flight_time_min": 120
+            },
+            {
+                "code": "DUR",
+                "flight_cost_typical": 80,
+                "flight_time_min": 75
+            },
+            {
+                "code": "ADD",
+                "flight_cost_typical": 200,
+                "flight_time_min": 240
+            },
+            {
+                "code": "NBO",
+                "flight_cost_typical": 180,
+                "flight_time_min": 240
+            },
+            {
+                "code": "CAI",
+                "flight_cost_typical": 350,
+                "flight_time_min": 480
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 380,
+                "flight_time_min": 480
+            },
+            {
+                "code": "DOH",
+                "flight_cost_typical": 400,
+                "flight_time_min": 480
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 580,
+                "flight_time_min": 660
+            },
+            {
+                "code": "CDG",
+                "flight_cost_typical": 620,
+                "flight_time_min": 660
+            },
+            {
+                "code": "IST",
+                "flight_cost_typical": 450,
+                "flight_time_min": 480
+            }
+        ]
+    },
+    "CPT": {
+        "name": "Cape Town International Airport",
+        "city": "Cape Town",
+        "country": "ZA",
+        "coordinates": {
+            "lat": -33.9649,
+            "lng": 18.6017
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "JNB",
+                "flight_cost_typical": 100,
+                "flight_time_min": 120
+            },
+            {
+                "code": "DUR",
+                "flight_cost_typical": 120,
+                "flight_time_min": 135
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 600,
+                "flight_time_min": 720
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 420,
+                "flight_time_min": 540
+            }
+        ]
+    },
+    "DUR": {
+        "name": "King Shaka International Airport",
+        "city": "Durban",
+        "country": "ZA",
+        "coordinates": {
+            "lat": -29.6144,
+            "lng": 31.1197
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "JNB",
+                "flight_cost_typical": 80,
+                "flight_time_min": 75
+            },
+            {
+                "code": "CPT",
+                "flight_cost_typical": 120,
+                "flight_time_min": 135
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 380,
+                "flight_time_min": 480
+            }
+        ]
+    },
+    "ADD": {
+        "name": "Addis Ababa Bole International Airport",
+        "city": "Addis Ababa",
+        "country": "ET",
+        "coordinates": {
+            "lat": 8.9806,
+            "lng": 38.7992
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "NBO",
+                "flight_cost_typical": 120,
+                "flight_time_min": 120
+            },
+            {
+                "code": "JNB",
+                "flight_cost_typical": 200,
+                "flight_time_min": 240
+            },
+            {
+                "code": "CAI",
+                "flight_cost_typical": 180,
+                "flight_time_min": 240
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 250,
+                "flight_time_min": 210
+            },
+            {
+                "code": "DOH",
+                "flight_cost_typical": 280,
+                "flight_time_min": 240
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 450,
+                "flight_time_min": 420
+            },
+            {
+                "code": "FRA",
+                "flight_cost_typical": 420,
+                "flight_time_min": 390
+            }
+        ]
+    },
+    "NBO": {
+        "name": "Jomo Kenyatta International Airport",
+        "city": "Nairobi",
+        "country": "KE",
+        "coordinates": {
+            "lat": -1.3192,
+            "lng": 36.9278
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "ADD",
+                "flight_cost_typical": 120,
+                "flight_time_min": 120
+            },
+            {
+                "code": "JNB",
+                "flight_cost_typical": 180,
+                "flight_time_min": 240
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 280,
+                "flight_time_min": 270
+            },
+            {
+                "code": "DOH",
+                "flight_cost_typical": 300,
+                "flight_time_min": 300
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 480,
+                "flight_time_min": 480
+            }
+        ]
+    },
+    "LOS": {
+        "name": "Murtala Muhammed International Airport",
+        "city": "Lagos",
+        "country": "NG",
+        "coordinates": {
+            "lat": 6.5774,
+            "lng": 3.3212
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "ABV",
+                "flight_cost_typical": 80,
+                "flight_time_min": 90
+            },
+            {
+                "code": "ACC",
+                "flight_cost_typical": 100,
+                "flight_time_min": 75
+            },
+            {
+                "code": "CAI",
+                "flight_cost_typical": 220,
+                "flight_time_min": 300
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 450,
+                "flight_time_min": 390
+            },
+            {
+                "code": "CDG",
+                "flight_cost_typical": 420,
+                "flight_time_min": 360
+            }
+        ]
+    },
+    "ABV": {
+        "name": "Nnamdi Azikiwe International Airport",
+        "city": "Abuja",
+        "country": "NG",
+        "coordinates": {
+            "lat": 9.0068,
+            "lng": 7.2631
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "LOS",
+                "flight_cost_typical": 80,
+                "flight_time_min": 90
+            },
+            {
+                "code": "ADD",
+                "flight_cost_typical": 180,
+                "flight_time_min": 180
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 480,
+                "flight_time_min": 420
+            }
+        ]
+    },
+    "ACC": {
+        "name": "Kotoka International Airport",
+        "city": "Accra",
+        "country": "GH",
+        "coordinates": {
+            "lat": 5.6052,
+            "lng": -0.1719
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "LOS",
+                "flight_cost_typical": 100,
+                "flight_time_min": 75
+            },
+            {
+                "code": "ABV",
+                "flight_cost_typical": 120,
+                "flight_time_min": 120
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 420,
+                "flight_time_min": 360
+            },
+            {
+                "code": "CDG",
+                "flight_cost_typical": 380,
+                "flight_time_min": 330
+            }
+        ]
+    },
+    "CAS": {
+        "name": "Mohammed V International Airport",
+        "city": "Casablanca",
+        "country": "MA",
+        "coordinates": {
+            "lat": 33.3675,
+            "lng": -7.5898
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "MAD",
+                "flight_cost_typical": 120,
+                "flight_time_min": 90
+            },
+            {
+                "code": "CDG",
+                "flight_cost_typical": 150,
+                "flight_time_min": 180
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 180,
+                "flight_time_min": 210
+            },
+            {
+                "code": "CAI",
+                "flight_cost_typical": 200,
+                "flight_time_min": 300
+            }
+        ]
+    },
+    "SYD": {
+        "name": "Kingsford Smith Airport",
+        "city": "Sydney",
+        "country": "AU",
+        "coordinates": {
+            "lat": -33.9399,
+            "lng": 151.1753
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "MEL",
+                "flight_cost_typical": 120,
+                "flight_time_min": 90
+            },
+            {
+                "code": "BNE",
+                "flight_cost_typical": 140,
+                "flight_time_min": 75
+            },
+            {
+                "code": "SIN",
+                "flight_cost_typical": 350,
+                "flight_time_min": 480
+            },
+            {
+                "code": "NRT",
+                "flight_cost_typical": 450,
+                "flight_time_min": 540
+            },
+            {
+                "code": "LAX",
+                "flight_cost_typical": 650,
+                "flight_time_min": 840
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 500,
+                "flight_time_min": 840
+            }
+        ]
+    },
+    "MEL": {
+        "name": "Melbourne Airport",
+        "city": "Melbourne",
+        "country": "AU",
+        "coordinates": {
+            "lat": -37.6690,
+            "lng": 144.8410
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "SYD",
+                "flight_cost_typical": 120,
+                "flight_time_min": 90
+            },
+            {
+                "code": "SIN",
+                "flight_cost_typical": 320,
+                "flight_time_min": 450
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 480,
+                "flight_time_min": 780
+            }
+        ]
+    },
+    "DAR": {
+        "name": "Julius Nyerere International Airport",
+        "city": "Dar es Salaam",
+        "country": "TZ",
+        "coordinates": {
+            "lat": -6.8781,
+            "lng": 39.2026
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "NBO",
+                "flight_cost_typical": 120,
+                "flight_time_min": 90
+            },
+            {
+                "code": "ADD",
+                "flight_cost_typical": 140,
+                "flight_time_min": 120
+            },
+            {
+                "code": "JNB",
+                "flight_cost_typical": 200,
+                "flight_time_min": 180
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 320,
+                "flight_time_min": 300
+            },
+            {
+                "code": "DOH",
+                "flight_cost_typical": 350,
+                "flight_time_min": 330
+            }
+        ]
+    },
+    "JRO": {
+        "name": "Kilimanjaro International Airport",
+        "city": "Arusha",
+        "country": "TZ",
+        "coordinates": {
+            "lat": -3.4294,
+            "lng": 37.0744
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "NBO",
+                "flight_cost_typical": 100,
+                "flight_time_min": 60
+            },
+            {
+                "code": "DAR",
+                "flight_cost_typical": 80,
+                "flight_time_min": 75
+            },
+            {
+                "code": "ADD",
+                "flight_cost_typical": 120,
+                "flight_time_min": 90
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 380,
+                "flight_time_min": 330
+            }
+        ]
+    },
+    "EBB": {
+        "name": "Entebbe International Airport",
+        "city": "Kampala",
+        "country": "UG",
+        "coordinates": {
+            "lat": 0.0464,
+            "lng": 32.4435
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "NBO",
+                "flight_cost_typical": 110,
+                "flight_time_min": 90
+            },
+            {
+                "code": "ADD",
+                "flight_cost_typical": 130,
+                "flight_time_min": 105
+            },
+            {
+                "code": "KGL",
+                "flight_cost_typical": 90,
+                "flight_time_min": 75
+            },
+            {
+                "code": "JNB",
+                "flight_cost_typical": 220,
+                "flight_time_min": 240
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 350,
+                "flight_time_min": 360
+            },
+            {
+                "code": "LHR",
+                "flight_cost_typical": 520,
+                "flight_time_min": 540
+            }
+        ]
+    },
+    "KGL": {
+        "name": "Kigali International Airport",
+        "city": "Kigali",
+        "country": "RW",
+        "coordinates": {
+            "lat": -1.9686,
+            "lng": 30.1395
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "EBB",
+                "flight_cost_typical": 90,
+                "flight_time_min": 75
+            },
+            {
+                "code": "NBO",
+                "flight_cost_typical": 120,
+                "flight_time_min": 105
+            },
+            {
+                "code": "ADD",
+                "flight_cost_typical": 110,
+                "flight_time_min": 90
+            },
+            {
+                "code": "JNB",
+                "flight_cost_typical": 200,
+                "flight_time_min": 210
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 380,
+                "flight_time_min": 390
+            },
+            {
+                "code": "BRU",
+                "flight_cost_typical": 450,
+                "flight_time_min": 480
+            }
+        ]
+    },
+    "JIB": {
+        "name": "Djibouti-Ambouli International Airport",
+        "city": "Djibouti City",
+        "country": "DJ",
+        "coordinates": {
+            "lat": 11.5473,
+            "lng": 43.1595
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "ADD",
+                "flight_cost_typical": 80,
+                "flight_time_min": 45
+            },
+            {
+                "code": "CAI",
+                "flight_cost_typical": 150,
+                "flight_time_min": 150
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 200,
+                "flight_time_min": 120
+            },
+            {
+                "code": "DOH",
+                "flight_cost_typical": 220,
+                "flight_time_min": 150
+            }
+        ]
+    },
+    "KRT": {
+        "name": "Khartoum International Airport",
+        "city": "Khartoum",
+        "country": "SD",
+        "coordinates": {
+            "lat": 15.5895,
+            "lng": 32.5532
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "CAI",
+                "flight_cost_typical": 120,
+                "flight_time_min": 120
+            },
+            {
+                "code": "ADD",
+                "flight_cost_typical": 140,
+                "flight_time_min": 105
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 250,
+                "flight_time_min": 210
+            },
+            {
+                "code": "DOH",
+                "flight_cost_typical": 280,
+                "flight_time_min": 240
+            }
+        ]
+    },
+    "JUB": {
+        "name": "Juba International Airport",
+        "city": "Juba",
+        "country": "SS",
+        "coordinates": {
+            "lat": 4.8721,
+            "lng": 31.6011
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "KRT",
+                "flight_cost_typical": 100,
+                "flight_time_min": 90
+            },
+            {
+                "code": "ADD",
+                "flight_cost_typical": 120,
+                "flight_time_min": 75
+            },
+            {
+                "code": "NBO",
+                "flight_cost_typical": 140,
+                "flight_time_min": 120
+            },
+            {
+                "code": "EBB",
+                "flight_cost_typical": 80,
+                "flight_time_min": 60
+            }
+        ]
+    },
+    "ASM": {
+        "name": "Asmara International Airport",
+        "city": "Asmara",
+        "country": "ER",
+        "coordinates": {
+            "lat": 15.2919,
+            "lng": 38.9107
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "CAI",
+                "flight_cost_typical": 180,
+                "flight_time_min": 180
+            },
+            {
+                "code": "KRT",
+                "flight_cost_typical": 120,
+                "flight_time_min": 90
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 280,
+                "flight_time_min": 240
+            }
+        ]
+    },
+    "MGQ": {
+        "name": "Aden Adde International Airport",
+        "city": "Mogadishu",
+        "country": "SO",
+        "coordinates": {
+            "lat": 2.0144,
+            "lng": 45.3047
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "ADD",
+                "flight_cost_typical": 150,
+                "flight_time_min": 120
+            },
+            {
+                "code": "NBO",
+                "flight_cost_typical": 140,
+                "flight_time_min": 105
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 300,
+                "flight_time_min": 270
+            }
+        ]
+    },
+    "SEZ": {
+        "name": "Seychelles International Airport",
+        "city": "Victoria",
+        "country": "SC",
+        "coordinates": {
+            "lat": -4.6743,
+            "lng": 55.5218
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "ADD",
+                "flight_cost_typical": 200,
+                "flight_time_min": 240
+            },
+            {
+                "code": "NBO",
+                "flight_cost_typical": 220,
+                "flight_time_min": 180
+            },
+            {
+                "code": "MRU",
+                "flight_cost_typical": 150,
+                "flight_time_min": 90
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 280,
+                "flight_time_min": 240
+            }
+        ]
+    },
+    "MRU": {
+        "name": "Sir Seewoosagur Ramgoolam International Airport",
+        "city": "Port Louis",
+        "country": "MU",
+        "coordinates": {
+            "lat": -20.4302,
+            "lng": 57.6836
+        },
+        "nearby_airports": [],
+        "reachable_hubs": [
+            {
+                "code": "SEZ",
+                "flight_cost_typical": 150,
+                "flight_time_min": 90
+            },
+            {
+                "code": "JNB",
+                "flight_cost_typical": 250,
+                "flight_time_min": 240
+            },
+            {
+                "code": "DXB",
+                "flight_cost_typical": 320,
+                "flight_time_min": 300
+            },
+            {
+                "code": "CDG",
+                "flight_cost_typical": 550,
+                "flight_time_min": 660
+            }
+        ]
+    }
 }

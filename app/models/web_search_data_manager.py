@@ -156,6 +156,19 @@ class DataManager:
             }
         }
     
+    def get_hub_destinations(self, hub_code: str) -> List[str]:
+        """
+        Get list of destination airport codes reachable from this hub.
+        Currently returns destinations from reachable_hubs field.
+        """
+        hub_info = self.get_airport_info(hub_code)
+        if not hub_info:
+            return []
+        
+        # Extract destination codes from reachable_hubs
+        reachable = hub_info.get('reachable_hubs', [])
+        return [hub['code'] for hub in reachable]
+    
     # Public API methods
     def get_airport_info(self, airport_code: str) -> Optional[Dict]:
         """Get full airport information"""

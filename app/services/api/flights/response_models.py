@@ -158,6 +158,7 @@ class FlightSearchResponse:
     error_message: Optional[str] = None
     provider_name: Optional[str] = None
     flights: List[FlightOffer] = field(default_factory=list)
+    budget_airline_alternatives: List[Dict] = field(default_factory=list)
 
 
 @dataclass
@@ -185,6 +186,7 @@ class SimplifiedSearchResponse:
     search_params: Optional[Dict[str, Any]] = None
     error_message: Optional[str] = None
     flights: List[SimplifiedFlightOffer] = field(default_factory=list)
+    budget_airline_alternatives: List[Dict] = field(default_factory=list)
 
 @dataclass
 class SeatSelection:

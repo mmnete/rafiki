@@ -12,6 +12,7 @@ export interface SearchRequest {
   };
   travel_class: 'economy' | 'premium_economy' | 'business' | 'first';
   special_needs?: string[];
+  flexible_dates?: boolean; // Add this
 }
 
 // Response when initiating a search
