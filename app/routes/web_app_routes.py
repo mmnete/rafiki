@@ -7,10 +7,10 @@ from app.models.web_search_strategy import validate_search_input, generate_searc
 from app.models.web_search_executer import execute_flight_searches
 from app.models.analytics import track_search, track_interest, track_no_interest, get_analytics
 from app.services.redis_storage_manager import implemented_redis_storage_manager as storage
-import geoip2.database
-import geoip2.errors
-import geoip2.webservice
-import os
+# import geoip2.database
+# import geoip2.errors
+# import geoip2.webservice
+# import os
 import logging
 import time
 
@@ -18,28 +18,40 @@ logger = logging.getLogger(__name__)
 
 web_search_bp = Blueprint("web_app", __name__)
 
-def get_user_location(ip_address):
-    """Get user location from IP address using MaxMind Web Services"""
-    try:
-        account_id = os.getenv("MAXMIND_ACCOUNT_ID")
-        license_key = os.getenv("MAXMIND_LICENSE_KEY")
+# def get_user_location(ip_address):
+#     """Get user location from IP address using MaxMind Web Services"""
+#     try:
+#         account_id = os.getenv("MAXMIND_ACCOUNT_ID")
+#         license_key = os.getenv("MAXMIND_LICENSE_KEY")
         
-        if account_id == None or license_key == None:
-            return {}
+#         if account_id is None or license_key is None:
+#             logger.warning("MaxMind credentials not configured (MAXMIND_ACCOUNT_ID or MAXMIND_LICENSE_KEY missing)")
+#             return {}
 
-        with geoip2.webservice.Client(int(account_id), license_key) as client:
-            response = client.city(ip_address)
+#         with geoip2.webservice.Client(int(account_id), license_key) as client:
+#             response = client.city(ip_address)
 
-            return {
-                "country": response.country.name,
-                "city": response.city.name,
-                "latitude": float(response.location.latitude) if response.location.latitude else None,
-                "longitude": float(response.location.longitude) if response.location.longitude else None
-            }
-    except geoip2.errors.AddressNotFoundError:
-        return {"country": "Unknown", "city": "Unknown", "latitude": None, "longitude": None}
-    except Exception:
-        return {"country": "Unknown", "city": "Unknown", "latitude": None, "longitude": None}
+#             return {
+#                 "country": response.country.name,
+#                 "city": response.city.name,
+#                 "latitude": float(response.location.latitude) if response.location.latitude else None,
+#                 "longitude": float(response.location.longitude) if response.location.longitude else None
+#             }
+#     except geoip2.errors.AddressNotFoundError:
+#         logger.warning(f"IP address not found in MaxMind database: {ip_address}")
+#         return {"country": "Unknown", "city": "Unknown", "latitude": None, "longitude": None}
+#     except geoip2.errors.AuthenticationError as e:
+#         logger.error(f"MaxMind authentication failed: {str(e)}")
+#         return {"country": "Unknown", "city": "Unknown", "latitude": None, "longitude": None}
+#     except geoip2.errors.PermissionRequiredError as e:
+#         logger.error(f"MaxMind permission error: {str(e)}")
+#         return {"country": "Unknown", "city": "Unknown", "latitude": None, "longitude": None}
+#     except ValueError as e:
+#         logger.error(f"Invalid MaxMind account ID format (expected integer): {str(e)}")
+#         return {"country": "Unknown", "city": "Unknown", "latitude": None, "longitude": None}
+#     except Exception as e:
+#         logger.error(f"Unexpected error getting location for IP {ip_address}: {type(e).__name__}: {str(e)}", exc_info=True)
+#         return {"country": "Unknown", "city": "Unknown", "latitude": None, "longitude": None}
 
 def get_or_create_session_id():
     """Generate or retrieve session ID for tracking"""
@@ -102,7 +114,7 @@ def web_search_flights():
         session_id = get_or_create_session_id()
         user_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', ''))
         user_agent = request.headers.get('User-Agent', '')
-        location = get_user_location(user_ip)
+        location = ""
         
         # Validate and parse input
         search_request = validate_search_input(request.json)
@@ -245,7 +257,7 @@ def track_user_interest():
         data = request.get_json(silent=True) or {}
         session_id = get_or_create_session_id()
         user_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', ''))
-        location = get_user_location(user_ip)
+        location = ""
 
         interest_data = {
             'session_id': session_id,
@@ -274,7 +286,7 @@ def track_user_not_interested():
         data = request.get_json(silent=True) or {}
         session_id = get_or_create_session_id()
         user_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', ''))
-        location = get_user_location(user_ip)
+        location = ""
 
         no_interest_data = {
             'session_id': session_id,
@@ -311,7 +323,7 @@ def create_price_alert():
         data = request.get_json(silent=True) or {}
         session_id = get_or_create_session_id()
         user_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', ''))
-        location = get_user_location(user_ip)
+        location = ""
 
         # Validate required fields
         if not data.get('email'):
@@ -379,13 +391,11 @@ def track_booking_click():
         data = request.get_json(silent=True) or {}
         session_id = get_or_create_session_id()
         user_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', ''))
-        location = get_user_location(user_ip)
+        location = ""
 
         # Validate required fields
         if not data.get('origin') or not data.get('destination'):
             return jsonify({'error': 'Origin and destination are required'}), 400
-        if not data.get('departure_date'):
-            return jsonify({'error': 'Departure date is required'}), 400
 
         from app.models.analytics import track_booking_click as track_click
 
@@ -394,7 +404,7 @@ def track_booking_click():
             'flight_offer_id': data.get('flight_offer_id'),
             'origin': data['origin'],
             'destination': data['destination'],
-            'departure_date': data['departure_date'],
+            'departure_date': data.get('departure_date'),  # Now optional
             'return_date': data.get('return_date'),
             'price': data.get('price'),
             'booking_site': data.get('booking_site', 'skyscanner'),

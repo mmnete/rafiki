@@ -267,6 +267,7 @@ function App() {
       direct_flights: sortByPrice(results.direct_flights || []),
       nearby_airport_options: sortByPrice(results.nearby_airport_options || []),
       hub_connections: sortByPrice(results.hub_connections || []),
+      budget_airline_alternatives: results.budget_airline_alternatives,
       search_summary: results.search_summary,
       debug_info: results.debug_info,
     };

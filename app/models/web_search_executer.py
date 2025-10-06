@@ -20,8 +20,8 @@ logger = logging.getLogger(__name__)
 USE_SERPAPI = os.getenv("USE_SERPAPI", "false").lower() == "true"
 
 
-# Rate limiting configuration
 class RateLimiter:
+    """Rate limiting for API requests"""
     def __init__(self, max_requests_per_second=2):
         self.max_requests_per_second = max_requests_per_second
         self.min_interval = 1.0 / max_requests_per_second
@@ -42,18 +42,19 @@ class RateLimiter:
 
 
 # Global rate limiter instance
-RATE_LIMIT = 5 if USE_SERPAPI else 2  # SerpAPI allows more requests
+RATE_LIMIT = 5 if USE_SERPAPI else 2
 rate_limiter = RateLimiter(max_requests_per_second=RATE_LIMIT)
 
 
 @dataclass
 class SearchResult:
+    """Result from a single search strategy"""
     strategy: SearchStrategy
     flights: List[Dict]
     success: bool
     error_message: Optional[str] = None
     budget_alternatives: List[Dict] = field(default_factory=list)
-
+    google_flights_url: Optional[str] = None
 
 def execute_flight_searches(
     strategies: List[SearchStrategy], search_request: SearchRequest
@@ -62,7 +63,7 @@ def execute_flight_searches(
 
     request_start = datetime.now()
     process = psutil.Process(os.getpid())
-    mem_start = process.memory_info().rss / 1024 / 1024  # MB
+    mem_start = process.memory_info().rss / 1024 / 1024
 
     logger.info(f"Starting flight search at {request_start}")
     logger.info(f"Memory at start: {mem_start:.2f} MB")
@@ -72,6 +73,7 @@ def execute_flight_searches(
 
     search_results = []
     all_budget_alternatives = []
+    google_flights_urls = []
 
     with ThreadPoolExecutor(max_workers=3) as executor:
         future_to_strategy = {}
@@ -87,11 +89,15 @@ def execute_flight_searches(
                     f"Waiting for strategy '{strategy.strategy_type}': {strategy.explanation}"
                 )
 
-                flights, budget_alternatives = future.result(timeout=60)
+                flights, budget_alternatives, google_url = future.result(timeout=60)
 
                 # Collect budget alternatives
                 if budget_alternatives:
                     all_budget_alternatives.extend(budget_alternatives)
+
+                # Collect Google Flights URLs
+                if google_url:
+                    google_flights_urls.append(google_url)
 
                 strategy_duration = (datetime.now() - strategy_start).total_seconds()
                 logger.debug(
@@ -99,14 +105,15 @@ def execute_flight_searches(
                 )
 
                 enriched_flights = _enrich_flight_results(
-                    flights, strategy, search_request
+                    flights, strategy, search_request, google_url
                 )
                 search_results.append(
                     SearchResult(
-                        strategy,
-                        enriched_flights,
-                        True,
+                        strategy=strategy,
+                        flights=enriched_flights,
+                        success=True,
                         budget_alternatives=budget_alternatives,
+                        google_flights_url=google_url,
                     )
                 )
                 logger.debug(
@@ -149,14 +156,17 @@ def execute_flight_searches(
     }
     budget_alternatives_list = list(unique_budget.values())
 
+    # Use the first available Google Flights URL (typically from direct search)
+    primary_google_url = google_flights_urls[0] if google_flights_urls else None
+
     return _process_search_results(
-        search_results, search_request, budget_alternatives_list
+        search_results, search_request, budget_alternatives_list, primary_google_url
     )
 
 
 def _execute_single_search(
     strategy: SearchStrategy, search_request: SearchRequest
-) -> Tuple[List[Dict], List[Dict]]:
+) -> Tuple[List[Dict], List[Dict], Optional[str]]:
     """Execute a single search strategy using configured provider with rate limiting"""
 
     logger.debug(f"Executing search for strategy: {strategy.explanation}")
@@ -164,11 +174,11 @@ def _execute_single_search(
     passengers = _convert_search_request_to_passengers(search_request)
 
     # Select provider based on configuration
-    provider = AmadeusProvider()
     if USE_SERPAPI:
         provider = SerpApiProvider()
         logger.debug("Using SerpAPI provider")
     else:
+        provider = AmadeusProvider()
         logger.debug("Using Amadeus provider")
 
     if search_request.is_roundtrip:
@@ -231,36 +241,53 @@ def _convert_search_request_to_passengers(
 
 
 def _search_oneway_strategy(
-    provider,  # Generic FlightProvider
+    provider,
     strategy: SearchStrategy,
     search_request: SearchRequest,
     passengers: List[Passenger],
-) -> Tuple[List[Dict], List[Dict]]:
+) -> Tuple[List[Dict], List[Dict], Optional[str]]:
     """Search one-way flights with support for hub connections"""
 
     if len(strategy.outbound_route) == 2:
-        # Direct flight - returns budget alternatives
+        # Direct flight - returns budget alternatives and Google Flights URL
         return _search_direct_flight(provider, strategy, search_request, passengers)
 
     elif len(strategy.outbound_route) == 3:
         # Hub connection: Origin → Hub → Destination
         flights = _search_hub_connection(provider, strategy, search_request, passengers)
-        return flights, []  # Hub connections don't have budget alternatives
+        return flights, [], None  # Hub connections don't have budget alternatives or URLs
 
     else:
         logger.warning(
             f"Unsupported route complexity: {len(strategy.outbound_route)} segments"
         )
-        return [], []
+        return [], [], None
 
+def _validate_route(origin: str, destination: str) -> bool:
+    """
+    Validate that origin and destination are different.
+    Returns True if valid, False if invalid.
+    """
+    if origin == destination:
+        logger.warning(f"Invalid route: origin and destination are the same ({origin})")
+        return False
+    return True
 
 def _search_direct_flight(
-    provider,  # Generic FlightProvider
+    provider,
     strategy: SearchStrategy,
     search_request: SearchRequest,
     passengers: List[Passenger],
-) -> Tuple[List[Dict], List[Dict]]:
-    """Search direct flights and return budget airline alternatives"""
+) -> Tuple[List[Dict], List[Dict], Optional[str]]:
+    """Search direct flights and return budget airline alternatives + Google Flights URL"""
+    
+    origin, destination = strategy.outbound_route
+    
+    # Validate route before making API call
+    if not _validate_route(origin, destination):
+        logger.info(f"Skipping search for {origin} -> {destination} (same airport)")
+        return [], [], None
+    
     rate_limiter.wait_if_needed()
 
     try:
@@ -282,23 +309,27 @@ def _search_direct_flight(
             )
             flights = [offer.__dict__ for offer in full_response.flights]
             budget_alternatives = full_response.budget_airline_alternatives or []
+            google_flights_url = getattr(full_response, 'google_flights_url', None)
 
             if budget_alternatives:
                 logger.info(
                     f"Found {len(budget_alternatives)} budget airline alternatives for {origin} -> {destination}"
                 )
 
-            return flights, budget_alternatives
+            if google_flights_url:
+                logger.info(f"Google Flights URL: {google_flights_url}")
+
+            return flights, budget_alternatives, google_flights_url
         else:
-            logger.debug(f"Direct flight: no results")
-            return [], []
+            logger.debug("Direct flight: no results")
+            return [], [], None
+
     except Exception as e:
         logger.error(f"Direct flight API call failed: {str(e)}")
         raise
 
-
 def _search_hub_connection(
-    provider,  # Generic FlightProvider
+    provider,
     strategy: SearchStrategy,
     search_request: SearchRequest,
     passengers: List[Passenger],
@@ -306,6 +337,21 @@ def _search_hub_connection(
     """Search hub connections by finding compatible flight pairs"""
 
     origin, hub, destination = strategy.outbound_route
+    
+    # Validate all segments
+    if not _validate_route(origin, hub):
+        logger.info(f"Skipping hub connection: invalid first leg {origin} -> {hub}")
+        return []
+    
+    if not _validate_route(hub, destination):
+        logger.info(f"Skipping hub connection: invalid second leg {hub} -> {destination}")
+        return []
+    
+    # Additional validation: ensure hub is different from both origin and destination
+    if origin == hub or hub == destination:
+        logger.info(f"Skipping hub connection: hub {hub} equals origin or destination")
+        return []
+
     departure_date = datetime.strptime(search_request.departure_date, "%Y-%m-%d")
 
     logger.debug(f"Hub connection: {origin} -> {hub} -> {destination}")
@@ -371,7 +417,6 @@ def _search_hub_connection(
         combined_flights.append(combined_flight)
 
     return combined_flights
-
 
 def _find_compatible_connections(
     first_leg_flights,
@@ -680,11 +725,11 @@ def _create_empty_roundtrip_structure(offer_dict):
 
 
 def _search_roundtrip_strategy(
-    provider,  # Generic FlightProvider
+    provider,
     strategy: SearchStrategy,
     search_request: SearchRequest,
     passengers: List[Passenger],
-) -> Tuple[List[Dict], List[Dict]]:
+) -> Tuple[List[Dict], List[Dict], Optional[str]]:
     """Search round-trip flights with hub support"""
 
     if (
@@ -696,6 +741,11 @@ def _search_roundtrip_strategy(
         rate_limiter.wait_if_needed()
         try:
             origin, destination = strategy.outbound_route
+            origin, destination = strategy.outbound_route
+        
+            if not _validate_route(origin, destination):
+                logger.info(f"Skipping round-trip search for {origin} <-> {destination} (same airport)")
+                return [], [], None
             logger.debug(f"Round-trip API call: {origin} <-> {destination}")
 
             simplified_response, full_response = provider.search_flights(
@@ -721,16 +771,21 @@ def _search_roundtrip_strategy(
                         split_roundtrips.append(split_offer)
 
                 budget_alternatives = full_response.budget_airline_alternatives or []
+                google_flights_url = getattr(full_response, 'google_flights_url', None)
 
                 if budget_alternatives:
                     logger.info(
                         f"Found {len(budget_alternatives)} budget airline alternatives for round-trip {origin} <-> {destination}"
                     )
 
-                return split_roundtrips, budget_alternatives
+                if google_flights_url:
+                    logger.info(f"Google Flights URL: {google_flights_url}")
+
+                return split_roundtrips, budget_alternatives, google_flights_url
             else:
-                logger.debug(f"Round-trip: no results")
-                return [], []
+                logger.debug("Round-trip: no results")
+                return [], [], None
+
         except Exception as e:
             logger.error(f"Round-trip API call failed: {str(e)}")
             raise
@@ -740,7 +795,7 @@ def _search_roundtrip_strategy(
         and strategy.return_route
         and len(strategy.return_route) == 3
     ):
-        # Hub round-trip - no budget alternatives for complex routes
+        # Hub round-trip - no budget alternatives or URLs for complex routes
         logger.debug("Hub round-trip connection")
 
         outbound_request = SearchRequest(
@@ -757,7 +812,7 @@ def _search_roundtrip_strategy(
         return_request = SearchRequest(
             origin=search_request.destination,
             destination=search_request.origin,
-            departure_date=search_request.return_date,  # type: ignore
+            departure_date=search_request.return_date, # type: ignore
             return_date=None,
             adults=search_request.adults,
             children=search_request.children,
@@ -819,15 +874,18 @@ def _search_roundtrip_strategy(
                     }
                 )
 
-        return combined_roundtrips, []
+        return combined_roundtrips, [], None
 
     else:
         logger.debug("Complex round-trip search not implemented yet")
-        return [], []
+        return [], [], None
 
 
 def _enrich_flight_results(
-    flights: List[Dict], strategy: SearchStrategy, search_request: SearchRequest
+    flights: List[Dict], 
+    strategy: SearchStrategy, 
+    search_request: SearchRequest,
+    google_flights_url: Optional[str] = None  # ✨ Add parameter
 ) -> List[Dict]:
     """Enhanced enrichment that works with FlightOffer objects"""
     enriched_flights = []
@@ -839,6 +897,7 @@ def _enrich_flight_results(
             enriched_flight["search_strategy"] = strategy.strategy_type
             enriched_flight["strategy_explanation"] = strategy.explanation
             enriched_flight["routing_used"] = strategy.outbound_route
+            enriched_flight["google_flights_url"] = google_flights_url  # ✨ Add URL to each flight
 
             if "pricing" in enriched_flight and enriched_flight["pricing"]:
                 if isinstance(enriched_flight["pricing"], dict):
@@ -886,7 +945,8 @@ def _enrich_flight_results(
 def _process_search_results(
     search_results: List[SearchResult],
     search_request: SearchRequest,
-    budget_alternatives: List[Dict] = [],
+    budget_alternatives: List[Dict],
+    google_flights_url: Optional[str] = None,
 ) -> Dict:
     """Process and group all search results"""
     all_flights = []
@@ -903,7 +963,7 @@ def _process_search_results(
             )
 
     # Sort by total cost with transport
-    all_flights.sort(key=lambda x: x["total_cost_with_transport"])
+    all_flights.sort(key=lambda x: x.get("total_cost_with_transport", float('inf')))
 
     logger.info(
         f"Search completed: {successful_searches}/{len(search_results)} strategies successful, "
@@ -913,28 +973,30 @@ def _process_search_results(
     if budget_alternatives:
         logger.info(f"Returning {len(budget_alternatives)} budget airline alternatives")
 
+    if google_flights_url:
+        logger.info(f"Including Google Flights URL in response: {google_flights_url}")
+
     response = {
         "search_summary": {
             "total_strategies_attempted": len(search_results),
             "successful_searches": successful_searches,
             "total_flights_found": len(all_flights),
             "search_request": search_request.__dict__,
-            "budget_airlines_checked": (
-                len(budget_alternatives) > 0 if budget_alternatives else False
-            ),
+            "budget_airlines_checked": len(budget_alternatives) > 0,
         },
         "results": {
             "direct_flights": [
-                f for f in all_flights if f["search_strategy"] == "direct"
+                f for f in all_flights if f.get("search_strategy") == "direct"
             ][:3],
             "nearby_airport_options": [
-                f for f in all_flights if f["search_strategy"] == "nearby"
+                f for f in all_flights if f.get("search_strategy") == "nearby"
             ][:3],
             "hub_connections": [
-                f for f in all_flights if f["search_strategy"] == "hub"
+                f for f in all_flights if f.get("search_strategy") == "hub"
             ][:3],
         },
-        "budget_airline_alternatives": budget_alternatives or [],
+        "budget_airline_alternatives": budget_alternatives,
+        "primary_google_flights_url": google_flights_url,
         "debug_info": {"failed_searches": failed_searches},
     }
 

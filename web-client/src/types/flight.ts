@@ -40,6 +40,7 @@ export interface SearchResponse {
   direct_flights?: Flight[];
   nearby_airport_options?: Flight[];
   hub_connections?: Flight[];
+  budget_airline_alternatives?: Flight[];
   search_summary?: any;
   debug_info?: any;
 }
@@ -102,6 +103,7 @@ export interface Flight {
   cabin_class: string;
   refundable: boolean;
   changeable: boolean;
+  google_flights_url: string | undefined;
 }
 
 export interface FlightSegment {

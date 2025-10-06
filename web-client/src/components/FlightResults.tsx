@@ -22,7 +22,7 @@ import {
   Close,
 } from "@mui/icons-material";
 import { ConnectingAirports } from "@mui/icons-material";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 interface FlightResultsProps {
   results: any;
@@ -66,6 +66,25 @@ export const FlightResults: React.FC<FlightResultsProps> = ({
   searchParams,
 }) => {
   const [expandedFlight, setExpandedFlight] = useState<string | null>(null);
+  const [showCompareMenu, setShowCompareMenu] = useState(false);
+  const compareLabel = useMemo(() => {
+    const memeLabels = [
+      "👑 We're the GOAT. Go see the runner-ups.", // Implies others are second best
+      "🧠 Big Brain Move: Confirm this price is unmatched.", // Suggests our deal is the smartest choice
+      "👀 Sus? Go see their higher prices.", // Direct suggestion that competitors are more expensive
+      "📈 Stonks! Compare to confirm max value.", // Focuses on confirming our great value
+      "🔥 This is fine. (Their prices are not). Compare.", // Implying others have "fire" (bad) prices
+      "🛡️ Expensive? Cap. See why they're priced higher.", // Stating our price isn't a lie, others might be
+      "🍿 Plot Twist: See how much you're saving with us.", // Highlights savings based on competitors
+      "🤝 Real Ones know. But go check the competition.", // Playfully confident
+      "💅 Slay that booking. Go find a bigger price tag.", // Dares the user to find a worse deal
+      "🚀 Time to Compare. (It’s a flex).", // Implies checking is showing off the great deal
+      "💯 Vibe check: Go see who failed the price test.", // Implies competitors have failed
+      "✨ Peep those 'almost as good' prices, fam.", // Subtly diminishes the competition
+    ];
+
+    return memeLabels[Math.floor(Math.random() * memeLabels.length)];
+  }, []);
   const [showPriceAlertExpanded, setShowPriceAlertExpanded] = useState(false);
   const [alertEmail, setAlertEmail] = useState("");
   const [alertStatus, setAlertStatus] = useState<
@@ -242,47 +261,6 @@ export const FlightResults: React.FC<FlightResultsProps> = ({
     return highlights.slice(0, 3);
   };
 
-//   const getFullPolicyDetails = (flight: any) => {
-//     const outbound = flight.outbound_flight || flight;
-
-//     return {
-//       baggage: {
-//         carryOn: outbound.baggage?.carry_on_included
-//           ? "Included"
-//           : "Not included (fee applies)",
-//         checked:
-//           outbound.baggage?.checked_bags_included > 0
-//             ? `${outbound.baggage.checked_bags_included} bag(s) included`
-//             : "Not included (fee applies)",
-//         policy: outbound.baggage_policy?.all_fares || null,
-//       },
-//       cancellation: {
-//         refundable: outbound.fare_details?.refundable || false,
-//         policy: outbound.cancellation_policy?.all_fares || "Non-refundable",
-//         changeable: outbound.fare_details?.changeable || false,
-//       },
-//       seats: {
-//         selectionAvailable:
-//           outbound.ancillary_services?.seat_selection_available || false,
-//         feeRange: outbound.ancillary_services?.seat_selection_fee_range || null,
-//         types: outbound.ancillary_services?.seat_types_available || [],
-//       },
-//       meals: {
-//         included: outbound.segments?.[0]?.meal_service || "Not specified",
-//         options: outbound.segments?.[0]?.meal_options || [],
-//         upgradeAvailable:
-//           outbound.ancillary_services?.meal_upgrade_available || false,
-//       },
-//       extras: {
-//         wifi: outbound.ancillary_services?.wifi_cost,
-//         loungeAccess: outbound.ancillary_services?.lounge_access || false,
-//         priorityBoarding:
-//           outbound.ancillary_services?.priority_boarding_available || false,
-//       },
-//       fareClass: outbound.fare_details?.fare_class || "Economy",
-//     };
-//   };
-
   // Extract route information from flight
   const getRouteInfo = (flight: any) => {
     const isRoundtrip = flight.outbound_flight && flight.return_flight;
@@ -357,55 +335,65 @@ export const FlightResults: React.FC<FlightResultsProps> = ({
     }
   };
 
-  const buildGoogleFlightsUrl = (
-    origin: string,
-    destination: string,
-    departureDate: string,
-    returnDate?: string
-  ) => {
-    const formatDate = (dateString: string) => {
-      const date = new Date(dateString);
-      // Make sure it stays in YYYY-MM-DD format
-      return date.toISOString().split("T")[0];
-    };
+  const getGoogleFlightsUrl = (flight: any): string => {
+    // Use the flight's own google_flights_url
+    if (flight.google_flights_url) {
+      return flight.google_flights_url;
+    }
 
-    const depDate = formatDate(departureDate);
-    const retDate = returnDate ? formatDate(returnDate) : "";
-
-    // Google Flights expects this format in the query:
-    // https://www.google.com/travel/flights?q=flights+from+{origin}+to+{destination}+on+{depDate}+returning+{retDate}
-    // It’s not documented officially, but this pattern works consistently.
-
-    let query = `flights from ${origin} to ${destination} on ${depDate}`;
-    if (retDate) query += ` returning ${retDate}`;
+    // Fallback: Build a generic Google Flights URL from flight data
+    const outbound = flight.outbound_flight || flight;
+    const returnFlight = flight.return_flight;
 
     const params = new URLSearchParams({
-      q: query,
+      engine: "google_flights",
+      departure_id: outbound.origin,
+      arrival_id: outbound.destination,
+      outbound_date: outbound.departure_time?.split("T")[0] || "",
       hl: "en",
       gl: "us",
+      type: returnFlight ? "1" : "2",
     });
 
-    return `https://www.google.com/travel/flights?${params.toString()}`;
+    if (returnFlight?.departure_time) {
+      params.set("return_date", returnFlight.departure_time.split("T")[0]);
+    }
+
+    return `https://serpapi.com/search?${params.toString()}`;
   };
 
-  const buildKiwiUrl = (
-    origin: string,
-    destination: string,
-    departureDate: string,
-    returnDate?: string
-  ) => {
-    const formatDate = (dateString: string) => {
-      const date = new Date(dateString);
-      return date.toISOString().split("T")[0];
-    };
+  const buildCompareUrl = (platform: "skyscanner" | "kayak") => {
+    if (!searchParams) return "#";
 
-    const depDate = formatDate(departureDate);
-    const retDate = returnDate ? formatDate(returnDate) : "";
+    const { origin, destination, departureDate, returnDate } = searchParams;
 
-    if (retDate) {
-      return `https://www.kiwi.com/en/search/results/${origin}/${destination}/${depDate}/${retDate}`;
+    if (platform === "skyscanner") {
+      const depDate = formatDateForSkyscanner(departureDate);
+      const retDate = returnDate ? formatDateForSkyscanner(returnDate) : "";
+      const baseUrl = "https://www.skyscanner.com/transport/flights";
+
+      if (retDate) {
+        return `${baseUrl}/${origin}/${destination}/${depDate}/${retDate}/`;
+      }
+      return `${baseUrl}/${origin}/${destination}/${depDate}/`;
+    } else {
+      // Kayak
+      const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      };
+
+      const depDate = formatDate(departureDate);
+      const retDate = returnDate ? formatDate(returnDate) : "";
+
+      if (retDate) {
+        return `https://www.kayak.com/flights/${origin}-${destination}/${depDate}/${retDate}?sort=bestflight_a`;
+      }
+      return `https://www.kayak.com/flights/${origin}-${destination}/${depDate}?sort=bestflight_a`;
     }
-    return `https://www.kiwi.com/en/search/results/${origin}/${destination}/${depDate}`;
   };
 
   // Render the booking guide for hub connections
@@ -1054,12 +1042,7 @@ export const FlightResults: React.FC<FlightResultsProps> = ({
                             totalPrice
                           );
                           window.open(
-                            buildGoogleFlightsUrl(
-                              outbound.origin,
-                              outbound.destination,
-                              outbound.departure_time,
-                              returnFlight?.departure_time
-                            ),
+                            getGoogleFlightsUrl(flight),
                             "_blank",
                             "noopener,noreferrer"
                           );
@@ -1068,19 +1051,28 @@ export const FlightResults: React.FC<FlightResultsProps> = ({
                         fullWidth
                       >
                         Book on Google Flights
+                        {results.google_flights_url && (
+                          <Chip
+                            label="✓"
+                            size="small"
+                            sx={{
+                              height: 16,
+                              fontSize: "0.6rem",
+                              bgcolor: "#dcfce7",
+                              color: "#166534",
+                              ml: 0.5,
+                              "& .MuiChip-label": { px: 0.5 },
+                            }}
+                          />
+                        )}
                       </Button>
-                      <Button
+                      {/* <Button
                         variant="outlined"
                         size="small"
                         endIcon={<OpenInNew sx={{ fontSize: 14 }} />}
                         onClick={() => {
                           window.open(
-                            buildKiwiUrl(
-                              outbound.origin,
-                              outbound.destination,
-                              outbound.departure_time,
-                              returnFlight?.departure_time
-                            ),
+                            buildKayakUrl(flight),
                             "_blank",
                             "noopener,noreferrer"
                           );
@@ -1097,8 +1089,8 @@ export const FlightResults: React.FC<FlightResultsProps> = ({
                         }}
                         fullWidth
                       >
-                        🔍 Compare on Kiwi.com
-                      </Button>
+                        🔍 Compare on Kayak
+                      </Button> */}
                     </>
                   )}
                 </Box>
@@ -1200,12 +1192,7 @@ export const FlightResults: React.FC<FlightResultsProps> = ({
                           totalPrice
                         );
                         window.open(
-                          buildGoogleFlightsUrl(
-                            outbound.origin,
-                            outbound.destination,
-                            outbound.departure_time,
-                            returnFlight?.departure_time
-                          ),
+                          getGoogleFlightsUrl(flight),
                           "_blank",
                           "noopener,noreferrer"
                         );
@@ -1213,19 +1200,28 @@ export const FlightResults: React.FC<FlightResultsProps> = ({
                       sx={{ textTransform: "none", fontWeight: 600 }}
                     >
                       Book on Google Flights
+                      {results.google_flights_url && (
+                        <Chip
+                          label="✓"
+                          size="small"
+                          sx={{
+                            height: 16,
+                            fontSize: "0.6rem",
+                            bgcolor: "#dcfce7",
+                            color: "#166534",
+                            ml: 0.5,
+                            "& .MuiChip-label": { px: 0.5 },
+                          }}
+                        />
+                      )}
                     </Button>
-                    <Button
+                    {/* <Button
                       variant="outlined"
                       size="small"
                       endIcon={<OpenInNew sx={{ fontSize: 14 }} />}
                       onClick={() => {
                         window.open(
-                          buildKiwiUrl(
-                            outbound.origin,
-                            outbound.destination,
-                            outbound.departure_time,
-                            returnFlight?.departure_time
-                          ),
+                          buildKayakUrl(flight),
                           "_blank",
                           "noopener,noreferrer"
                         );
@@ -1241,8 +1237,8 @@ export const FlightResults: React.FC<FlightResultsProps> = ({
                         },
                       }}
                     >
-                      🔍 Compare on Kiwi.com
-                    </Button>
+                      🔍 Compare on Kayak
+                    </Button> */}
                   </>
                 )}
               </Box>
@@ -1258,27 +1254,125 @@ export const FlightResults: React.FC<FlightResultsProps> = ({
       <Box
         sx={{
           display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
+          flexDirection: "column",
+          gap: 2,
           mb: 3,
         }}
       >
-        <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+        {/* First row: Title and New Search button */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Typography variant="h4" sx={{ fontWeight: 700 }}>
             Your Flights
           </Typography>
-          <Typography variant="body2" sx={{ color: "text.secondary" }}>
-            {results.search_summary?.total_flights_found} options found
-          </Typography>
+          <Button
+            variant="outlined"
+            startIcon={<Refresh />}
+            onClick={onNewSearch}
+            sx={{ borderRadius: 2, textTransform: "none" }}
+          >
+            New Search
+          </Button>
         </Box>
-        <Button
-          variant="outlined"
-          startIcon={<Refresh />}
-          onClick={onNewSearch}
-          sx={{ borderRadius: 2, textTransform: "none" }}
-        >
-          New Search
-        </Button>
+
+        {/* Second row: Compare button (full width available) */}
+        {searchParams && (
+          <Box sx={{ position: "relative", width: "fit-content" }}>
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => setShowCompareMenu(!showCompareMenu)}
+              sx={{
+                textTransform: "none",
+                fontSize: "0.75rem",
+                py: 0.5,
+                px: 1.5,
+                borderColor: "#e2e8f0",
+                color: "#64748b",
+                "&:hover": {
+                  borderColor: "#cbd5e1",
+                  bgcolor: "#f8fafc",
+                },
+              }}
+            >
+              {compareLabel} {showCompareMenu ? "▲" : "▼"}
+            </Button>
+            {showCompareMenu && (
+              <Card
+                sx={{
+                  position: "absolute",
+                  top: "calc(100% + 4px)",
+                  left: 0,
+                  zIndex: 1000,
+                  minWidth: 160,
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                }}
+              >
+                <Box sx={{ p: 1 }}>
+                  <Button
+                    fullWidth
+                    size="small"
+                    variant="text"
+                    endIcon={<OpenInNew sx={{ fontSize: 14 }} />}
+                    onClick={() => {
+                      window.open(
+                        buildCompareUrl("skyscanner"),
+                        "_blank",
+                        "noopener,noreferrer"
+                      );
+                      setShowCompareMenu(false);
+                    }}
+                    sx={{
+                      textTransform: "none",
+                      justifyContent: "flex-start",
+                      fontSize: "0.875rem",
+                      px: 1.5,
+                      py: 1,
+                      color: "#475569",
+                      "&:hover": {
+                        bgcolor: "#f1f5f9",
+                      },
+                    }}
+                  >
+                    Skyscanner
+                  </Button>
+                  <Button
+                    fullWidth
+                    size="small"
+                    variant="text"
+                    endIcon={<OpenInNew sx={{ fontSize: 14 }} />}
+                    onClick={() => {
+                      window.open(
+                        buildCompareUrl("kayak"),
+                        "_blank",
+                        "noopener,noreferrer"
+                      );
+                      setShowCompareMenu(false);
+                    }}
+                    sx={{
+                      textTransform: "none",
+                      justifyContent: "flex-start",
+                      fontSize: "0.875rem",
+                      px: 1.5,
+                      py: 1,
+                      color: "#475569",
+                      "&:hover": {
+                        bgcolor: "#f1f5f9",
+                      },
+                    }}
+                  >
+                    Kayak
+                  </Button>
+                </Box>
+              </Card>
+            )}
+          </Box>
+        )}
       </Box>
 
       {/* Price Alert Card - same as before */}
