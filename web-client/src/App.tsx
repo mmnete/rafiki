@@ -472,32 +472,6 @@ function App() {
                   </Box>
                 </Box>)}
               </Box>
-
-              {/* Test Data Disclaimer */}
-              {!loading && !searchResults && (
-                <Box
-                  sx={{
-                    mt: 3,
-                    px: 2.5,
-                    py: 1.5,
-                    borderRadius: 2,
-                    backgroundColor: "rgba(245, 158, 11, 0.08)",
-                    border: "1px solid rgba(245, 158, 11, 0.2)",
-                    maxWidth: 500,
-                    textAlign: "center",
-                  }}
-                >
-                  <Box
-                    sx={{
-                      fontSize: "0.75rem",
-                      color: "#92400e",
-                      fontWeight: 500,
-                    }}
-                  >
-                    <strong>Test Mode:</strong> Live pricing coming soon as we finalize approvals.
-                  </Box>
-                </Box>
-              )}
             </Box>
 
             {/* Search Form */}
