@@ -66,96 +66,41 @@ export const SearchForm: React.FC<SearchFormProps> = ({ onSearch }) => {
   useEffect(() => {
     const detectUserLocation = async () => {
       try {
-        // Use ipapi.co (free, no API key required, 1000 requests/day)
-        const response = await fetch("https://ipapi.co/json/");
-        const data = await response.json();
+        // 🌍 Step 1: Get user’s approximate location from IP (Free)
+        const ipRes = await fetch("https://ipapi.co/json/");
+        const ipData = await ipRes.json();
 
-        // Map city to nearest major airport
-        const cityToAirport: { [key: string]: string } = {
-          "New York": "JFK",
-          "Los Angeles": "LAX",
-          Chicago: "ORD",
-          Houston: "IAH",
-          Phoenix: "PHX",
-          Philadelphia: "PHL",
-          "San Antonio": "SAT",
-          "San Diego": "SAN",
-          Dallas: "DFW",
-          "San Jose": "SJC",
-          Austin: "AUS",
-          Jacksonville: "JAX",
-          "Fort Worth": "DFW",
-          Columbus: "CMH",
-          Charlotte: "CLT",
-          "San Francisco": "SFO",
-          Indianapolis: "IND",
-          Seattle: "SEA",
-          Denver: "DEN",
-          Washington: "DCA",
-          Boston: "BOS",
-          "El Paso": "ELP",
-          Nashville: "BNA",
-          Detroit: "DTW",
-          "Oklahoma City": "OKC",
-          Portland: "PDX",
-          "Las Vegas": "LAS",
-          Memphis: "MEM",
-          Louisville: "SDF",
-          Baltimore: "BWI",
-          Milwaukee: "MKE",
-          Albuquerque: "ABQ",
-          Tucson: "TUS",
-          Fresno: "FAT",
-          Sacramento: "SMF",
-          "Kansas City": "MCI",
-          Mesa: "PHX",
-          Atlanta: "ATL",
-          Omaha: "OMA",
-          "Colorado Springs": "COS",
-          Raleigh: "RDU",
-          Miami: "MIA",
-          Oakland: "OAK",
-          Minneapolis: "MSP",
-          Tulsa: "TUL",
-          Cleveland: "CLE",
-          Wichita: "ICT",
-          Arlington: "DFW",
-          // International
-          Toronto: "YYZ",
-          Vancouver: "YVR",
-          Montreal: "YUL",
-          London: "LHR",
-          Paris: "CDG",
-          Berlin: "BER",
-          Madrid: "MAD",
-          Barcelona: "BCN",
-          Rome: "FCO",
-          Amsterdam: "AMS",
-          Brussels: "BRU",
-          Dubai: "DXB",
-          Singapore: "SIN",
-          "Hong Kong": "HKG",
-          Tokyo: "NRT",
-          Seoul: "ICN",
-          Bangkok: "BKK",
-          Delhi: "DEL",
-          Mumbai: "BOM",
-          Sydney: "SYD",
-          Melbourne: "MEL",
-        };
+        console.log("📍 User location from IP:", ipData);
 
-        const detectedAirport = cityToAirport[data.city] || null;
+        const lat = ipData.latitude;
+        const lon = ipData.longitude;
 
-        if (detectedAirport) {
-          setDetectedLocation(data.city);
+        if (!lat || !lon) throw new Error("No coordinates found from IP");
+
+        // 🛫 Step 2: Get nearby airports using OpenAIP (Free, No key)
+        const airportRes = await fetch(
+          `https://api.openaip.net/api/airports?lat=${lat}&lon=${lon}&distance=50`
+        );
+
+        if (!airportRes.ok) throw new Error("Failed to fetch airports");
+
+        const airportData = await airportRes.json();
+        console.log("🗺 Nearby airports:", airportData);
+
+        // Check if we got any airports
+        if (airportData && airportData.items && airportData.items.length > 0) {
+          const nearest = airportData.items[0]; // take first one
+          setDetectedLocation(ipData.city || "Unknown City");
           setFormData((prev) => ({
             ...prev,
-            origin: detectedAirport,
+            origin: nearest.icao || nearest.name || "Unknown",
           }));
+          console.log("✅ Nearest airport:", nearest);
+        } else {
+          console.log("⚠️ No nearby airports found.");
         }
       } catch (error) {
-        console.log("Could not detect location:", error);
-        // Fail silently - user can still search manually
+        console.error("❌ Could not detect location:", error);
       }
     };
 
