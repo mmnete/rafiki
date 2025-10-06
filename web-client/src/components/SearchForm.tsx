@@ -16,7 +16,6 @@ import {
   FormControlLabel,
   Checkbox,
   Alert,
-  Chip,
 } from "@mui/material";
 import {
   FlightTakeoff,
@@ -26,7 +25,6 @@ import {
   Search as SearchIcon,
   AirlineSeatReclineNormal,
   ChildCare,
-  CalendarMonth,
   LocationOn,
 } from "@mui/icons-material";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";

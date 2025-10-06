@@ -242,46 +242,46 @@ export const FlightResults: React.FC<FlightResultsProps> = ({
     return highlights.slice(0, 3);
   };
 
-  const getFullPolicyDetails = (flight: any) => {
-    const outbound = flight.outbound_flight || flight;
+//   const getFullPolicyDetails = (flight: any) => {
+//     const outbound = flight.outbound_flight || flight;
 
-    return {
-      baggage: {
-        carryOn: outbound.baggage?.carry_on_included
-          ? "Included"
-          : "Not included (fee applies)",
-        checked:
-          outbound.baggage?.checked_bags_included > 0
-            ? `${outbound.baggage.checked_bags_included} bag(s) included`
-            : "Not included (fee applies)",
-        policy: outbound.baggage_policy?.all_fares || null,
-      },
-      cancellation: {
-        refundable: outbound.fare_details?.refundable || false,
-        policy: outbound.cancellation_policy?.all_fares || "Non-refundable",
-        changeable: outbound.fare_details?.changeable || false,
-      },
-      seats: {
-        selectionAvailable:
-          outbound.ancillary_services?.seat_selection_available || false,
-        feeRange: outbound.ancillary_services?.seat_selection_fee_range || null,
-        types: outbound.ancillary_services?.seat_types_available || [],
-      },
-      meals: {
-        included: outbound.segments?.[0]?.meal_service || "Not specified",
-        options: outbound.segments?.[0]?.meal_options || [],
-        upgradeAvailable:
-          outbound.ancillary_services?.meal_upgrade_available || false,
-      },
-      extras: {
-        wifi: outbound.ancillary_services?.wifi_cost,
-        loungeAccess: outbound.ancillary_services?.lounge_access || false,
-        priorityBoarding:
-          outbound.ancillary_services?.priority_boarding_available || false,
-      },
-      fareClass: outbound.fare_details?.fare_class || "Economy",
-    };
-  };
+//     return {
+//       baggage: {
+//         carryOn: outbound.baggage?.carry_on_included
+//           ? "Included"
+//           : "Not included (fee applies)",
+//         checked:
+//           outbound.baggage?.checked_bags_included > 0
+//             ? `${outbound.baggage.checked_bags_included} bag(s) included`
+//             : "Not included (fee applies)",
+//         policy: outbound.baggage_policy?.all_fares || null,
+//       },
+//       cancellation: {
+//         refundable: outbound.fare_details?.refundable || false,
+//         policy: outbound.cancellation_policy?.all_fares || "Non-refundable",
+//         changeable: outbound.fare_details?.changeable || false,
+//       },
+//       seats: {
+//         selectionAvailable:
+//           outbound.ancillary_services?.seat_selection_available || false,
+//         feeRange: outbound.ancillary_services?.seat_selection_fee_range || null,
+//         types: outbound.ancillary_services?.seat_types_available || [],
+//       },
+//       meals: {
+//         included: outbound.segments?.[0]?.meal_service || "Not specified",
+//         options: outbound.segments?.[0]?.meal_options || [],
+//         upgradeAvailable:
+//           outbound.ancillary_services?.meal_upgrade_available || false,
+//       },
+//       extras: {
+//         wifi: outbound.ancillary_services?.wifi_cost,
+//         loungeAccess: outbound.ancillary_services?.lounge_access || false,
+//         priorityBoarding:
+//           outbound.ancillary_services?.priority_boarding_available || false,
+//       },
+//       fareClass: outbound.fare_details?.fare_class || "Economy",
+//     };
+//   };
 
   // Extract route information from flight
   const getRouteInfo = (flight: any) => {
@@ -409,7 +409,7 @@ export const FlightResults: React.FC<FlightResultsProps> = ({
   };
 
   // Render the booking guide for hub connections
-  const renderBookingGuide = (routeInfo: any, flightId: string) => {
+  const renderBookingGuide = (routeInfo: any) => {
     const { outboundRoute, returnRoute, isRoundtrip, outbound, returnFlight } =
       routeInfo;
 
@@ -612,7 +612,6 @@ export const FlightResults: React.FC<FlightResultsProps> = ({
       isRoundtrip,
       outbound,
       returnFlight,
-      outboundRoute,
       returnRoute,
       isHubConnection,
       hubCities,
@@ -627,7 +626,7 @@ export const FlightResults: React.FC<FlightResultsProps> = ({
       : parseFloat(outbound.pricing?.price_total || outbound.total_price || 0);
 
     const policyHighlights = getPolicyHighlights(flight);
-    const policyDetails = getFullPolicyDetails(flight);
+    // const policyDetails = getFullPolicyDetails(flight);
     const showPolicies = expandedPolicies[flightId] || false;
 
     return (
@@ -913,7 +912,7 @@ export const FlightResults: React.FC<FlightResultsProps> = ({
                   </Box>
                 )}
 
-                {showGuide && renderBookingGuide(routeInfo, flightId)}
+                {showGuide && renderBookingGuide(routeInfo)}
 
                 {isExpanded && (
                   <Box
